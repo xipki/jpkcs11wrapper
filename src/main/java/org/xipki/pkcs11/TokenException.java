@@ -47,7 +47,6 @@ package org.xipki.pkcs11;
  * exception from a lower layer.
  *
  * @author Karl Scheibelhofer
- * @version 1.0
  */
 public class TokenException extends Exception {
 

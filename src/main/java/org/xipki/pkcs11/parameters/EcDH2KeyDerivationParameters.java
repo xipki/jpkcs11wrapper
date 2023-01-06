@@ -50,7 +50,7 @@ import sun.security.pkcs11.wrapper.CK_ECDH2_DERIVE_PARAMS;
  * CKM_ECMQV_DERIVE.
  *
  * @author Karl Scheibelhofer
- * @version 1.0
+ * @author Lijun Liao (xipki)
  */
 public class EcDH2KeyDerivationParameters extends DHKeyDerivationParameters {
 

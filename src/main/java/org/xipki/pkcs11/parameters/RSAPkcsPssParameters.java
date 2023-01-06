@@ -52,7 +52,7 @@ import java.lang.reflect.Field;
  * This class encapsulates parameters for the Mechanism.RSA_PKCS_PSS.
  *
  * @author Karl Scheibelhofer
- * @version 1.0
+ * @author Lijun Liao (xipki)
  */
 public class RSAPkcsPssParameters extends RSAPkcsParameters {
 

@@ -50,7 +50,7 @@ import sun.security.pkcs11.wrapper.CK_PBE_PARAMS;
  * Mechanism.PBA_SHA1_WITH_SHA1_HMAC mechanisms.
  *
  * @author Karl Scheibelhofer
- * @version 1.0
+ * @author Lijun Liao (xipki)
  */
 public class PBEParameters implements Parameters {
 

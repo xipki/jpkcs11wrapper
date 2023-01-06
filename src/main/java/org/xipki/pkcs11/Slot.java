@@ -57,10 +57,8 @@ import sun.security.pkcs11.wrapper.PKCS11;
  *   }
  * </code></pre>
  *
- * @see SlotInfo
- * @see Token
  * @author Karl Scheibelhofer
- * @version 1.0
+ * @author Lijun Liao (xipki)
  */
 public class Slot {
 

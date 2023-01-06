@@ -51,7 +51,7 @@ import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
  *
  *
  * @author Birgit Haas
- * @version 1.0
+ * @author Lijun Liao (xipki)
  */
 public class AttributeArray extends Attribute {
 
