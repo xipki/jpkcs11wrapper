@@ -41,14 +41,14 @@ public class GcmParameters implements Parameters {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class);
   }
 
-  public GcmParameters(byte[] iv, byte[] aad, long tagBits) {
+  public GcmParameters(byte[] iv, byte[] aad, int tagBits) {
     if (constructor == null) {
       throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
     }
 
     this.iv = iv;
     this.aad = aad;
-    this.tagBits = (int) tagBits;
+    this.tagBits = tagBits;
   }
 
   public Object getPKCS11ParamsObject() {

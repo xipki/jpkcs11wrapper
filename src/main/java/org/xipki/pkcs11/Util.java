@@ -56,6 +56,14 @@ import java.lang.reflect.Method;
  */
 public class Util {
 
+  public static Class<?> getClass(String className) {
+    try {
+      return Class.forName(className);
+    } catch (Throwable th) {
+      return null;
+    }
+  }
+
   public static Field getField(Class<?> clazz, String fieldName) {
     try {
       return clazz.getField(fieldName);

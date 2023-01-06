@@ -44,7 +44,6 @@ package org.xipki.pkcs11.parameters;
 
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.Util;
-import sun.security.pkcs11.wrapper.CK_RSA_PKCS_PSS_PARAMS;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -57,32 +56,34 @@ import java.lang.reflect.Field;
  */
 public class RSAPkcsPssParameters extends RSAPkcsParameters {
 
-  private static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_RSA_PKCS_PSS_PARAMS";
+  public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_RSA_PKCS_PSS_PARAMS";
 
-  private static final Constructor<?> constructor;
+  private static Constructor<?> constructor;
 
-  private static final Constructor<?> constructorNoArgs;
+  private static Constructor<?> constructorNoArgs;
 
-  private static final Field hashAlgField;
+  private static Field hashAlgField;
 
-  private static final Field mgfField;
+  private static Field mgfField;
 
-  private static final Field sLenField;
+  private static Field sLenField;
 
   /**
    * The length of the salt value in octets.
    */
-  private long saltLength;
+  private int saltLength;
 
   static {
-    Class<?> clazz = CK_RSA_PKCS_PSS_PARAMS.class;
+    Class<?> clazz = Util.getClass(CLASS_CK_PARAMS);
 
-    constructor = Util.getConstructor(clazz, String.class, String.class, String.class, int.class);
-    constructorNoArgs = (constructor != null) ? null : Util.getConstructor(clazz);
+    if (clazz != null) {
+      constructor = Util.getConstructor(clazz, String.class, String.class, String.class, int.class);
+      constructorNoArgs = (constructor != null) ? null : Util.getConstructor(clazz);
 
-    hashAlgField = (constructorNoArgs == null) ? null : Util.getField(clazz, "hashAlg");
-    mgfField     = (constructorNoArgs == null) ? null : Util.getField(clazz, "mgf");
-    sLenField    = (constructorNoArgs == null) ? null : Util.getField(clazz, "sLen");
+      hashAlgField = (constructorNoArgs == null) ? null : Util.getField(clazz, "hashAlg");
+      mgfField = (constructorNoArgs == null) ? null : Util.getField(clazz, "mgf");
+      sLenField = (constructorNoArgs == null) ? null : Util.getField(clazz, "sLen");
+    }
   }
 
   /**
@@ -99,7 +100,7 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
    *                MessageGenerationFunctionType.Sha1)
    *
    */
-  public RSAPkcsPssParameters(long hashAlgorithm, long maskGenerationFunction, long saltLength) {
+  public RSAPkcsPssParameters(long hashAlgorithm, long maskGenerationFunction, int saltLength) {
     super(hashAlgorithm, maskGenerationFunction);
     if (constructor == null && constructorNoArgs == null) {
       throw new IllegalStateException("could not find constructor for class " + CLASS_CK_PARAMS);
@@ -112,10 +113,10 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
    *
    * @return This object as a CK_RSA_PKCS_PSS_PARAMS object.
    */
-  public CK_RSA_PKCS_PSS_PARAMS getPKCS11ParamsObject() {
+  public Object getPKCS11ParamsObject() {
     if (constructorNoArgs != null) {
       try {
-        CK_RSA_PKCS_PSS_PARAMS ret = (CK_RSA_PKCS_PSS_PARAMS) constructorNoArgs.newInstance();
+        Object ret = constructorNoArgs.newInstance();
         hashAlgField.set(ret, hashAlg);
         mgfField.set(ret, mgf);
         sLenField.set(ret, saltLength);
@@ -127,7 +128,7 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
       String hashAlgName = Functions.getHashAlgName(hashAlg);
       String mgfHashAlgName = Functions.getHashAlgName(mgf2HashAlgMap.get(mgf));
       try {
-        return (CK_RSA_PKCS_PSS_PARAMS) constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, (int) saltLength);
+        return constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, saltLength);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
@@ -139,7 +140,7 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
    *
    * @return The length of the salt value in octets.
    */
-  public long getSaltLength() {
+  public int getSaltLength() {
     return saltLength;
   }
 

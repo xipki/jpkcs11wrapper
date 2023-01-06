@@ -49,7 +49,7 @@ public class AESGCMEncryptDecrypt extends SymmEncryptDecrypt {
   public void main() throws PKCS11Exception {
     // check whether supported in current JDK
     try {
-      new GcmParameters(new byte[12], null, 128L);
+      new GcmParameters(new byte[12], null, 128);
     } catch (IllegalStateException ex) {
       System.err.println("AES-GCM unsupported in current JDK, skip");
       return;

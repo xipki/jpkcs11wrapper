@@ -42,17 +42,18 @@ public class CcmParameters implements Parameters {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class, int.class);
   }
 
-  public CcmParameters(long dataLen, byte[] nonce, byte[] aad, long macLen) {
+  public CcmParameters(int dataLen, byte[] nonce, byte[] aad, int macLen) {
     if (constructor == null) throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
 
-    this.dataLen = (int) dataLen;
-    this.nonce = nonce;
+    this.nonce = Functions.requireNonNull("nonce", nonce);
+    Functions.requireRange("nonce.length", nonce.length, 7, 13);
+    this.macLen = Functions.requireAmong("macLen", macLen, 4, 6, 8, 10, 12, 14, 16);
+    this.dataLen = dataLen;
     this.aad = aad;
-    this.macLen = (int) Functions.requireAmong("macLen", macLen, 4, 6, 8, 10, 12, 14, 16);
   }
 
-  public void setDataLen(long dataLen) {
-    this.dataLen = (int) dataLen;
+  public void setDataLen(int dataLen) {
+    this.dataLen = dataLen;
   }
 
   public String toString() {
