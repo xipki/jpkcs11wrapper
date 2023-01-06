@@ -398,7 +398,6 @@ public class Session {
    *          attributes at the objectToUpdate.
    * @exception PKCS11Exception
    *              If updateing the attributes fails. All or no attributes are updated.
-   * @preconditions (objectToUpdate != null) and (template != null)
    *
    */
   public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws PKCS11Exception {
