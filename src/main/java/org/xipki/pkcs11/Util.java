@@ -74,8 +74,7 @@ public class Util {
 
   public static Constructor<?> getConstructor(String className, Class<?>... parameterTypes) {
     try {
-      Class<?> clazz = Class.forName(className, false, Util.class.getClassLoader());
-      return getConstructor(clazz, parameterTypes);
+      return getConstructor(Class.forName(className, false, Util.class.getClassLoader()), parameterTypes);
     } catch (Throwable th) {
       return null;
     }

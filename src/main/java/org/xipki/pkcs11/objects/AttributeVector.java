@@ -401,7 +401,6 @@ public class AttributeVector {
     return attr == null ? null : ((ByteArrayAttribute) attr).getByteArrayValue();
   }
 
-  @Override
   public String toString() {
     return toString("");
   }

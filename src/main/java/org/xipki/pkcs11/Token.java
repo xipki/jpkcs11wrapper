@@ -44,7 +44,6 @@ package org.xipki.pkcs11;
 
 import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
 import sun.security.pkcs11.wrapper.CK_MECHANISM_INFO;
-import sun.security.pkcs11.wrapper.CK_NOTIFY;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -99,35 +98,6 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  * @version 1.0
  */
 public class Token {
-
-  public static final String CLASS_PKCS11Exception = "sun.security.pkcs11.wrapper.PKCS11Exception";
-
-  private static final Constructor<?> PKCS11ExceptionConstructor;
-
-  private static final int PKCS11ExceptionConstructorType;
-
-  static {
-    Constructor<?> constructor = null;
-    int type = 0;
-
-    try {
-      Class<?> clazz = Class.forName(CLASS_PKCS11Exception);
-
-      constructor = Util.getConstructor(clazz, long.class);
-      if (constructor != null) {
-        type = 1;
-      } else {
-        constructor= Util.getConstructor(clazz, long.class, String.class);
-        if (constructor != null) {
-          type = 2;
-        }
-      }
-    } catch (Exception ex) {
-    }
-
-    PKCS11ExceptionConstructor = constructor;
-    PKCS11ExceptionConstructorType = type;
-  }
 
   /**
    * The reference to the slot.
@@ -247,22 +217,10 @@ public class Token {
     }
 
     try {
-      CK_MECHANISM_INFO info = slot.getPKCS11().C_GetMechanismInfo(slot.getSlotID(), mechanism);
-      return new MechanismInfo(info);
+      return new MechanismInfo(slot.getPKCS11().C_GetMechanismInfo(slot.getSlotID(), mechanism));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex);
     }
-  }
-
-  /**
-   * The overriding of this method should ensure that the objects of this
-   * class work correctly in a hashtable.
-   *
-   * @return The hash code of this object. Gained from the slot ID.
-   */
-  @Override
-  public int hashCode() {
-    return slot.hashCode();
   }
 
   /**
@@ -279,7 +237,7 @@ public class Token {
    *              If the session could not be opened.
    */
   public Session openSession(boolean rwSession) throws TokenException {
-    return openSession(rwSession, null, null);
+    return openSession(rwSession, null);
   }
 
   /**
@@ -294,53 +252,19 @@ public class Token {
    * @param application
    *          PKCS11Object to be supplied upon notify callback. May be null.
    *          (Not implemented yet!).
-   * @param notify
-   *          For notifications via callback. may be null.
-   *          (Not implemented yet!)
    * @return The newly opened session.
    * @exception TokenException
    *              If the session could not be opened.
    */
-  public Session openSession(boolean rwSession, Object application, Notify notify) throws TokenException {
+  public Session openSession(boolean rwSession, Object application) throws TokenException {
     long flags = rwSession ? CKF_SERIAL_SESSION | CKF_RW_SESSION : CKF_SERIAL_SESSION;
-    // we need it for the Notify already here
-    final Session newSession = new Session(this, -1);
-    CK_NOTIFY ckNotify = null;
-    if (notify != null) {
-      ckNotify = (hSession, event, pApplication) -> {
-        try {
-          notify.notify(newSession, event, pApplication);
-        } catch (PKCS11Exception ex) {
-          long errorCode = ex.getErrorCode();
-          try {
-            if (PKCS11ExceptionConstructorType == 0) {
-              // ignore
-            } else if (PKCS11ExceptionConstructorType == 1) {
-              // JDK 8 - 16
-              throw (sun.security.pkcs11.wrapper.PKCS11Exception) PKCS11ExceptionConstructor.newInstance(errorCode);
-            } else if (PKCS11ExceptionConstructorType == 2) {
-              // JDK 17+
-              final String extraInfo = null;
-              throw (sun.security.pkcs11.wrapper.PKCS11Exception)
-                  PKCS11ExceptionConstructor.newInstance(errorCode, extraInfo);
-            }
-          } catch (Throwable th) {
-            // ignore
-          }
-        }
-      };
-    }
-
     long sessionHandle;
     try {
-      sessionHandle = slot.getPKCS11().C_OpenSession(slot.getSlotID(), flags, application, ckNotify);
+      sessionHandle = slot.getPKCS11().C_OpenSession(slot.getSlotID(), flags, application, null);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex);
     }
-    //now we have the session handle available
-    newSession.setSessionHandle(sessionHandle);
-
-    return newSession;
+    return new Session(this, sessionHandle);
   }
 
   /**

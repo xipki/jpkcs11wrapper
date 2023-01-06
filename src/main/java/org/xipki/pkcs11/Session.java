@@ -143,19 +143,11 @@ public class Session {
     encrypt0 = Util.getMethod(clazz, "C_Encrypt",
         long.class, byte[].class, int.class, int.class, byte[].class, int.class, int.class);
 
-    if (decrypt0 == null) {
-      decrypt1 = Util.getMethod(clazz, "C_Decrypt",
+    decrypt1 = decrypt0 != null ? null : Util.getMethod(clazz, "C_Decrypt",
           long.class, long.class, byte[].class, int.class, int.class, long.class, byte[].class, int.class, int.class);
-    } else {
-      decrypt1 = null;
-    }
 
-    if (encrypt0 == null) {
-      encrypt1 = Util.getMethod(clazz, "C_Encrypt",
+    encrypt1 = encrypt0 != null ? null : Util.getMethod(clazz, "C_Encrypt",
           long.class, long.class, byte[].class, int.class, int.class, long.class, byte[].class, int.class, int.class);
-    } else {
-      encrypt1 = null;
-    }
 
     clazz = CK_MECHANISM.class;
     field_CK_MECHANISM_pParameter = Util.getField(clazz, "pParameter");
@@ -542,8 +534,8 @@ public class Session {
    *              If encrypting failed.
    */
   public int encrypt(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
+
     try {
       if (encrypt0 != null) {
         return (int) encrypt0.invoke(pkcs11, sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
@@ -555,14 +547,7 @@ public class Session {
     } catch (IllegalAccessException ex) {
       throw new TokenException("", ex);
     } catch (InvocationTargetException ex) {
-      Throwable cause = ex.getCause();
-      if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
-        throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
-      } else if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else {
-        throw new TokenException("Error " + ex.getMessage(), ex);
-      }
+      throw evaluateInvocationTargetException(ex);
     }
   }
 
@@ -588,10 +573,8 @@ public class Session {
    * @exception TokenException
    *              If encrypting the data failed.
    */
-  public int encryptUpdate(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
-      throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+  public int encryptUpdate(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
       return pkcs11.C_EncryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
@@ -616,7 +599,7 @@ public class Session {
    *              If calculating the final result failed.
    */
   public int encryptFinal(byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("out", out);
+    checkOutParams(out, outOfs, outLen);
 
     try {
       return pkcs11.C_EncryptFinal(sessionHandle, 0, out, outOfs, outLen);
@@ -672,8 +655,7 @@ public class Session {
    *              If decrypting failed.
    */
   public int decrypt(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
       if (decrypt0 != null) {
@@ -686,14 +668,7 @@ public class Session {
     } catch (IllegalAccessException ex) {
       throw new TokenException("", ex);
     } catch (InvocationTargetException ex) {
-      Throwable cause = ex.getCause();
-      if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
-        throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
-      } else if (cause instanceof RuntimeException) {
-        throw (RuntimeException) cause;
-      } else {
-        throw new TokenException("Error " + ex.getMessage(), ex);
-      }
+      throw evaluateInvocationTargetException(ex);
     }
   }
 
@@ -720,8 +695,7 @@ public class Session {
    *              If decrypting the data failed.
    */
   public int decryptUpdate(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
       return pkcs11.C_DecryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
@@ -746,7 +720,7 @@ public class Session {
    *              If calculating the final result failed.
    */
   public int decryptFinal(byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("out", out);
+    checkOutParams(out, outOfs, outLen);
 
     try {
       return pkcs11.C_DecryptFinal(sessionHandle, 0, out, outOfs, outLen);
@@ -788,20 +762,21 @@ public class Session {
    *          buffer offset of the to-be-digested data
    * @param inLen
    *          length of the to-be-digested data
-   * @param digest
+   * @param out
    *          buffer for the digested data
-   * @param digestOfs
+   * @param outOfs
    *          buffer offset for the digested data
-   * @param digestLen
+   * @param outLen
    *          buffer size for the digested data
    * @return the length of digested data for this update
    * @exception TokenException
    *              If digesting the data failed.
    */
-  public int digest(byte[] in, int inOfs, int inLen, byte[] digest, int digestOfs, int digestLen)
-      throws TokenException {
+  public int digestFinal(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
+
     digestUpdate(in, inOfs, inLen);
-    return digestFinal(digest, digestOfs, digestLen);
+    return digestFinal(out, outOfs, outLen);
   }
 
   /**
@@ -815,24 +790,22 @@ public class Session {
    *          buffer offset of the to-be-digested data
    * @param inLen
    *          length of the to-be-digested data
-   * @param digest
+   * @param out
    *          buffer for the digested data
-   * @param digestOfs
+   * @param outOfs
    *          buffer offset for the digested data
-   * @param digestLen
+   * @param outLen
    *          buffer size for the digested data
    * @return the length of digested data for this update
    * @exception TokenException
    *              If digesting the data failed.
    */
-  public int digest(Mechanism mechanism, byte[] in, int inOfs, int inLen,
-                    byte[] digest, int digestOfs, int digestLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("digest", digest);
+  public int digest(Mechanism mechanism, byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
+      throws TokenException {
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
-      return pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism),
-          in, inOfs, inLen, digest, digestOfs, digestLen);
+      return pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism), in, inOfs, inLen, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex);
     }
@@ -844,20 +817,20 @@ public class Session {
    * method. The application must call digestFinal to get the final result of the digesting after
    * feeding in all data using this method.
    *
-   * @param part
+   * @param in
    *          buffer containing the to-be-digested data
-   * @param partOfs
+   * @param inOfs
    *          buffer offset of the to-be-digested data
-   * @param partLen
+   * @param inLen
    *          length of the to-be-digested data
    * @exception TokenException
    *              If digesting the data failed.
    */
-  public void digestUpdate(byte[] part, int partOfs, int partLen) throws TokenException {
-    Functions.requireNonNull("part", part);
+  public void digestUpdate(byte[] in, int inOfs, int inLen) throws TokenException {
+    checkInParams(in, inOfs, inLen);
 
     try {
-      pkcs11.C_DigestUpdate(sessionHandle, 0, part, partOfs, partLen);
+      pkcs11.C_DigestUpdate(sessionHandle, 0, in, inOfs, inLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex);
     }
@@ -968,7 +941,7 @@ public class Session {
    *              If signing the data failed.
    */
   public void signUpdate(byte[] in, int inOfs, int inLen) throws TokenException {
-    Functions.requireNonNull("in", in);
+    checkInParams(in, inOfs, inLen);
 
     try {
       pkcs11.C_SignUpdate(sessionHandle, 0, in, inOfs, inLen);
@@ -1043,8 +1016,7 @@ public class Session {
    *              If signing the data failed.
    */
   public int signRecover(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
       return pkcs11.C_SignRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
@@ -1118,7 +1090,7 @@ public class Session {
    *              If verifying (e.g. digesting) the data failed.
    */
   public void verifyUpdate(byte[] in, int inOfs, int inLen) throws TokenException {
-    Functions.requireNonNull("in", in);
+    checkInParams(in, inOfs, inLen);
 
     try {
       pkcs11.C_VerifyUpdate(sessionHandle, 0, in, inOfs, inLen);
@@ -1197,8 +1169,7 @@ public class Session {
    *              If signing the data failed.
    */
   public int verifyRecover(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws TokenException {
-    Functions.requireNonNull("in", in);
-    Functions.requireNonNull("out", out);
+    checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
     try {
       return pkcs11.C_VerifyRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
@@ -1379,7 +1350,6 @@ public class Session {
    *
    * @return the string representation of this object
    */
-  @Override
   public String toString() {
     return "Session Handle: 0x" + Long.toHexString(sessionHandle) +  "\nToken: " + token;
   }
@@ -1387,9 +1357,7 @@ public class Session {
   private CK_MECHANISM toCkMechanism(Mechanism mechanism) {
     long code = mechanism.getMechanismCode();
     if ((code & CKM_VENDOR_DEFINED) != 0) {
-      if (vendorCode != null) {
-        code = vendorCode.ckmGenericToVendor(code);
-      }
+      if (vendorCode != null) code = vendorCode.ckmGenericToVendor(code);
     }
 
     Parameters params = mechanism.getParameters();
@@ -1442,12 +1410,10 @@ public class Session {
 //      return new CK_MECHANISM(code, ((X942DH2KeyDerivationParameters) params).getPKCS11ParamsObject());
     } else {
       Constructor<?> constructor = (params instanceof CcmParameters) ? constructor_CK_MECHANISM_CCM
-          : (params instanceof GcmParameters) ? constructor_CK_MECHANISM_GCM
-          : null;
+          : (params instanceof GcmParameters) ? constructor_CK_MECHANISM_GCM : null;
 
-      if (constructor == null) {
-        throw new IllegalArgumentException("could not find constructor");
-      }
+      if (constructor == null) throw new IllegalArgumentException("could not find constructor");
+
       try {
         return (CK_MECHANISM) constructor.newInstance(code, params.getPKCS11ParamsObject());
       } catch (Exception ex) {
@@ -1577,9 +1543,8 @@ public class Session {
 
     CK_ATTRIBUTE[] attributeTemplateList = new CK_ATTRIBUTE[attributes.length];
     for (int i = 0; i < attributeTemplateList.length; i++) {
-      CK_ATTRIBUTE attribute = new CK_ATTRIBUTE();
-      attribute.type = attributes[i].getType();
-      attributeTemplateList[i] = attribute;
+      attributeTemplateList[i] = new CK_ATTRIBUTE();
+      attributeTemplateList[i].type = attributes[i].getType();
       attributes[i].stateKnown(false);
     }
 
@@ -1664,7 +1629,6 @@ public class Session {
 
       if (attribute instanceof BooleanAttribute) fixBooleanAttrValue(attributeTemplateList[0]);
 
-
       attribute.ckAttribute(attributeTemplateList[0]).stateKnown(true).present(true).sensitive(false);
       postProcessGetAttribute(attribute);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1682,8 +1646,7 @@ public class Session {
         attribute.getCkAttribute().pValue = null;
         attribute.stateKnown(true).present(true).sensitive(true).getCkAttribute().pValue = null;
         if (!ignoreParsableException) throw new PKCS11Exception(ex);
-      } else if (ec == CKR_ARGUMENTS_BAD || ec == CKR_FUNCTION_FAILED
-          || ec == CKR_FUNCTION_REJECTED) {
+      } else if (ec == CKR_ARGUMENTS_BAD || ec == CKR_FUNCTION_FAILED || ec == CKR_FUNCTION_REJECTED) {
         attribute.stateKnown(true).present(false).sensitive(false).getCkAttribute().pValue = null;
         if (!ignoreParsableException) throw new PKCS11Exception(ex);
       } else {
@@ -1699,9 +1662,7 @@ public class Session {
       for (CK_ATTRIBUTE ckAttr : ret) {
         if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
           long value = (long) ckAttr.pValue;
-          if ((value & CKK_VENDOR_DEFINED) != 0L) {
-            ckAttr.pValue = vendorCode.ckkGenericToVendor(value);
-          }
+          if ((value & CKK_VENDOR_DEFINED) != 0L) ckAttr.pValue = vendorCode.ckkGenericToVendor(value);
         }
       }
     }
@@ -1712,9 +1673,7 @@ public class Session {
     CK_ATTRIBUTE ckAttr = attr.getCkAttribute();
     if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
       long value = (long) ckAttr.pValue;
-      if ((value & CKK_VENDOR_DEFINED) != 0L) {
-        ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
-      }
+      if ((value & CKK_VENDOR_DEFINED) != 0L) ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
     }
   }
 
@@ -1730,6 +1689,30 @@ public class Session {
       }
       attr.pValue = !allZeros;
     }
+  }
+
+  private static void checkParams(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) {
+    Functions.requireNonNull("in", in);
+    Functions.requireNonNull("out", out);
+    if (in.length < inOfs + inLen) throw new IllegalArgumentException("inOfs + inLen > in.length");
+    if (out.length < outOfs + outLen) throw new IllegalArgumentException("outOfs + outLen > out.length");
+  }
+
+  private static void checkInParams(byte[] in, int inOfs, int inLen) {
+    Functions.requireNonNull("in", in);
+    if (in.length < inOfs + inLen) throw new IllegalArgumentException("inOfs + inLen > in.length");
+  }
+
+  private static void checkOutParams(byte[] out, int outOfs, int outLen) {
+    Functions.requireNonNull("out", out);
+    if (out.length < outOfs + outLen) throw new IllegalArgumentException("outOfs + outLen > out.length");
+  }
+
+  private static TokenException evaluateInvocationTargetException(InvocationTargetException ex) {
+    Throwable cause = ex.getCause();
+    return (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception)
+        ? new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode())
+        : new TokenException("Error " + ex.getMessage(), ex);
   }
 
 }

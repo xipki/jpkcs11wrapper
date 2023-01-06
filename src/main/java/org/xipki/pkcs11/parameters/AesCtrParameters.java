@@ -63,11 +63,8 @@ public class AesCtrParameters implements Parameters {
   private byte[] cb;
 
   public AesCtrParameters(byte[] cb) {
-    Functions.requireNonNull("cb", cb);
-    if (cb.length != 16) {
-      throw new IllegalArgumentException("cb.length must be 16");
-    }
-    this.cb = cb;
+    this.cb = Functions.requireNonNull("cb", cb);
+    Functions.requireAmong("cb.length", cb.length, 16);
   }
 
   public byte[] getCb() {
@@ -80,12 +77,10 @@ public class AesCtrParameters implements Parameters {
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
-    return "  cb: " + Functions.toHex(cb);
+    return "Class: " + getClass().getName() + "\n  cb: " + Functions.toHex(cb);
   }
 
-  @Override
   public CK_AES_CTR_PARAMS getPKCS11ParamsObject() {
     return new CK_AES_CTR_PARAMS(cb);
   }

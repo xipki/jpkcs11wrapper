@@ -51,7 +51,7 @@ import sun.security.pkcs11.wrapper.CK_INFO;
  * @author Karl Scheibelhofer
  * @version 1.0
  */
-public class Info {
+public class ModuleInfo {
 
   /**
    * The module claims to be compliant to this version of PKCS#11.
@@ -79,7 +79,7 @@ public class Info {
    * @param ckInfo
    *          The info object as got from PKCS11.C_GetInfo().
    */
-  public Info(CK_INFO ckInfo) {
+  public ModuleInfo(CK_INFO ckInfo) {
     Functions.requireNonNull("ckInfo", ckInfo);
     cryptokiVersion = new Version(ckInfo.cryptokiVersion);
     manufacturerID = new String(ckInfo.manufacturerID);

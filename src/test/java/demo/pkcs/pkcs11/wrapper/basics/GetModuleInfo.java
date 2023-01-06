@@ -57,14 +57,14 @@ import static org.xipki.pkcs11.PKCS11Constants.CKF_TOKEN_INITIALIZED;
  * only public objects but no private objects; i.e. as defined in PKCS#11 for
  * public read-only sessions.
  */
-public class GetInfo extends TestBase {
+public class GetModuleInfo extends TestBase {
 
   @Test
   public void main() throws TokenException {
     PKCS11Module pkcs11Module = getModule();
-    Info info = pkcs11Module.getInfo();
+    ModuleInfo moduleInfo = pkcs11Module.getInfo();
     LOG.info("##################################################");
-    LOG.info("{}", info);
+    LOG.info("{}", moduleInfo);
     LOG.info("##################################################");
     LOG.info("getting list of all slots");
     Slot[] slots = pkcs11Module.getSlotList(false);

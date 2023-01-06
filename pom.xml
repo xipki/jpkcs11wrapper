@@ -11,10 +11,9 @@
   <groupId>org.xipki</groupId>
   <artifactId>jpkcs11wrapper</artifactId>
   <version>1.0.0-SNAPSHOT</version>
-  <packaging>bundle</packaging>
-  <name>PKCS#11 wrapper</name>
-  <description>PKCS#11 wrapper based on sunpkcs11</description>
   <properties>
+    <!--must match the version defined above-->
+    <bundle.version>1.0.0.SNAPSHOT</bundle.version>
     <test.excludes>**/*Speed.java</test.excludes>
     <test.junit.argline></test.junit.argline>
   </properties>
@@ -89,22 +88,17 @@
           <version>3.0.0</version>
         </plugin>
         <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>buildnumber-maven-plugin</artifactId>
-          <version>1.4</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.felix</groupId>
-          <artifactId>maven-bundle-plugin</artifactId>
-          <version>3.5.0</version>
-        </plugin>
-        <plugin>
           <artifactId>maven-clean-plugin</artifactId>
           <version>3.1.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.7.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.3.0</version>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
@@ -168,6 +162,22 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Export-Package>org.xipki.pkcs11,org.xipki.pkcs11.objects,org.xipki.pkcs11.parameters,iaik.pkcs.pkcs11.wrapper</Export-Package>
+              <Import-Package>sun.security.pkcs11.wrapper</Import-Package>
+              <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+              <Bundle-Name>jpkcs11wrapper</Bundle-Name>
+              <Bundle-SymbolicName>org.xipki.jpkcs11wrapper</Bundle-SymbolicName>
+              <Bundle-Version>${bundle.version}</Bundle-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <!--plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
         <executions>
           <execution>
@@ -177,40 +187,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Vendor>Lijun Liao (xipki.org)</Bundle-Vendor>
-            <Bundle-Build-Id>${buildNumber}</Bundle-Build-Id>
-            <Bundle-Description>${project.name}</Bundle-Description>
-            <Bundle-Build-Timestamp>${timestamp}</Bundle-Build-Timestamp>
-          </instructions>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>create</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <shortRevisionLength>8</shortRevisionLength>
-          <doCheck>false</doCheck>
-          <doUpdate>false</doUpdate>
-          <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
-          <revisionOnScmFailure>NO_GIT</revisionOnScmFailure>
-          <timestampFormat>{0,date,yyyy-MM-dd-HH:mm:ss}</timestampFormat>
-        </configuration>
-      </plugin>
+      </plugin-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>

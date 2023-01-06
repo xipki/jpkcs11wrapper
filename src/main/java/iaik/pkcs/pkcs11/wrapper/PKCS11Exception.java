@@ -59,8 +59,6 @@ import org.xipki.pkcs11.TokenException;
  */
 public class PKCS11Exception extends TokenException {
 
-  private static final long serialVersionUID = -5193259612747392211L;
-
   /**
    * The code of the error which was the reason for this exception.
    */

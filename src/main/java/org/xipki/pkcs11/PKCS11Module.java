@@ -74,7 +74,7 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  * All applications using this library will contain the following code.
  * <pre><code>
  *      PKCS11Module pkcs11Module = PKCS11Module.getInstance("cryptoki.dll");
- *      pkcs11Module.initialize(new DefaultInitializeArgs);
+ *      pkcs11Module.initialize();
  *
  *      // ... work with the module
  *
@@ -106,7 +106,7 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  * if the event occurred in the slot of interest and if there is really a token
  * present in the slot.
  *
- * @see Info
+ * @see ModuleInfo
  * @see Slot
  * @author Karl Scheibelhofer
  * @version 1.0
@@ -149,15 +149,12 @@ public class PKCS11Module {
   public static PKCS11Module getInstance(String pkcs11ModulePath) throws IOException {
     Functions.requireNonNull("pkcs11ModulePath", pkcs11ModulePath);
     File file = new File(pkcs11ModulePath);
-    if (!file.exists()) {
-      throw new IOException("File " + pkcs11ModulePath + " does not exist");
-    }
-    if (!file.isFile()) {
-      throw new IOException(pkcs11ModulePath + " is not a file");
-    }
-    if (!file.canRead()) {
-      throw new IOException("Can not read file " + pkcs11ModulePath + "");
-    }
+    if (!file.exists()) throw new IOException("File " + pkcs11ModulePath + " does not exist");
+
+    if (!file.isFile()) throw new IOException(pkcs11ModulePath + " is not a file");
+
+    if (!file.canRead()) throw new IOException("Can not read file " + pkcs11ModulePath + "");
+
     return new PKCS11Module(pkcs11ModulePath);
   }
 
@@ -176,10 +173,10 @@ public class PKCS11Module {
    * @exception TokenException
    *              If getting the information fails.
    */
-  public Info getInfo() throws TokenException {
+  public ModuleInfo getInfo() throws TokenException {
     assertInitialized();
     try {
-      return new Info(pkcs11.C_GetInfo());
+      return new ModuleInfo(pkcs11.C_GetInfo());
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex);
     }
@@ -189,33 +186,12 @@ public class PKCS11Module {
    * Initializes the module. The application must call this method before
    * calling any other method of the module.
    *
-   * @param initArgs
-   *          The initialization arguments for the module as defined in
-   *          PKCS#11. May be null.
    * @exception TokenException
    *              If initialization fails.
    */
-  public void initialize(InitializeArgs initArgs) throws TokenException {
-    if (initArgs == null) initArgs = new DefaultInitializeArgs();
-
-    final MutexHandler mutexHandler = initArgs.getMutexHandler();
+  public void initialize() throws TokenException {
     CK_C_INITIALIZE_ARGS wrapperInitArgs = new CK_C_INITIALIZE_ARGS();
-    if (mutexHandler == null) {
-      wrapperInitArgs.CreateMutex  = null;
-      wrapperInitArgs.DestroyMutex = null;
-      wrapperInitArgs.LockMutex    = null;
-      wrapperInitArgs.UnlockMutex  = null;
-    } else {
-      wrapperInitArgs.CreateMutex = () -> null;
-      wrapperInitArgs.DestroyMutex = pMutex -> {};
-      wrapperInitArgs.LockMutex = pMutex -> {};
-
-      wrapperInitArgs.UnlockMutex = pMutex -> {};
-    }
-
-    wrapperInitArgs.flags |= initArgs.isLibraryCantCreateOsThreads() ? CKF_LIBRARY_CANT_CREATE_OS_THREADS : 0;
-    wrapperInitArgs.flags |= initArgs.isOsLockingOk() ? CKF_OS_LOCKING_OK : 0;
-    wrapperInitArgs.pReserved = initArgs.getReserved();
+    wrapperInitArgs.flags |= CKF_OS_LOCKING_OK;
 
     // pReserved of CK_C_INITIALIZE_ARGS not used yet, just set to standard conform UTF8
     // pkcs11.C_Initialize(wrapperInitArgs, true);
@@ -242,10 +218,10 @@ public class PKCS11Module {
       }
     }
 
-    Info info = getInfo();
+    ModuleInfo moduleInfo = getInfo();
     try {
-      vendorCode = VendorCode.getVendorCode(pkcs11ModulePath, info.getManufacturerID(),
-          info.getLibraryDescription(), info.getLibraryVersion());
+      vendorCode = VendorCode.getVendorCode(pkcs11ModulePath, moduleInfo.getManufacturerID(),
+          moduleInfo.getLibraryDescription(), moduleInfo.getLibraryVersion());
     } catch (IOException e) {
       System.err.println("Error loading vendorcode: " + e.getMessage());
     }
@@ -337,10 +313,6 @@ public class PKCS11Module {
    *              If finalization fails.
    */
   public void finalize(Object args) throws TokenException {
-    if (pkcs11 == null) {
-      return;
-    }
-
     try {
       pkcs11.C_Finalize(args);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -349,9 +321,7 @@ public class PKCS11Module {
   }
 
   private void assertInitialized() {
-    if (pkcs11 == null) {
-      throw new IllegalStateException("Module not initialized yet, please call initialize() first");
-    }
+    if (pkcs11 == null) throw new IllegalStateException("Module not initialized yet, please call initialize() first");
   }
 
 }

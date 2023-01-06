@@ -109,7 +109,6 @@ public class LongAttribute extends Attribute {
     return present ? (sensitive ? "<Value is sensitive>" : getValueString(radix)) : "<Attribute not present>";
   }
 
-  @Override
   public void setValue(Object value) {
     longValue((Long) value);
   }

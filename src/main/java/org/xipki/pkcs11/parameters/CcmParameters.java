@@ -43,9 +43,8 @@ public class CcmParameters implements Parameters {
   }
 
   public CcmParameters(long dataLen, byte[] nonce, byte[] aad, long macLen) {
-    if (constructor == null) {
-      throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
-    }
+    if (constructor == null) throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
+
     this.dataLen = (int) dataLen;
     this.nonce = nonce;
     this.aad = aad;
@@ -56,13 +55,11 @@ public class CcmParameters implements Parameters {
     this.dataLen = (int) dataLen;
   }
 
-  @Override
   public String toString() {
-    return "\n  ulDataLen: " + dataLen + "\n  nonce: " + Functions.toHex(nonce) +
-        "\n  aad: " + Functions.toHex(aad) + "\n  macLen: " + macLen;
+    return "Class: " + getClass().getName() + "\n  ulDataLen: " + dataLen +
+        "\n  nonce: " + Functions.toHex(nonce) + "\n  aad: " + Functions.toHex(aad) + "\n  macLen: " + macLen;
   }
 
-  @Override
   public Object getPKCS11ParamsObject() {
     try {
       return constructor.newInstance(macLen, nonce, aad, dataLen);

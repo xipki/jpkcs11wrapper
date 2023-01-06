@@ -113,7 +113,6 @@ public class DateAttribute extends Attribute {
     return calendar.getTime();
   }
 
-  @Override
   public void setValue(Object value) {
     dateValue((Date) value);
   }

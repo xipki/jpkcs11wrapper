@@ -80,15 +80,9 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
     constructor = Util.getConstructor(clazz, String.class, String.class, String.class, int.class);
     constructorNoArgs = (constructor != null) ? null : Util.getConstructor(clazz);
 
-    if (constructorNoArgs != null) {
-      hashAlgField = Util.getField(clazz, "hashAlg");
-      mgfField = Util.getField(clazz, "mgf");
-      sLenField = Util.getField(clazz, "sLen");
-    } else {
-      hashAlgField = null;
-      mgfField = null;
-      sLenField = null;
-    }
+    hashAlgField = (constructorNoArgs == null) ? null : Util.getField(clazz, "hashAlg");
+    mgfField     = (constructorNoArgs == null) ? null : Util.getField(clazz, "mgf");
+    sLenField    = (constructorNoArgs == null) ? null : Util.getField(clazz, "sLen");
   }
 
   /**
@@ -118,7 +112,6 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
    *
    * @return This object as a CK_RSA_PKCS_PSS_PARAMS object.
    */
-  @Override
   public CK_RSA_PKCS_PSS_PARAMS getPKCS11ParamsObject() {
     if (constructorNoArgs != null) {
       try {
@@ -134,8 +127,7 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
       String hashAlgName = Functions.getHashAlgName(hashAlg);
       String mgfHashAlgName = Functions.getHashAlgName(mgf2HashAlgMap.get(mgf));
       try {
-        return (CK_RSA_PKCS_PSS_PARAMS) constructor.newInstance(
-            hashAlgName, "MGF1", mgfHashAlgName, (int) saltLength);
+        return (CK_RSA_PKCS_PSS_PARAMS) constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, (int) saltLength);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
