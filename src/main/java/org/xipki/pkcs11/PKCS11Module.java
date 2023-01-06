@@ -42,7 +42,6 @@
 
 package org.xipki.pkcs11;
 
-import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
 import sun.security.pkcs11.wrapper.*;
 
 import java.io.File;
@@ -143,8 +142,6 @@ public class PKCS11Module {
    * @return An instance of Module that is connected to the given PKCS#11 module.
    * @exception IOException
    *              If connecting to the named module fails.
-   * @preconditions (pkcs11ModuleName != null) and (pkcs11ModuleName is a valid PKCS#11 module name)
-   *
    */
   public static PKCS11Module getInstance(String pkcs11ModulePath) throws IOException {
     Functions.requireNonNull("pkcs11ModulePath", pkcs11ModulePath);
@@ -170,10 +167,10 @@ public class PKCS11Module {
    * Gets information about the module; i.e. the PKCS#11 module behind.
    *
    * @return An object holding information about the module.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If getting the information fails.
    */
-  public ModuleInfo getInfo() throws TokenException {
+  public ModuleInfo getInfo() throws PKCS11Exception {
     assertInitialized();
     try {
       return new ModuleInfo(pkcs11.C_GetInfo());
@@ -186,15 +183,12 @@ public class PKCS11Module {
    * Initializes the module. The application must call this method before
    * calling any other method of the module.
    *
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If initialization fails.
    */
   public void initialize() throws TokenException {
     CK_C_INITIALIZE_ARGS wrapperInitArgs = new CK_C_INITIALIZE_ARGS();
     wrapperInitArgs.flags |= CKF_OS_LOCKING_OK;
-
-    // pReserved of CK_C_INITIALIZE_ARGS not used yet, just set to standard conform UTF8
-    // pkcs11.C_Initialize(wrapperInitArgs, true);
 
     final String functionList = "C_GetFunctionList";
     final boolean omitInitialize = false;
@@ -236,10 +230,10 @@ public class PKCS11Module {
    * @param tokenPresent
    *          Whether only slots with present token are returned.
    * @return An array of Slot objects, may be an empty array but not null.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If error occurred.
    */
-  public Slot[] getSlotList(boolean tokenPresent) throws TokenException {
+  public Slot[] getSlotList(boolean tokenPresent) throws PKCS11Exception {
     assertInitialized();
     long[] slotIDs;
     try {
@@ -265,11 +259,11 @@ public class PKCS11Module {
    * @param dontBlock
    *          Can false (BLOCK) or true (DONT_BLOCK).
    * @return The slot for which an event occurred.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If the method was called with WaitingBehavior.DONT_BLOCK but
    *              there was no event available, or if an error occurred.
    *
-  public Slot waitForSlotEvent(boolean dontBlock) throws TokenException {
+  public Slot waitForSlotEvent(boolean dontBlock) throws PKCS11Exception {
     return new Slot(this, pkcs11.C_WaitForSlotEvent(dontBlock ? CKF_DONT_BLOCK : 0L, null));
   }
   */
@@ -309,10 +303,10 @@ public class PKCS11Module {
    *
    * @param args
    *          Must be null in version 2.x of PKCS#11.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If finalization fails.
    */
-  public void finalize(Object args) throws TokenException {
+  public void finalize(Object args) throws PKCS11Exception {
     try {
       pkcs11.C_Finalize(args);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {

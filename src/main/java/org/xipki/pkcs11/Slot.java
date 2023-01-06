@@ -42,7 +42,6 @@
 
 package org.xipki.pkcs11;
 
-import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
 import sun.security.pkcs11.wrapper.PKCS11;
 
 /**
@@ -139,10 +138,10 @@ public class Slot {
    * Get information about this slot object.
    *
    * @return An object that contains information about this slot.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If reading the information fails.
    */
-  public SlotInfo getSlotInfo() throws TokenException {
+  public SlotInfo getSlotInfo() throws PKCS11Exception {
     try {
       return new SlotInfo(module.getPKCS11().C_GetSlotInfo(slotID));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -156,10 +155,10 @@ public class Slot {
    *
    * @return The object for accessing the token. Or null, if none is present
    *         in this slot.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If determining whether a token is present fails.
    */
-  public Token getToken() throws TokenException {
+  public Token getToken() throws PKCS11Exception {
     return getSlotInfo().isTokenPresent() ? new Token(this) : null;
   }
 

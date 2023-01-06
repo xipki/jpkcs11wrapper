@@ -42,10 +42,6 @@
 
 package org.xipki.pkcs11;
 
-import iaik.pkcs.pkcs11.wrapper.PKCS11Exception;
-import sun.security.pkcs11.wrapper.CK_MECHANISM_INFO;
-
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,7 +65,7 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  *   if (!supportedMechanisms.contains(Mechanism.RSA_PKCS)) {
  *     System.out.print("This token does not support the RSA PKCS mechanism!");
  *     System.out.flush();
- *     throw new TokenException("RSA not supported!");
+ *     throw new PKCS11Exception("RSA not supported!");
  *   } else {
  *     MechanismInfo rsaMechanismInfo =
  *         token.getMechanismInfo(Mechanism.RSA_PKCS);
@@ -78,7 +74,7 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  *        System.out.print(
  *            "This token does not support RSA decryption according to PKCS!");
  *        System.out.flush();
- *        throw new TokenException("RSA signing not supported!");
+ *        throw new PKCS11Exception("RSA signing not supported!");
  *     }
  *   }
  * </code></pre>
@@ -148,10 +144,10 @@ public class Token {
    * Get information about this token.
    *
    * @return An object containing information about this token.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If reading the information fails.
    */
-  public TokenInfo getTokenInfo() throws TokenException {
+  public TokenInfo getTokenInfo() throws PKCS11Exception {
     try {
       return new TokenInfo(slot.getPKCS11().C_GetTokenInfo(slot.getSlotID()));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -159,7 +155,7 @@ public class Token {
     }
   }
 
-  public List<Long> getMechanismList2() throws TokenException {
+  public List<Long> getMechanismList2() throws PKCS11Exception {
     long[] values = getMechanismList();
     List<Long> list = new ArrayList<>(values.length);
     for (long value : values) {
@@ -175,10 +171,10 @@ public class Token {
    *
    * @return An array of Mechanism objects. Each describes a mechanism that
    *         this token can perform. This array may be empty but not null.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If reading the list of supported mechanisms fails.
    */
-  public long[] getMechanismList() throws TokenException {
+  public long[] getMechanismList() throws PKCS11Exception {
     long[] mechanisms;
     try {
       mechanisms = slot.getPKCS11().C_GetMechanismList(slot.getSlotID());
@@ -206,11 +202,11 @@ public class Token {
    * @param mechanism
    *          A mechanism that is supported by this token.
    * @return An information object about the concerned mechanism.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If reading the information fails, or if the mechanism is not
    *              supported by this token.
    */
-  public MechanismInfo getMechanismInfo(long mechanism) throws TokenException {
+  public MechanismInfo getMechanismInfo(long mechanism) throws PKCS11Exception {
     if ((mechanism & CKM_VENDOR_DEFINED) != 0L) {
       VendorCode vendorCode = slot.getModule().getVendorCode();
       if (vendorCode != null) mechanism = vendorCode.ckmGenericToVendor(mechanism);
@@ -233,10 +229,10 @@ public class Token {
    *          sessions or SessionReadWriteBehavior.RW_SESSION for read-write
    *          sessions.
    * @return The newly opened session.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If the session could not be opened.
    */
-  public Session openSession(boolean rwSession) throws TokenException {
+  public Session openSession(boolean rwSession) throws PKCS11Exception {
     return openSession(rwSession, null);
   }
 
@@ -253,10 +249,10 @@ public class Token {
    *          PKCS11Object to be supplied upon notify callback. May be null.
    *          (Not implemented yet!).
    * @return The newly opened session.
-   * @exception TokenException
+   * @exception PKCS11Exception
    *              If the session could not be opened.
    */
-  public Session openSession(boolean rwSession, Object application) throws TokenException {
+  public Session openSession(boolean rwSession, Object application) throws PKCS11Exception {
     long flags = rwSession ? CKF_SERIAL_SESSION | CKF_RW_SESSION : CKF_SERIAL_SESSION;
     long sessionHandle;
     try {

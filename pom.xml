@@ -166,7 +166,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Export-Package>org.xipki.pkcs11,org.xipki.pkcs11.objects,org.xipki.pkcs11.parameters,iaik.pkcs.pkcs11.wrapper</Export-Package>
+              <Export-Package>org.xipki.pkcs11,org.xipki.pkcs11.objects,org.xipki.pkcs11.parameters</Export-Package>
               <Import-Package>sun.security.pkcs11.wrapper</Import-Package>
               <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
               <Bundle-Name>jpkcs11wrapper</Bundle-Name>
