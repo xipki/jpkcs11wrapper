@@ -74,14 +74,6 @@ public class AesCtrParameters implements Parameters {
     return cb;
   }
 
-  public void setCb(byte[] cb) {
-    Functions.requireNonNull("cb", cb);
-    if (cb.length != 16) {
-      throw new IllegalArgumentException("cb.length must be 16");
-    }
-    this.cb = cb;
-  }
-
   /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.

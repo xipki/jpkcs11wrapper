@@ -76,7 +76,6 @@ public class InitializationVectorParameters implements Parameters {
    *
    * @return This object as a byte array.
    */
-  @Override
   public byte[] getPKCS11ParamsObject() {
     return iv;
   }
@@ -91,24 +90,13 @@ public class InitializationVectorParameters implements Parameters {
   }
 
   /**
-   * Set the initialization vector.
-   *
-   * @param iv
-   *          The initialization vector.
-   */
-  public void setInitializationVector(byte[] iv) {
-    this.iv = Functions.requireNonNull("iv", iv);
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
-    return "  Initialization Vector (hex): " + Functions.toHex(iv);
+    return "Class: " + getClass().getName() + "\n  IV: " + Functions.toHex(iv);
   }
 
 }

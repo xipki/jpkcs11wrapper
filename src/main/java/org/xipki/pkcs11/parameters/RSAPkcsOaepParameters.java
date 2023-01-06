@@ -82,10 +82,7 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
    */
   public RSAPkcsOaepParameters(long hashAlgorithm, long maskGenerationFunction, long source, byte[] sourceData) {
     super(hashAlgorithm, maskGenerationFunction);
-    if ((source != 0) && (source != CKZ_SALT_SPECIFIED)) {
-      throw new IllegalArgumentException("Illegal value for argument 'source': " + Functions.ckzCodeToName(source));
-    }
-    this.source = source;
+    this.source = Functions.requireAmong("source", source, 0, CKZ_SALT_SPECIFIED);
     this.sourceData = sourceData;
   }
 
@@ -95,7 +92,6 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
    *
    * @return This object as a CK_RSA_PKCS_OAEP_PARAMS object.
    */
-  @Override
   public CK_RSA_PKCS_OAEP_PARAMS getPKCS11ParamsObject() {
     CK_RSA_PKCS_OAEP_PARAMS params = new CK_RSA_PKCS_OAEP_PARAMS();
 
@@ -126,36 +122,11 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
   }
 
   /**
-   * Set the source of the encoding parameter. One of the constants defined in
-   * the SourceType interface.
-   *
-   * @param source
-   *          The source of the encoding parameter.
-   */
-  public void setSource(long source) {
-    if ((source != 0) && (source != CKZ_SALT_SPECIFIED)) {
-      throw new IllegalArgumentException("Illegal value for argument 'source': " + Functions.ckzCodeToName(source));
-    }
-    this.source = source;
-  }
-
-  /**
-   * Set the data used as the input for the encoding parameter source.
-   *
-   * @param sourceData
-   *          The data used as the input for the encoding parameter source.
-   */
-  public void setSourceData(byte[] sourceData) {
-    this.sourceData = sourceData;
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
     return super.toString() + "\n  Source: " + Functions.ckzCodeToName(source)
         + "\n  Source Data (hex): " + Functions.toHex(sourceData);

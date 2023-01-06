@@ -82,7 +82,6 @@ public class X942DH1KeyDerivationParameters extends DHKeyDerivationParameters {
    *
    * @return This object as a CK_X9_42_DH1_DERIVE_PARAMS object.
    */
-  @Override
   public CK_X9_42_DH1_DERIVE_PARAMS getPKCS11ParamsObject() {
     CK_X9_42_DH1_DERIVE_PARAMS params = new CK_X9_42_DH1_DERIVE_PARAMS();
 
@@ -103,22 +102,11 @@ public class X942DH1KeyDerivationParameters extends DHKeyDerivationParameters {
   }
 
   /**
-   * Set the data shared between the two parties.
-   *
-   * @param otherInfo
-   *          The data shared between the two parties.
-   */
-  public void setOtherInfo(byte[] otherInfo) {
-    this.otherInfo = otherInfo;
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
     return super.toString() + "\n  Other Info: " + Functions.toHex(otherInfo);
   }

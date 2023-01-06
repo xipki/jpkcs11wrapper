@@ -66,7 +66,7 @@ public class DHPkcsDeriveParameters implements Parameters {
    *          protocol.
    */
   public DHPkcsDeriveParameters(byte[] publicValue) {
-    this.publicValue = publicValue;
+    this.publicValue = Functions.requireNonNull("publicValue", publicValue);
   }
 
   /**
@@ -74,7 +74,6 @@ public class DHPkcsDeriveParameters implements Parameters {
    *
    * @return This object as a byte array.
    */
-  @Override
   public byte[] getPKCS11ParamsObject() {
     return publicValue;
   }
@@ -90,25 +89,13 @@ public class DHPkcsDeriveParameters implements Parameters {
   }
 
   /**
-   * Set the public value of the other party in the key agreement protocol.
-   *
-   * @param publicValue
-   *          The public value of the other party in the key agreement
-   *          protocol.
-   */
-  public void setPublicValue(byte[] publicValue) {
-    this.publicValue = Functions.requireNonNull("publicValue", publicValue);
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
-    return "  Public Value (hex): " + Functions.toHex(publicValue);
+    return "Class: " + getClass().getName() + "\n  Public Value: " + Functions.toHex(publicValue);
   }
 
 }

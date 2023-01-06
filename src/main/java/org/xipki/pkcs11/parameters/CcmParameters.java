@@ -26,8 +26,6 @@ import java.lang.reflect.Constructor;
  * CK_CCM_PARAMS
  *
  * @author Lijun Liao
- * @since 1.4.5
- *
  */
 public class CcmParameters implements Parameters {
 
@@ -54,8 +52,8 @@ public class CcmParameters implements Parameters {
     this.macLen = (int) Functions.requireAmong("macLen", macLen, 4, 6, 8, 10, 12, 14, 16);
   }
 
-  public void setDataLen(int dataLen) {
-    this.dataLen = dataLen;
+  public void setDataLen(long dataLen) {
+    this.dataLen = (int) dataLen;
   }
 
   @Override

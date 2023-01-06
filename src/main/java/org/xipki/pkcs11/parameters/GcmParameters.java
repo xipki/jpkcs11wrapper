@@ -26,8 +26,6 @@ import java.lang.reflect.Constructor;
  * CK_CCM_PARAMS
  *
  * @author Lijun Liao
- * @since 1.4.5
- *
  */
 public class GcmParameters implements Parameters {
 
@@ -43,18 +41,14 @@ public class GcmParameters implements Parameters {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class);
   }
 
-  public GcmParameters(byte[] iv, byte[] aad, int tagBits) {
+  public GcmParameters(byte[] iv, byte[] aad, long tagBits) {
     if (constructor == null) {
       throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
     }
 
     this.iv = iv;
     this.aad = aad;
-    this.tagBits = tagBits;
-  }
-
-  public String toString() {
-    return "\n  iv: " + Functions.toHex(iv) + "\n  aad: " + Functions.toHex(aad) + "\n  tagBits: " + tagBits;
+    this.tagBits = (int) tagBits;
   }
 
   @Override
@@ -66,4 +60,16 @@ public class GcmParameters implements Parameters {
     }
   }
 
+  /**
+   * Returns the string representation of this object. Do not parse data from this string, it is for
+   * debugging only.
+   *
+   * @return A string representation of this object.
+   */
+  public String toString() {
+    return "Class: " + getClass().getName() + "\n   IV: " + Functions.toHex(iv) +
+        "\n  AAD: " + (aad == null ? " " : Functions.toHex(aad)) + "\n   TagBits: " + tagBits;
+  }
+
 }
+

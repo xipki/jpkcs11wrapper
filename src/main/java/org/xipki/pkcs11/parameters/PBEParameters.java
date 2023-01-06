@@ -101,7 +101,6 @@ public class PBEParameters implements Parameters {
    *
    * @return This object as a CK_PBE_PARAMS object.
    */
-  @Override
   public CK_PBE_PARAMS getPKCS11ParamsObject() {
     CK_PBE_PARAMS params = new CK_PBE_PARAMS();
 
@@ -150,60 +149,15 @@ public class PBEParameters implements Parameters {
   }
 
   /**
-   * Set the 8-byte initialization vector (IV), if an IV is required.
-   *
-   * @param iv
-   *          The 8-byte initialization vector (IV), if an IV is required.
-   */
-  public void setInitializationVector(char[] iv) {
-    if ((iv != null) && (iv.length != 8)) {
-      throw new IllegalArgumentException("Argument 'iv' must be null or must have length 8, if it is not null.");
-    }
-    this.iv = iv;
-  }
-
-  /**
-   * Set the password to be used in the PBE key generation.
-   *
-   * @param password
-   *          The password to be used in the PBE key generation.
-   */
-  public void setPassword(char[] password) {
-    this.password = Functions.requireNonNull("password", password);
-  }
-
-  /**
-   * Set the salt to be used in the PBE key generation.
-   *
-   * @param salt
-   *          The salt to be used in the PBE key generation.
-   */
-  public void setSalt(char[] salt) {
-    this.salt = Functions.requireNonNull("salt", salt);
-  }
-
-  /**
-   * Set the number of iterations required for the generation.
-   *
-   * @param iterations
-   *          The number of iterations required for the generation.
-   */
-  public void setIterations(long iterations) {
-    this.iterations = iterations;
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
-    return "  IV: " + ((iv != null) ? new String(iv) : null) +
-        "\n  Password: " + ((password != null) ? new String(password) : null) +
-        "\n  Salt: " + ((salt != null) ? new String(salt) : null) +
-        "\n  Iterations (dec): " + iterations;
+    return "Class: " + getClass().getName() + "\n  IV: " + (iv != null ? new String(iv) : null) +
+        "\n  Password: " + (password != null ? new String(password) : null) +
+        "\n  Salt: " + (salt != null ? new String(salt) : null) + "\n  Iterations (dec): " + iterations;
   }
 
 }

@@ -206,33 +206,11 @@ public class PKCS11Module {
       wrapperInitArgs.LockMutex    = null;
       wrapperInitArgs.UnlockMutex  = null;
     } else {
-      wrapperInitArgs.CreateMutex = new CK_CREATEMUTEX() {
-        @Override
-        public Object CK_CREATEMUTEX() throws sun.security.pkcs11.wrapper.PKCS11Exception {
-          return null;
-        }
-      };
+      wrapperInitArgs.CreateMutex = () -> null;
+      wrapperInitArgs.DestroyMutex = pMutex -> {};
+      wrapperInitArgs.LockMutex = pMutex -> {};
 
-      wrapperInitArgs.DestroyMutex = new CK_DESTROYMUTEX() {
-        @Override
-        public void CK_DESTROYMUTEX(Object pMutex) throws sun.security.pkcs11.wrapper.PKCS11Exception {
-
-        }
-      };
-
-      wrapperInitArgs.LockMutex = new CK_LOCKMUTEX() {
-        @Override
-        public void CK_LOCKMUTEX(Object pMutex) throws sun.security.pkcs11.wrapper.PKCS11Exception {
-
-        }
-      };
-
-      wrapperInitArgs.UnlockMutex = new CK_UNLOCKMUTEX() {
-        @Override
-        public void CK_UNLOCKMUTEX(Object pMutex) throws sun.security.pkcs11.wrapper.PKCS11Exception {
-
-        }
-      };
+      wrapperInitArgs.UnlockMutex = pMutex -> {};
     }
 
     wrapperInitArgs.flags |= initArgs.isLibraryCantCreateOsThreads() ? CKF_LIBRARY_CANT_CREATE_OS_THREADS : 0;

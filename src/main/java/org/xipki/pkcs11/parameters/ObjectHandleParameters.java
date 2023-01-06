@@ -58,11 +58,11 @@ public class ObjectHandleParameters implements Parameters {
   /**
    * Create a new ObjectHandleParameters object using the given object.
    *
-   * @param object
+   * @param objectHandle
    *          The PKCS#11 object whose handle to use.
    */
-  public ObjectHandleParameters(long object) {
-    this.objectHandle = object;
+  public ObjectHandleParameters(long objectHandle) {
+    this.objectHandle = objectHandle;
   }
 
   /**
@@ -71,7 +71,6 @@ public class ObjectHandleParameters implements Parameters {
    *
    * @return This object as a Long object.
    */
-  @Override
   public Long getPKCS11ParamsObject() {
     return objectHandle;
   }
@@ -86,24 +85,13 @@ public class ObjectHandleParameters implements Parameters {
   }
 
   /**
-   * Set the PKCS#11 object.
-   *
-   * @param objectHandle
-   *          The PKCS#11 object.
-   */
-  public void setObjectHandle(long objectHandle) {
-    this.objectHandle = objectHandle;
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
-    return "  PKCS11Object: " + objectHandle;
+    return "Class: " + getClass().getName() + "\n  PKCS11Object: " + objectHandle;
   }
 
 }

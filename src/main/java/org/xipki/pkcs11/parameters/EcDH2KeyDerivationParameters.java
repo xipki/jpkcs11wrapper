@@ -107,7 +107,6 @@ public class EcDH2KeyDerivationParameters extends DHKeyDerivationParameters {
    *
    * @return This object as a CK_ECDH2_DERIVE_PARAMS object.
    */
-  @Override
   public CK_ECDH2_DERIVE_PARAMS getPKCS11ParamsObject() {
     CK_ECDH2_DERIVE_PARAMS params = new CK_ECDH2_DERIVE_PARAMS();
 
@@ -128,16 +127,6 @@ public class EcDH2KeyDerivationParameters extends DHKeyDerivationParameters {
    */
   public byte[] getSharedData() {
     return sharedData;
-  }
-
-  /**
-   * Set the data shared between the two parties.
-   *
-   * @param sharedData
-   *          The data shared between the two parties.
-   */
-  public void setSharedData(byte[] sharedData) {
-    this.sharedData = sharedData;
   }
 
   /**
@@ -168,42 +157,11 @@ public class EcDH2KeyDerivationParameters extends DHKeyDerivationParameters {
   }
 
   /**
-   * Set the key for the second EC private key value.
-   *
-   * @param privateDataHandle
-   *          The key for the second EC private key value.
-   */
-  public void setPrivateDataHandle(long privateDataHandle) {
-    this.privateDataHandle = privateDataHandle;
-  }
-
-  /**
-   * Set the length in bytes of the second EC private key.
-   *
-   * @param privateDataLength
-   *          The length in bytes of the second EC private key.
-   */
-  public void setPrivateDataLength(long privateDataLength) {
-    this.privateDataLength = privateDataLength;
-  }
-
-  /**
-   * Set the other party's second EC public key value.
-   *
-   * @param publicData2
-   *          The other party's second EC public key value.
-   */
-  public void setPublicData2(byte[] publicData2) {
-    this.publicData2 = Functions.requireNonNull("publicData2", publicData2);
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *
    * @return A string representation of this object.
    */
-  @Override
   public String toString() {
     return super.toString() +
         "\n  Shared Data: " + Functions.toHex(sharedData) + "\n  Private Data Length (dec): " + privateDataLength +
