@@ -58,20 +58,20 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
 
   public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_RSA_PKCS_PSS_PARAMS";
 
-  private static Constructor<?> constructor;
+  private static final Constructor<?> constructor;
 
-  private static Constructor<?> constructorNoArgs;
+  private static final Constructor<?> constructorNoArgs;
 
-  private static Field hashAlgField;
+  private static final Field hashAlgField;
 
-  private static Field mgfField;
+  private static final Field mgfField;
 
-  private static Field sLenField;
+  private static final Field sLenField;
 
   /**
    * The length of the salt value in octets.
    */
-  private int saltLength;
+  private final int saltLength;
 
   static {
     Class<?> clazz = Util.getClass(CLASS_CK_PARAMS);
@@ -83,6 +83,12 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
       hashAlgField = (constructorNoArgs == null) ? null : Util.getField(clazz, "hashAlg");
       mgfField = (constructorNoArgs == null) ? null : Util.getField(clazz, "mgf");
       sLenField = (constructorNoArgs == null) ? null : Util.getField(clazz, "sLen");
+    } else {
+      constructor = null;
+      constructorNoArgs = null;
+      hashAlgField = null;
+      mgfField = null;
+      sLenField = null;
     }
   }
 

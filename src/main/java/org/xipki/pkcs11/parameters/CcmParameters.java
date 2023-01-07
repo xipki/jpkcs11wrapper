@@ -17,8 +17,8 @@
 
 package org.xipki.pkcs11.parameters;
 
-import org.xipki.pkcs11.Util;
 import org.xipki.pkcs11.Functions;
+import org.xipki.pkcs11.Util;
 
 import java.lang.reflect.Constructor;
 

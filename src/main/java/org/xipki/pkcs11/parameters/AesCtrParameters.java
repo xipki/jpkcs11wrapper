@@ -35,7 +35,7 @@ import sun.security.pkcs11.wrapper.CK_AES_CTR_PARAMS;
  */
 public class AesCtrParameters implements Parameters {
 
-  private byte[] cb;
+  private final byte[] cb;
 
   public AesCtrParameters(byte[] cb) {
     this.cb = Functions.requireNonNull("cb", cb);

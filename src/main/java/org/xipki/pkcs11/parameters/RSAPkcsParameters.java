@@ -65,12 +65,12 @@ abstract public class RSAPkcsParameters implements Parameters {
    * The message digest algorithm used to calculate the digest of the encoding
    * parameter.
    */
-  protected long hashAlg;
+  protected final long hashAlg;
 
   /**
    * The mask to apply to the encoded block.
    */
-  protected long mgf;
+  protected final long mgf;
 
   static {
     Map<Long, Long> map = new HashMap<>();

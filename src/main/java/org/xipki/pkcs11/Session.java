@@ -1441,7 +1441,7 @@ public class Session {
   public Long getLongAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     LongAttribute attr = new LongAttribute(attributeType);
     getAttrValue(objectHandle, attr);
-    return attr.getLongValue();
+    return attr.getValue();
   }
 
   public Long[] getLongAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
@@ -1456,7 +1456,7 @@ public class Session {
     Long[] ret = new Long[attributeTypes.length];
     idx = 0;
     for (LongAttribute attr : attrs) {
-      ret[idx++] = attr.getLongValue();
+      ret[idx++] = attr.getValue();
     }
     return ret;
   }
@@ -1464,7 +1464,7 @@ public class Session {
   public String getStringAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     CharArrayAttribute attr = new CharArrayAttribute(attributeType);
     getAttrValue(objectHandle, attr);
-    return attr.getStringValue();
+    return attr.getValue();
   }
 
   public String[] getStringAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
@@ -1479,7 +1479,7 @@ public class Session {
     String[] ret = new String[attributeTypes.length];
     idx = 0;
     for (CharArrayAttribute attr : attrs) {
-      ret[idx++] = attr.getStringValue();
+      ret[idx++] = attr.getValue();
     }
     return ret;
   }
@@ -1501,7 +1501,7 @@ public class Session {
   public byte[] getByteArrayAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     ByteArrayAttribute attr = new ByteArrayAttribute(attributeType);
     getAttrValue(objectHandle, attr);
-    return attr.getByteArrayValue();
+    return attr.getValue();
   }
 
   public byte[][] getByteArrayAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
@@ -1516,7 +1516,7 @@ public class Session {
     byte[][] ret = new byte[attributeTypes.length][];
     idx = 0;
     for (ByteArrayAttribute attr : attrs) {
-      ret[idx++] = attr.getByteArrayValue();
+      ret[idx++] = attr.getValue();
     }
     return ret;
   }
@@ -1524,7 +1524,7 @@ public class Session {
   public Boolean getBooleanAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     BooleanAttribute attr = new BooleanAttribute(attributeType);
     getAttrValue(objectHandle, attr);
-    return attr.getBooleanValue();
+    return attr.getValue();
   }
 
   public Boolean[] getBooleanAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
@@ -1539,7 +1539,7 @@ public class Session {
     Boolean[] ret = new Boolean[attributeTypes.length];
     idx = 0;
     for (BooleanAttribute attr : attrs) {
-      ret[idx++] = attr.getBooleanValue();
+      ret[idx++] = attr.getValue();
     }
     return ret;
   }
@@ -1564,20 +1564,40 @@ public class Session {
     return getLongAttrValue(objectHandle, CKA_CERTIFICATE_TYPE);
   }
 
+  public Object getAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
+    Attribute attr = Attribute.getInstance(attributeType);
+    getAttrValue(objectHandle, attr);
+    return attr.getValue();
+  }
+
+  public Object[] getAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
+    final int n = attributeTypes.length;
+    Attribute[] attrs = new Attribute[n];
+    for (int i = 0; i < n; i++) {
+      attrs[i] = Attribute.getInstance(attributeTypes[i]);
+    }
+    getAttrValues(objectHandle, attrs);
+    Object[] attrValues = new Object[n];
+    for (int i = 0; i < n; i++) {
+      attrValues[i] = attrs[i].getValue();
+    }
+    return attrValues;
+  }
+
   /**
-   * This method reads the attributes at once. This can lead  to performance
-   * improvements. If reading all attributes at once fails, it tries to read
-   * each attributes individually.
-   *
-   * @param objectHandle
-   *          The handle of the object which contains the attributes.
-   * @param attributes
-   *          The objects specifying the attribute types
-   *          (see {@link Attribute#getType()}) and receiving the attribute
-   *          values (see {@link Attribute#ckAttribute(CK_ATTRIBUTE)}).
-   * @exception PKCS11Exception
-   *              If getting the attributes failed.
-   */
+     * This method reads the attributes at once. This can lead  to performance
+     * improvements. If reading all attributes at once fails, it tries to read
+     * each attributes individually.
+     *
+     * @param objectHandle
+     *          The handle of the object which contains the attributes.
+     * @param attributes
+     *          The objects specifying the attribute types
+     *          (see {@link Attribute#getType()}) and receiving the attribute
+     *          values (see {@link Attribute#ckAttribute(CK_ATTRIBUTE)}).
+     * @exception PKCS11Exception
+     *              If getting the attributes failed.
+     */
   public void getAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
     Functions.requireNonNull("attributes", attributes);
 
@@ -1620,7 +1640,7 @@ public class Session {
     delayedEx = null;
     for (Attribute attr : attributes) {
       try {
-        getAttrValue(objectHandle, attr, true);
+        getAttrValue(objectHandle, attr);
       } catch (PKCS11Exception ex) {
         if (delayedEx == null) delayedEx = ex;
       }
@@ -1654,11 +1674,6 @@ public class Session {
    *              If getting the attribute failed.
    */
   public void getAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
-    getAttrValue(objectHandle, attribute, true);
-  }
-
-  public void getAttrValue(long objectHandle, Attribute attribute, boolean ignoreParsableException)
-      throws PKCS11Exception {
     attribute.stateKnown(false).present(false);
 
     try {
@@ -1678,17 +1693,14 @@ public class Session {
         // we can ignore this and proceed; e.g. a v2.01 module won't
         // have the object ID attribute
         attribute.stateKnown(true).present(false).getCkAttribute().pValue = null;
-        if (!ignoreParsableException) throw new PKCS11Exception(ex);
       } else if (ec == CKR_ATTRIBUTE_SENSITIVE) {
         // this means, that some requested attributes are missing, but
         // we can ignore this and proceed; e.g. a v2.01 module won't
         // have the object ID attribute
         attribute.getCkAttribute().pValue = null;
         attribute.stateKnown(true).present(true).sensitive(true).getCkAttribute().pValue = null;
-        if (!ignoreParsableException) throw new PKCS11Exception(ex);
       } else if (ec == CKR_ARGUMENTS_BAD || ec == CKR_FUNCTION_FAILED || ec == CKR_FUNCTION_REJECTED) {
         attribute.stateKnown(true).present(false).sensitive(false).getCkAttribute().pValue = null;
-        if (!ignoreParsableException) throw new PKCS11Exception(ex);
       } else {
         // there was a different error that we should propagate
         throw new PKCS11Exception(ex);

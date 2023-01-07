@@ -58,12 +58,12 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
   /**
    * The source of the encoding parameter.
    */
-  private long source;
+  private final long source;
 
   /**
    * The data used as the input for the encoding parameter source.
    */
-  private byte[] sourceData;
+  private final byte[] sourceData;
 
   /**
    * Create a new RSAPkcsOaepParameters object with the given attributes.

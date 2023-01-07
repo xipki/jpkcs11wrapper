@@ -42,8 +42,8 @@
 
 package org.xipki.pkcs11.parameters;
 
-import sun.security.pkcs11.wrapper.CK_VERSION;
 import org.xipki.pkcs11.Version;
+import sun.security.pkcs11.wrapper.CK_VERSION;
 
 /**
  * This class is used for the Mechanism.SSL3_PRE_MASTER_KEY_GEN.

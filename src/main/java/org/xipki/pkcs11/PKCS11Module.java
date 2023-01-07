@@ -42,14 +42,15 @@
 
 package org.xipki.pkcs11;
 
-import sun.security.pkcs11.wrapper.*;
+import sun.security.pkcs11.wrapper.CK_C_INITIALIZE_ARGS;
+import sun.security.pkcs11.wrapper.PKCS11;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Method;
 
-import static org.xipki.pkcs11.PKCS11Constants.*;
+import static org.xipki.pkcs11.PKCS11Constants.CKF_OS_LOCKING_OK;
 
 /**
  * <B>Caution:
