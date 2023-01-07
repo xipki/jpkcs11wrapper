@@ -113,8 +113,4 @@ public class DateAttribute extends Attribute {
     return calendar.getTime();
   }
 
-  public void setValue(Object value) {
-    dateValue((Date) value);
-  }
-
 }
