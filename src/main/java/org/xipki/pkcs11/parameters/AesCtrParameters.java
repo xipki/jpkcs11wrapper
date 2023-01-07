@@ -42,10 +42,6 @@ public class AesCtrParameters implements Parameters {
     Functions.requireAmong("cb.length", cb.length, 16);
   }
 
-  public byte[] getCb() {
-    return cb;
-  }
-
   /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.

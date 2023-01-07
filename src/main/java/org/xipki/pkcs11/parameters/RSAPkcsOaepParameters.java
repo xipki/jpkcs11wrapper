@@ -104,24 +104,6 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
   }
 
   /**
-   * Get the source of the encoding parameter.
-   *
-   * @return The source of the encoding parameter.
-   */
-  public long getSource() {
-    return source;
-  }
-
-  /**
-   * Get the data used as the input for the encoding parameter source.
-   *
-   * @return The data used as the input for the encoding parameter source.
-   */
-  public byte[] getSourceData() {
-    return sourceData;
-  }
-
-  /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
    *

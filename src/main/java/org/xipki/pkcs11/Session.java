@@ -1378,8 +1378,6 @@ public class Session {
       return new CK_MECHANISM(code, ((DHPkcsDeriveParameters) params).getPKCS11ParamsObject());
     } else if (params instanceof EcDH1KeyDerivationParameters) {
       return new CK_MECHANISM(code, ((EcDH1KeyDerivationParameters) params).getPKCS11ParamsObject());
-    } else if (params instanceof EcDH2KeyDerivationParameters) {
-//      return new CK_MECHANISM(code, ((EcDH2KeyDerivationParameters) params).getPKCS11ParamsObject());
     } else if (params instanceof ExtractParameters) {
       return new CK_MECHANISM(code, ((ExtractParameters) params).getPKCS11ParamsObject());
     } else if (params instanceof InitializationVectorParameters) {
@@ -1390,10 +1388,6 @@ public class Session {
       return new CK_MECHANISM(code, ((ObjectHandleParameters) params).getPKCS11ParamsObject());
     } else if (params instanceof OpaqueParameters) {
       return new CK_MECHANISM(code, ((OpaqueParameters) params).getPKCS11ParamsObject());
-    } else if (params instanceof PBEParameters) {
-//      return new CK_MECHANISM(code, ((PBEParameters) params).getPKCS11ParamsObject());
-    } else if (params instanceof PKCS5PBKD2Parameters) {
-//      return new CK_MECHANISM(code, ((PKCS5PBKD2Parameters) params).getPKCS11ParamsObject());
     } else if (params instanceof RSAPkcsOaepParameters) {
 //      return new CK_MECHANISM(code, ((RSAPkcsOaepParameters) params).getPKCS11ParamsObject());
     } else if (params instanceof RSAPkcsPssParameters) {
@@ -1413,10 +1407,6 @@ public class Session {
       return mech;
     } else if (params instanceof VersionParameters) {
       return new CK_MECHANISM(code, ((VersionParameters)params).getPKCS11ParamsObject());
-    } else if (params instanceof X942DH1KeyDerivationParameters) {
-//      return new CK_MECHANISM(code, params.getPKCS11ParamsObject());
-    } else if (params instanceof X942DH2KeyDerivationParameters) {
-//      return new CK_MECHANISM(code, params.getPKCS11ParamsObject());
     } else {
       Constructor<?> constructor = (params instanceof CcmParameters) ? constructor_CK_MECHANISM_CCM
           : (params instanceof GcmParameters) ? constructor_CK_MECHANISM_GCM : null;
