@@ -323,12 +323,11 @@ public class Session {
   /**
    * Create a new object on the token (or in the session). The application must provide a template
    * that holds enough information to create a certain object. For instance, if the application
-   * wants to create a new DES key object it creates a new instance of the AttributeVector class to
+   * wants to create a new DES key object it creates a new instance of the AttributesTemplate class to
    * serve as a template. The application must set all attributes of this new object which are
    * required for the creation of such an object on the token. Then it passes this DESSecretKey
    * object to this method to create the object on the token. Example: <code>
-   *   AttributeVector desKeyTemplate = new AttributeVector()
-   *       .class_(CKO_SECRET_KEY).keytype(CKK_DES3);
+   *   AttributesTemplate desKeyTemplate = new AttributesTemplate().newSecretKey(CKK_DES3);
    *   // the key type is set by the DESSecretKey's constructor, so you need not do it
    *   desKeyTemplate.value(myDesKeyValueAs8BytesLongByteArray)
    *     .token(true)
@@ -336,7 +335,7 @@ public class Session {
    *     .encrypt(true);
    *     .decrypt(true);
    *   ...
-   *   DESSecretKey theCreatedDESKeyObject = (DESSecretKey) userSession.createObject(desKeyTemplate);
+   *   long theCreatedDESKeyObjectHandle = userSession.createObject(desKeyTemplate);
    * </code> Refer to the PKCS#11 standard to find out what attributes must be set for certain types
    * of objects to create them on the token.
    *
@@ -350,7 +349,7 @@ public class Session {
    *              If the creation of the new object fails. If it fails, the no new object was
    *              created on the token.
    */
-  public long createObject(AttributeVector template) throws PKCS11Exception {
+  public long createObject(AttributesTemplate template) throws PKCS11Exception {
     try {
       return pkcs11.C_CreateObject(sessionHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -374,7 +373,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If copying the object fails for some reason.
    */
-  public long copyObject(long sourceObjectHandle, AttributeVector template) throws PKCS11Exception {
+  public long copyObject(long sourceObjectHandle, AttributesTemplate template) throws PKCS11Exception {
     try {
       return pkcs11.C_CopyObject(sessionHandle, sourceObjectHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -400,7 +399,7 @@ public class Session {
    *              If updateing the attributes fails. All or no attributes are updated.
    *
    */
-  public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws PKCS11Exception {
+  public void setAttributeValues(long objectToUpdateHandle, AttributesTemplate template) throws PKCS11Exception {
     try {
       pkcs11.C_SetAttributeValue(sessionHandle, objectToUpdateHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -438,7 +437,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If initializing the find operation fails.
    */
-  public void findObjectsInit(AttributeVector template) throws PKCS11Exception {
+  public void findObjectsInit(AttributesTemplate template) throws PKCS11Exception {
     try {
       pkcs11.C_FindObjectsInit(sessionHandle, template == null ? null : toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1202,7 +1201,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If generating a new secret key or domain parameters failed.
    */
-  public long generateKey(Mechanism mechanism, AttributeVector template) throws PKCS11Exception {
+  public long generateKey(Mechanism mechanism, AttributesTemplate template) throws PKCS11Exception {
     try {
       return pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1228,8 +1227,8 @@ public class Session {
    * @exception PKCS11Exception
    *              If generating a new key-pair failed.
    */
-  public KeyPair generateKeyPair(Mechanism mechanism, AttributeVector publicKeyTemplate,
-                                 AttributeVector privateKeyTemplate) throws PKCS11Exception {
+  public PKCS11KeyPair generateKeyPair(Mechanism mechanism, AttributesTemplate publicKeyTemplate,
+                                       AttributesTemplate privateKeyTemplate) throws PKCS11Exception {
     long[] objectHandles;
     try {
       objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
@@ -1238,7 +1237,7 @@ public class Session {
       throw new PKCS11Exception(ex);
     }
 
-    return new KeyPair(objectHandles[0], objectHandles[1]);
+    return new PKCS11KeyPair(objectHandles[0], objectHandles[1]);
   }
 
   /**
@@ -1280,7 +1279,7 @@ public class Session {
    *              If unwrapping the key or creating a new key object failed.
    */
   public long unwrapKey(Mechanism mechanism, long unwrappingKeyHandle,
-                        byte[] wrappedKey, AttributeVector keyTemplate) throws PKCS11Exception {
+                        byte[] wrappedKey, AttributesTemplate keyTemplate) throws PKCS11Exception {
     Functions.requireNonNull("wrappedKey", wrappedKey);
 
     try {
@@ -1309,7 +1308,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If deriving the key or creating a new key object failed.
    */
-  public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws PKCS11Exception {
+  public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributesTemplate template) throws PKCS11Exception {
     CK_MECHANISM ckMechanism = toCkMechanism(mechanism);
 
     try {
@@ -1522,6 +1521,49 @@ public class Session {
     return ret;
   }
 
+  public Boolean getBooleanAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
+    BooleanAttribute attr = new BooleanAttribute(attributeType);
+    getAttrValue(objectHandle, attr);
+    return attr.getBooleanValue();
+  }
+
+  public Boolean[] getBooleanAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
+    BooleanAttribute[] attrs = new BooleanAttribute[attributeTypes.length];
+    int idx = 0;
+    for (long attrType : attributeTypes) {
+      attrs[idx++] = new BooleanAttribute(attrType);
+    }
+
+    getAttrValues(objectHandle, attrs);
+
+    Boolean[] ret = new Boolean[attributeTypes.length];
+    idx = 0;
+    for (BooleanAttribute attr : attrs) {
+      ret[idx++] = attr.getBooleanValue();
+    }
+    return ret;
+  }
+
+  public String getCkaLabel(long objectHandle) throws PKCS11Exception {
+    return getStringAttrValue(objectHandle, CKA_LABEL);
+  }
+
+  public byte[] getCkaId(long objectHandle) throws PKCS11Exception {
+    return getByteArrayAttrValue(objectHandle, CKA_ID);
+  }
+
+  public Long getCkaClass(long objectHandle) throws PKCS11Exception {
+    return getLongAttrValue(objectHandle, CKA_CLASS);
+  }
+
+  public Long getCkaKeyType(long objectHandle) throws PKCS11Exception {
+    return getLongAttrValue(objectHandle, CKA_KEY_TYPE);
+  }
+
+  public Long getCkaCertificateType(long objectHandle) throws PKCS11Exception {
+    return getLongAttrValue(objectHandle, CKA_CERTIFICATE_TYPE);
+  }
+
   /**
    * This method reads the attributes at once. This can lead  to performance
    * improvements. If reading all attributes at once fails, it tries to read
@@ -1654,8 +1696,8 @@ public class Session {
     }
   }
 
-  private CK_ATTRIBUTE[] toOutCKAttributes(AttributeVector attributeVector) {
-    CK_ATTRIBUTE[] ret = attributeVector.toCkAttributes();
+  private CK_ATTRIBUTE[] toOutCKAttributes(AttributesTemplate template) {
+    CK_ATTRIBUTE[] ret = template.toCkAttributes();
     if (vendorCode != null) {
       for (CK_ATTRIBUTE ckAttr : ret) {
         if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
