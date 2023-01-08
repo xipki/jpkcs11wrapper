@@ -50,18 +50,12 @@ extends MultipleStepsSymmEncryptDecrypt {
 
   @Override
   protected Mechanism getEncryptionMech(Token token) throws PKCS11Exception {
-    Mechanism mech = getSupportedMechanism(token, CKM_AES_CTR);
-    AesCtrParameters params = new AesCtrParameters(iv);
-    mech.setParameters(params);
-    return mech;
+    return getSupportedMechanism(token, CKM_AES_CTR, new AesCtrParameters(iv));
   }
 
   @Override
   protected AttributesTemplate getKeyTemplate() {
-    return newSecretKey(CKK_AES)
-        .attr(CKA_ENCRYPT, true)
-        .attr(CKA_DECRYPT, true)
-        .attr(CKA_VALUE_LEN, 16);
+    return newSecretKey(CKK_AES).encrypt(true).decrypt(true).valueLen(16);
   }
 
 }
