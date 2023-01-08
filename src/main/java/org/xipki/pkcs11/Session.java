@@ -334,7 +334,7 @@ public class Session {
    * @throws PKCS11Exception If the creation of the new object fails. If it fails, the no new object was
    *                         created on the token.
    */
-  public long createObject(AttributesTemplate template) throws PKCS11Exception {
+  public long createObject(AttributeVector template) throws PKCS11Exception {
     try {
       return pkcs11.C_CreateObject(sessionHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -355,7 +355,7 @@ public class Session {
    * the values given by the template.
    * @throws PKCS11Exception If copying the object fails for some reason.
    */
-  public long copyObject(long sourceObjectHandle, AttributesTemplate template) throws PKCS11Exception {
+  public long copyObject(long sourceObjectHandle, AttributeVector template) throws PKCS11Exception {
     try {
       return pkcs11.C_CopyObject(sessionHandle, sourceObjectHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -377,7 +377,7 @@ public class Session {
    *                             attributes at the objectToUpdate.
    * @throws PKCS11Exception If updateing the attributes fails. All or no attributes are updated.
    */
-  public void setAttributeValues(long objectToUpdateHandle, AttributesTemplate template) throws PKCS11Exception {
+  public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws PKCS11Exception {
     try {
       pkcs11.C_SetAttributeValue(sessionHandle, objectToUpdateHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -411,7 +411,7 @@ public class Session {
    *                 session will see private objects.
    * @throws PKCS11Exception If initializing the find operation fails.
    */
-  public void findObjectsInit(AttributesTemplate template) throws PKCS11Exception {
+  public void findObjectsInit(AttributeVector template) throws PKCS11Exception {
     try {
       pkcs11.C_FindObjectsInit(sessionHandle, template == null ? null : toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1244,7 +1244,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If generating a new secret key or domain parameters failed.
    */
-  public long generateKey(Mechanism mechanism, AttributesTemplate template) throws PKCS11Exception {
+  public long generateKey(Mechanism mechanism, AttributeVector template) throws PKCS11Exception {
     try {
       return pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1270,8 +1270,8 @@ public class Session {
    * @exception PKCS11Exception
    *              If generating a new key-pair failed.
    */
-  public PKCS11KeyPair generateKeyPair(Mechanism mechanism, AttributesTemplate publicKeyTemplate,
-                                       AttributesTemplate privateKeyTemplate) throws PKCS11Exception {
+  public PKCS11KeyPair generateKeyPair(Mechanism mechanism, AttributeVector publicKeyTemplate,
+                                       AttributeVector privateKeyTemplate) throws PKCS11Exception {
     long[] objectHandles;
     try {
       objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
@@ -1322,7 +1322,7 @@ public class Session {
    *              If unwrapping the key or creating a new key object failed.
    */
   public long unwrapKey(Mechanism mechanism, long unwrappingKeyHandle,
-                        byte[] wrappedKey, AttributesTemplate keyTemplate) throws PKCS11Exception {
+                        byte[] wrappedKey, AttributeVector keyTemplate) throws PKCS11Exception {
     Functions.requireNonNull("wrappedKey", wrappedKey);
 
     try {
@@ -1351,7 +1351,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If deriving the key or creating a new key object failed.
    */
-  public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributesTemplate template) throws PKCS11Exception {
+  public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws PKCS11Exception {
     CK_MECHANISM ckMechanism = toCkMechanism(mechanism);
 
     try {
@@ -1751,7 +1751,7 @@ public class Session {
     }
   }
 
-  private CK_ATTRIBUTE[] toOutCKAttributes(AttributesTemplate template) {
+  private CK_ATTRIBUTE[] toOutCKAttributes(AttributeVector template) {
     CK_ATTRIBUTE[] ret = template.toCkAttributes();
     if (vendorCode != null) {
       for (CK_ATTRIBUTE ckAttr : ret) {
