@@ -58,7 +58,8 @@ public class CcmParameters implements Parameters {
 
   public String toString() {
     return "Class: " + getClass().getName() + "\n  ulDataLen: " + dataLen +
-        "\n  nonce: " + Functions.toHex(nonce) + "\n  aad: " + Functions.toHex(aad) + "\n  macLen: " + macLen;
+        "\n  nonce: " + Functions.toHex(nonce) +
+        "\n  aad: " + (aad == null ? " " : Functions.toHex(aad)) + "\n  macLen: " + macLen;
   }
 
   public Object getPKCS11ParamsObject() {

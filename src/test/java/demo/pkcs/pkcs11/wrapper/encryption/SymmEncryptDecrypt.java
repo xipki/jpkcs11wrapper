@@ -18,6 +18,7 @@
 package demo.pkcs.pkcs11.wrapper.encryption;
 
 import demo.pkcs.pkcs11.wrapper.TestBase;
+import org.apache.logging.log4j.util.SystemPropertiesPropertySource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xipki.pkcs11.*;
@@ -55,7 +56,15 @@ public abstract class SymmEncryptDecrypt extends TestBase {
   private void main0(Token token, Session session) throws PKCS11Exception {
     LOG.info("##################################################");
     LOG.info("generate secret encryption/decryption key");
-    Mechanism keyMechanism = getKeyGenMech(token);
+
+    Mechanism keyMechanism;
+    try {
+      keyMechanism = getKeyGenMech(token);
+    } catch (PKCS11Exception e) {
+      LOG.info("unsupported by the HSM, skipping test");
+      System.out.println("unsupported by the HSM, skipping test");
+      return;
+    }
 
     AttributeVector keyTemplate = getKeyTemplate().token(false);
 

@@ -111,6 +111,8 @@ public class Session {
 
   private static final Constructor<?> constructor_CK_MECHANISM_GCM;
 
+  private static final Constructor<?> constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305;
+
   /**
    * A reference to the underlying PKCS#11 module to perform the operations.
    */
@@ -155,6 +157,8 @@ public class Session {
 
     constructor_CK_MECHANISM_CCM = getConstructofOfCK_MECHANISM(CcmParameters.CLASS_CK_PARAMS);
     constructor_CK_MECHANISM_GCM = getConstructofOfCK_MECHANISM(GcmParameters.CLASS_CK_PARAMS);
+    constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305 =
+        getConstructofOfCK_MECHANISM(Salsa20Chacha20Poly1305Parameters.CLASS_CK_PARAMS);
   }
 
   private static Constructor<?> getConstructofOfCK_MECHANISM(String paramsClassName) {
@@ -1451,7 +1455,9 @@ public class Session {
       return new CK_MECHANISM(code, ((VersionParameters)params).getPKCS11ParamsObject());
     } else {
       Constructor<?> constructor = (params instanceof CcmParameters) ? constructor_CK_MECHANISM_CCM
-          : (params instanceof GcmParameters) ? constructor_CK_MECHANISM_GCM : null;
+          : (params instanceof GcmParameters) ? constructor_CK_MECHANISM_GCM
+          : (params instanceof Salsa20Chacha20Poly1305Parameters) ? constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305
+          : null;
 
       if (constructor == null) throw new IllegalArgumentException("could not find constructor");
 
