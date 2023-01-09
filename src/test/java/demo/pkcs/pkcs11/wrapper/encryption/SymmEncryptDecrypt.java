@@ -18,7 +18,6 @@
 package demo.pkcs.pkcs11.wrapper.encryption;
 
 import demo.pkcs.pkcs11.wrapper.TestBase;
-import org.apache.logging.log4j.util.SystemPropertiesPropertySource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xipki.pkcs11.*;

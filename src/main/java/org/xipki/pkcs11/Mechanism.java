@@ -71,8 +71,7 @@ public class Mechanism {
    *          The mechanism code.
    */
   public Mechanism(long pkcs11MechanismCode) {
-    this.pkcs11MechanismCode = pkcs11MechanismCode;
-    this.parameters = null;
+    this(pkcs11MechanismCode, null);
   }
 
   /**
@@ -111,7 +110,7 @@ public class Mechanism {
    * @return The name of this mechanism.
    */
   public String getName() {
-    return Functions.ckmCodeToName(pkcs11MechanismCode);
+    return PKCS11Constants.codeToName(PKCS11Constants.Category.CKK, pkcs11MechanismCode);
   }
 
   /**

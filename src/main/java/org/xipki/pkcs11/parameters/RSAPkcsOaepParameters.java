@@ -43,6 +43,7 @@
 package org.xipki.pkcs11.parameters;
 
 import org.xipki.pkcs11.Functions;
+import org.xipki.pkcs11.PKCS11Constants;
 import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 
 import static org.xipki.pkcs11.PKCS11Constants.CKZ_SALT_SPECIFIED;
@@ -110,7 +111,7 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return super.toString() + "\n  Source: " + Functions.ckzCodeToName(source)
+    return super.toString() + "\n  Source: " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKZ, source)
         + "\n  Source Data (hex): " + Functions.toHex(sourceData);
   }
 

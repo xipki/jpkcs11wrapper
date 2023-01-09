@@ -135,6 +135,8 @@ public class Session {
    */
   private final Token token;
 
+  private boolean isEcdsaSign;
+
   static {
     Class<?> clazz = PKCS11.class;
     decrypt0 = Util.getMethod(clazz, "C_Decrypt",
@@ -195,7 +197,7 @@ public class Session {
     try {
       pkcs11.C_CloseSession(sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -218,7 +220,7 @@ public class Session {
     try {
       return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -251,7 +253,7 @@ public class Session {
     try {
       return pkcs11.C_GetOperationState(sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -261,10 +263,12 @@ public class Session {
    * into the state's byte array. Refer to the PKCS#11 standard for details on this function.
    *
    * @param operationState          The previously saved state as returned by getOperationState().
-   * @param encryptionKeyHandle     An encryption or decryption key handle, if an encryption or decryption operation was saved
-   *                                which should be continued, but the keys could not be saved.
-   * @param authenticationKeyHandle A signing, verification of MAC key handle, if a signing, verification or MAC operation needs
-   *                                to be restored that could not save the key.
+   * @param encryptionKeyHandle     An encryption or decryption key handle, if an encryption or
+   *                                decryption operation was saved  which should be continued, but
+   *                                the keys could not be saved.
+   * @param authenticationKeyHandle A signing, verification of MAC key handle, if a signing,
+   *                                verification or MAC operation needs to be restored that could
+   *                                not save the key.
    * @throws PKCS11Exception If restoring the state fails.
    * @see #getOperationState()
    */
@@ -273,7 +277,7 @@ public class Session {
     try {
       pkcs11.C_SetOperationState(sessionHandle, operationState, encryptionKeyHandle, authenticationKeyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -294,7 +298,7 @@ public class Session {
     try {
       pkcs11.C_Login(sessionHandle, userType, pin);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -307,7 +311,7 @@ public class Session {
     try {
       pkcs11.C_Logout(sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -342,7 +346,7 @@ public class Session {
     try {
       return pkcs11.C_CreateObject(sessionHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -363,7 +367,7 @@ public class Session {
     try {
       return pkcs11.C_CopyObject(sessionHandle, sourceObjectHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -385,7 +389,7 @@ public class Session {
     try {
       pkcs11.C_SetAttributeValue(sessionHandle, objectToUpdateHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -401,7 +405,7 @@ public class Session {
     try {
       pkcs11.C_DestroyObject(sessionHandle, objectHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -419,7 +423,7 @@ public class Session {
     try {
       pkcs11.C_FindObjectsInit(sessionHandle, template == null ? null : toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -442,7 +446,7 @@ public class Session {
       long[] handles = pkcs11.C_FindObjects(sessionHandle, maxObjectCount);
       return handles == null ? new long[0] : handles;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -456,7 +460,7 @@ public class Session {
     try {
       pkcs11.C_FindObjectsFinal(sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -477,7 +481,7 @@ public class Session {
     try {
       pkcs11.C_EncryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -529,7 +533,7 @@ public class Session {
     } catch (InvocationTargetException ex) {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
-        throw new PKCS11Exception((sun.security.pkcs11.wrapper.PKCS11Exception) cause);
+        throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
@@ -574,7 +578,7 @@ public class Session {
     try {
       return pkcs11.C_EncryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -595,7 +599,7 @@ public class Session {
     try {
       return pkcs11.C_EncryptFinal(sessionHandle, 0, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -616,7 +620,7 @@ public class Session {
     try {
       pkcs11.C_DecryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -668,7 +672,7 @@ public class Session {
     } catch (InvocationTargetException ex) {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
-        throw new PKCS11Exception((sun.security.pkcs11.wrapper.PKCS11Exception) cause);
+        throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
@@ -713,7 +717,7 @@ public class Session {
     try {
       return pkcs11.C_DecryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -734,7 +738,7 @@ public class Session {
     try {
       return pkcs11.C_DecryptFinal(sessionHandle, 0, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -753,7 +757,7 @@ public class Session {
     try {
       pkcs11.C_DigestInit(sessionHandle, toCkMechanism(mechanism));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -833,7 +837,7 @@ public class Session {
     try {
       return pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism), in, inOfs, inLen, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -867,7 +871,7 @@ public class Session {
     try {
       pkcs11.C_DigestUpdate(sessionHandle, 0, in, inOfs, inLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -882,7 +886,7 @@ public class Session {
     try {
       pkcs11.C_DigestKey(sessionHandle, keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -904,7 +908,7 @@ public class Session {
     try {
       return pkcs11.C_DigestFinal(sessionHandle, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -924,9 +928,14 @@ public class Session {
    */
   public void signInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     try {
+      long code = mechanism.getMechanismCode();
+      isEcdsaSign = code == CKM_ECDSA   || code == CKM_ECDSA_SHA1     || code == CKM_ECDSA_SHA224
+          || code == CKM_ECDSA_SHA256   || code == CKM_ECDSA_SHA384   || code == CKM_ECDSA_SHA512
+          || code == CKM_VENDOR_SM2     || code == CKM_VENDOR_SM2_SM3 || code == CKM_ECDSA_SHA3_224
+          || code == CKM_ECDSA_SHA3_256 || code == CKM_ECDSA_SHA3_384 || code == CKM_ECDSA_SHA3_512;
       pkcs11.C_SignInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -943,9 +952,10 @@ public class Session {
     Functions.requireNonNull("data", data);
 
     try {
-      return pkcs11.C_Sign(sessionHandle, data);
+      byte[] sigValue = pkcs11.C_Sign(sessionHandle, data);
+      return isEcdsaSign ? Functions.fixECDSASignature(sigValue) : sigValue;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -979,7 +989,7 @@ public class Session {
     try {
       pkcs11.C_SignUpdate(sessionHandle, 0, in, inOfs, inLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -988,16 +998,16 @@ public class Session {
    * fed in the data using signUpdate. If you used the sign(byte[]) method, you need not (and shall
    * not) call this method, because sign(byte[]) finalizes the signing operation itself.
    *
-   * @param expectedLen expected length of the signature value.
    * @return The final result of the signing operation; i.e. the signature
    * value.
    * @throws PKCS11Exception If calculating the final signature value failed.
    */
-  public byte[] signFinal(int expectedLen) throws PKCS11Exception {
+  public byte[] signFinal() throws PKCS11Exception {
     try {
-      return pkcs11.C_SignFinal(sessionHandle, expectedLen);
+      byte[] sigValue = pkcs11.C_SignFinal(sessionHandle, 0);
+      return isEcdsaSign ? Functions.fixECDSASignature(sigValue) : sigValue;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1018,7 +1028,7 @@ public class Session {
     try {
       pkcs11.C_SignRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1058,7 +1068,7 @@ public class Session {
     try {
       return pkcs11.C_SignRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1080,7 +1090,7 @@ public class Session {
     try {
       pkcs11.C_VerifyInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1102,7 +1112,7 @@ public class Session {
     try {
       pkcs11.C_Verify(sessionHandle, data, signature);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1134,7 +1144,7 @@ public class Session {
     try {
       pkcs11.C_VerifyUpdate(sessionHandle, 0, in, inOfs, inLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1156,7 +1166,7 @@ public class Session {
     try {
       pkcs11.C_VerifyFinal(sessionHandle, signature);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1177,7 +1187,7 @@ public class Session {
     try {
       pkcs11.C_VerifyRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1229,7 +1239,7 @@ public class Session {
     try {
       return pkcs11.C_VerifyRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1252,7 +1262,7 @@ public class Session {
     try {
       return pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1281,7 +1291,7 @@ public class Session {
       objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
           toOutCKAttributes(publicKeyTemplate), toOutCKAttributes(privateKeyTemplate));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
 
     return new PKCS11KeyPair(objectHandles[0], objectHandles[1]);
@@ -1304,7 +1314,7 @@ public class Session {
     try {
       return pkcs11.C_WrapKey(sessionHandle, toCkMechanism(mechanism), wrappingKeyHandle, keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1333,7 +1343,7 @@ public class Session {
       return pkcs11.C_UnwrapKey(sessionHandle, toCkMechanism(mechanism),
           unwrappingKeyHandle, wrappedKey, toOutCKAttributes(keyTemplate));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1361,7 +1371,7 @@ public class Session {
     try {
       return pkcs11.C_DeriveKey(sessionHandle, ckMechanism, baseKeyHandle, toOutCKAttributes(template));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1377,7 +1387,7 @@ public class Session {
     try {
       pkcs11.C_SeedRandom(sessionHandle, seed);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -1395,7 +1405,7 @@ public class Session {
     try {
       pkcs11.C_GenerateRandom(sessionHandle, randomBytesBuffer);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     } // fill the buffer with random bytes
     return randomBytesBuffer;
   }
@@ -1476,38 +1486,10 @@ public class Session {
     return value == null ? null : value.intValue();
   }
 
-  public Integer[] getIntAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    Long[] value = getLongAttrValues(objectHandle, attributeTypes);
-    if (value == null) return null;
-
-    Integer[] ret = new Integer[value.length];
-    for (int i = 0; i < value.length; i++) {
-      if (value[i] != null) ret[i] = value[i].intValue();
-    }
-    return ret;
-  }
-
   public Long getLongAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     LongAttribute attr = new LongAttribute(attributeType);
     getAttrValue(objectHandle, attr);
     return attr.getValue();
-  }
-
-  public Long[] getLongAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    LongAttribute[] attrs = new LongAttribute[attributeTypes.length];
-    int idx = 0;
-    for (long attrType : attributeTypes) {
-      attrs[idx++] = new LongAttribute(attrType);
-    }
-
-    getAttrValues(objectHandle, attrs);
-
-    Long[] ret = new Long[attributeTypes.length];
-    idx = 0;
-    for (LongAttribute attr : attrs) {
-      ret[idx++] = attr.getValue();
-    }
-    return ret;
   }
 
   public String getStringAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
@@ -1516,35 +1498,9 @@ public class Session {
     return attr.getValue();
   }
 
-  public String[] getStringAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    CharArrayAttribute[] attrs = new CharArrayAttribute[attributeTypes.length];
-    int idx = 0;
-    for (long attrType : attributeTypes) {
-      attrs[idx++] = new CharArrayAttribute(attrType);
-    }
-
-    getAttrValues(objectHandle, attrs);
-
-    String[] ret = new String[attributeTypes.length];
-    idx = 0;
-    for (CharArrayAttribute attr : attrs) {
-      ret[idx++] = attr.getValue();
-    }
-    return ret;
-  }
-
   public BigInteger getBigIntAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     byte[] value = getByteArrayAttrValue(objectHandle, attributeType);
     return value == null ? null : new BigInteger(1, value);
-  }
-
-  public BigInteger[] getBigIntAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    byte[][] values = getByteArrayAttrValues(objectHandle, attributeTypes);
-    BigInteger[] ret = new BigInteger[attributeTypes.length];
-    for (int i = 0; i < values.length; i++) {
-      ret[i] = new BigInteger(1, values[i]);
-    }
-    return ret;
   }
 
   public byte[] getByteArrayAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
@@ -1553,44 +1509,10 @@ public class Session {
     return attr.getValue();
   }
 
-  public byte[][] getByteArrayAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    ByteArrayAttribute[] attrs = new ByteArrayAttribute[attributeTypes.length];
-    int idx = 0;
-    for (long attrType : attributeTypes) {
-      attrs[idx++] = new ByteArrayAttribute(attrType);
-    }
-
-    getAttrValues(objectHandle, attrs);
-
-    byte[][] ret = new byte[attributeTypes.length][];
-    idx = 0;
-    for (ByteArrayAttribute attr : attrs) {
-      ret[idx++] = attr.getValue();
-    }
-    return ret;
-  }
-
   public Boolean getBooleanAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     BooleanAttribute attr = new BooleanAttribute(attributeType);
     getAttrValue(objectHandle, attr);
     return attr.getValue();
-  }
-
-  public Boolean[] getBooleanAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    BooleanAttribute[] attrs = new BooleanAttribute[attributeTypes.length];
-    int idx = 0;
-    for (long attrType : attributeTypes) {
-      attrs[idx++] = new BooleanAttribute(attrType);
-    }
-
-    getAttrValues(objectHandle, attrs);
-
-    Boolean[] ret = new Boolean[attributeTypes.length];
-    idx = 0;
-    for (BooleanAttribute attr : attrs) {
-      ret[idx++] = attr.getValue();
-    }
-    return ret;
   }
 
   public String getCkaLabel(long objectHandle) throws PKCS11Exception {
@@ -1619,18 +1541,14 @@ public class Session {
     return attr.getValue();
   }
 
-  public Object[] getAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
+  public AttributeVector getAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
     final int n = attributeTypes.length;
     Attribute[] attrs = new Attribute[n];
     for (int i = 0; i < n; i++) {
       attrs[i] = Attribute.getInstance(attributeTypes[i]);
     }
     getAttrValues(objectHandle, attrs);
-    Object[] attrValues = new Object[n];
-    for (int i = 0; i < n; i++) {
-      attrValues[i] = attrs[i].getValue();
-    }
-    return attrValues;
+    return new AttributeVector(attrs);
   }
 
   /**
@@ -1661,7 +1579,7 @@ public class Session {
     try {
       pkcs11.C_GetAttributeValue(sessionHandle, objectHandle, attributeTemplateList);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      delayedEx = new PKCS11Exception(ex);
+      delayedEx = new PKCS11Exception(ex.getErrorCode());
     }
 
     for (int i = 0; i < attributes.length; i++) {
@@ -1752,7 +1670,7 @@ public class Session {
         attribute.stateKnown(true).present(false).sensitive(false).getCkAttribute().pValue = null;
       } else {
         // there was a different error that we should propagate
-        throw new PKCS11Exception(ex);
+        throw new PKCS11Exception(ex.getErrorCode());
       }
     }
   }

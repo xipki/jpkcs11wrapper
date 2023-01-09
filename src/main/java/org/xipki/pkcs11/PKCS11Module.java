@@ -174,7 +174,7 @@ public class PKCS11Module {
     try {
       return new ModuleInfo(pkcs11.C_GetInfo());
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
@@ -196,7 +196,7 @@ public class PKCS11Module {
     } catch (IOException ex) {
       throw new TokenException(ex.getMessage(), ex);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     } catch (NoSuchMethodError ex) {
       // In some JDKs like red hat, the getInstance is extended by fipsKeyImporter as follows:
       // getInstance(String pkcs11ModulePath, String functionList, CK_C_INITIALIZE_ARGS pInitArgs,
@@ -238,7 +238,7 @@ public class PKCS11Module {
     try {
       slotIDs = pkcs11.C_GetSlotList(tokenPresent);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
     Slot[] slots = new Slot[slotIDs.length];
     for (int i = 0; i < slots.length; i++) {
@@ -309,7 +309,7 @@ public class PKCS11Module {
     try {
       pkcs11.C_Finalize(args);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex);
+      throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
