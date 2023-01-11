@@ -40,71 +40,40 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.params;
 
-import org.xipki.pkcs11.PKCS11Constants;
+import org.xipki.pkcs11.Version;
+import sun.security.pkcs11.wrapper.CK_VERSION;
 
 /**
- * Objects of this class represent a mechanism array attribute of a PKCS#11
- * object as specified by PKCS#11. This attribute is available since
- * cryptoki version 2.20.
+ * This class is used for the Mechanism.SSL3_PRE_MASTER_KEY_GEN.
  *
- * @author Birgit Haas
+ * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
+ *
  */
-public class MechanismArrayAttribute extends Attribute {
+public class VersionParameters extends Version implements Parameters {
 
   /**
-   * Constructor taking the PKCS#11 type of the attribute.
+   * Create a new VersionParameters object with the given major and minor
+   * version.
    *
-   * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE.
+   * @param major
+   *          The major version number.
+   * @param minor
+   *          The minor version number.
    */
-  public MechanismArrayAttribute(long type) {
-    super(type);
+  public VersionParameters(byte major, byte minor) {
+    super(major, minor);
   }
 
   /**
-   * Set the attributes of this mechanism attribute array by specifying a
-   * Mechanism[]. Null, is also valid.
-   * A call to this method sets the present flag to true.
+   * Get this parameters object as a CK_VERSION object.
    *
-   * @param value
-   *          The MechanismArrayAttribute value to set. May be null.
+   * @return This object as a CK_VERSION object.
    */
-  public MechanismArrayAttribute mechanismAttributeArrayValue(long[] value) {
-    ckAttribute.pValue = value.clone();
-    present = true;
-    return this;
-  }
-
-  /**
-   * Get the mechanism attribute array value of this attribute as Mechanism[].
-   * Null, is also possible.
-   *
-   * @return The mechanism attribute array value of this attribute or null.
-   */
-  @Override
-  public long[] getValue() {
-    return ckAttribute.pValue == null ? null : ((long[]) ckAttribute.pValue).clone();
-  }
-
-  /**
-   * Get a string representation of the value of this attribute.
-   *
-   * @return A string representation of the value of this attribute.
-   */
-  protected String getValueString() {
-    long[] allowedMechanisms = getValue();
-    if (allowedMechanisms != null && allowedMechanisms.length > 0) {
-      StringBuilder sb = new StringBuilder(200);
-      for (long mech : allowedMechanisms) {
-        sb.append("\n      ").append(PKCS11Constants.codeToName(PKCS11Constants.Category.CKM, mech));
-      }
-      return sb.toString();
-    } else {
-      return "<NULL_PTR>";
-    }
+  public CK_VERSION getPKCS11ParamsObject() {
+    return new CK_VERSION(getMajor(), getMinor());
   }
 
 }

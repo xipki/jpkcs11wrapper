@@ -42,8 +42,8 @@
 
 package org.xipki.pkcs11;
 
-import org.xipki.pkcs11.objects.*;
-import org.xipki.pkcs11.parameters.*;
+import org.xipki.pkcs11.attrs.*;
+import org.xipki.pkcs11.params.*;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.PKCS11;
@@ -1565,7 +1565,7 @@ public class Session {
      * @exception PKCS11Exception
      *              If getting the attributes failed.
      */
-  public void getAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
+  private void getAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
     Functions.requireNonNull("attributes", attributes);
 
     CK_ATTRIBUTE[] attributeTemplateList = new CK_ATTRIBUTE[attributes.length];
@@ -1640,7 +1640,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If getting the attribute failed.
    */
-  public void getAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
+  private void getAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
     attribute.stateKnown(false).present(false);
 
     try {

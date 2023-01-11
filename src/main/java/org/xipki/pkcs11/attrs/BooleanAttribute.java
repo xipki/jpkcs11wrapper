@@ -40,50 +40,48 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.attrs;
 
 /**
- * This class encapsulates parameters for Mechanisms.EXTRACT_KEY_FROM_KEY.
+ * Objects of this class represent a boolean attribute of a PKCS#11 object
+ * as specified by PKCS#11.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class ExtractParameters implements Parameters {
+public class BooleanAttribute extends Attribute {
 
   /**
-   * The bit of the base key that should be used as the first bit of the
-   * derived key.
-   */
-  private final int bitIndex;
-
-  /**
-   * Create a new ExtractParameters object with the given bit index.
+   * Constructor taking the PKCS#11 type of the attribute.
    *
-   * @param bitIndex
-   *          The bit of the base key that should be used as the first bit of
-   *          the derived key.
+   * @param type
+   *          The PKCS#11 type of this attribute; e.g. CKA_PRIVATE.
    */
-  public ExtractParameters(int bitIndex) {
-    this.bitIndex = bitIndex;
+  public BooleanAttribute(long type) {
+    super(type);
   }
 
   /**
-   * Get this parameters object as a Long object.
+   * Set the boolean value of this attribute. Null, is also valid.
+   * A call to this method sets the present flag to true.
    *
-   * @return This object as a Long object.
+   * @param value
+   *          The boolean value to set. May be null.
    */
-  public Long getPKCS11ParamsObject() {
-    return (long) bitIndex;
+  public BooleanAttribute booleanValue(Boolean value) {
+    ckAttribute.pValue = value;
+    present = true;
+    return this;
   }
 
   /**
-   * Returns the string representation of this object. Do not parse data from
-   * this string, it is for debugging only.
+   * Get the boolean value of this attribute. Null, is also possible.
    *
-   * @return A string representation of this object.
+   * @return The boolean value of this attribute or null.
    */
-  public String toString() {
-    return "Class: " + getClass().getName() + "\n  Bit Index (dec): " + bitIndex;
+  @Override
+  public Boolean getValue() {
+    return (Boolean) ckAttribute.pValue;
   }
 
 }

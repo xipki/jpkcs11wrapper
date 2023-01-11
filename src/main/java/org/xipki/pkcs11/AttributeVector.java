@@ -16,7 +16,7 @@
  */
 package org.xipki.pkcs11;
 
-import org.xipki.pkcs11.objects.*;
+import org.xipki.pkcs11.attrs.*;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 
 import java.math.BigInteger;

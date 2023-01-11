@@ -40,48 +40,71 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.attrs;
+
+import org.xipki.pkcs11.PKCS11Constants;
 
 /**
- * Objects of this class represent a boolean attribute of a PKCS#11 object
- * as specified by PKCS#11.
+ * Objects of this class represent a mechanism array attribute of a PKCS#11
+ * object as specified by PKCS#11. This attribute is available since
+ * cryptoki version 2.20.
  *
- * @author Karl Scheibelhofer
+ * @author Birgit Haas
  * @author Lijun Liao (xipki)
  */
-public class BooleanAttribute extends Attribute {
+public class MechanismArrayAttribute extends Attribute {
 
   /**
    * Constructor taking the PKCS#11 type of the attribute.
    *
    * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_PRIVATE.
+   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE.
    */
-  public BooleanAttribute(long type) {
+  public MechanismArrayAttribute(long type) {
     super(type);
   }
 
   /**
-   * Set the boolean value of this attribute. Null, is also valid.
+   * Set the attributes of this mechanism attribute array by specifying a
+   * Mechanism[]. Null, is also valid.
    * A call to this method sets the present flag to true.
    *
    * @param value
-   *          The boolean value to set. May be null.
+   *          The MechanismArrayAttribute value to set. May be null.
    */
-  public BooleanAttribute booleanValue(Boolean value) {
-    ckAttribute.pValue = value;
+  public MechanismArrayAttribute mechanismAttributeArrayValue(long[] value) {
+    ckAttribute.pValue = value.clone();
     present = true;
     return this;
   }
 
   /**
-   * Get the boolean value of this attribute. Null, is also possible.
+   * Get the mechanism attribute array value of this attribute as Mechanism[].
+   * Null, is also possible.
    *
-   * @return The boolean value of this attribute or null.
+   * @return The mechanism attribute array value of this attribute or null.
    */
   @Override
-  public Boolean getValue() {
-    return (Boolean) ckAttribute.pValue;
+  public long[] getValue() {
+    return ckAttribute.pValue == null ? null : ((long[]) ckAttribute.pValue).clone();
+  }
+
+  /**
+   * Get a string representation of the value of this attribute.
+   *
+   * @return A string representation of the value of this attribute.
+   */
+  protected String getValueString() {
+    long[] allowedMechanisms = getValue();
+    if (allowedMechanisms != null && allowedMechanisms.length > 0) {
+      StringBuilder sb = new StringBuilder(200);
+      for (long mech : allowedMechanisms) {
+        sb.append("\n      ").append(PKCS11Constants.codeToName(PKCS11Constants.Category.CKM, mech));
+      }
+      return sb.toString();
+    } else {
+      return "<NULL_PTR>";
+    }
   }
 
 }

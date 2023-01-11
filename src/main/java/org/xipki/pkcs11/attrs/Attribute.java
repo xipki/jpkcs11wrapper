@@ -40,7 +40,7 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.attrs;
 
 import org.xipki.pkcs11.AttributeVector;
 import org.xipki.pkcs11.Functions;

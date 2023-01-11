@@ -40,68 +40,45 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
-import org.xipki.pkcs11.PKCS11Constants;
-import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 
-import static org.xipki.pkcs11.PKCS11Constants.CKZ_SALT_SPECIFIED;
+import static org.xipki.pkcs11.PKCS11Constants.*;
 
 /**
- * This class encapsulates parameters for the Mechanism.RSA_PKCS_OAEP.
+ * This abstract class encapsulates parameters for the DH mechanisms
+ * CKM_ECDH1_DERIVE, CKM_CDH1_COFACTOR_DERIVE, CKM_ECMQV_DERIVE,
+ * CKM_X9_42_DH_DERIVE, CKM_X9_42_DH_HYBRID_DERIVE and CKM_X9_42_MQV_DERIVE.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class RSAPkcsOaepParameters extends RSAPkcsParameters {
+abstract public class DHKeyDerivationParameters implements Parameters {
 
   /**
-   * The source of the encoding parameter.
+   * The key derivation function used on the shared secret value.
    */
-  private final long source;
+  protected long kdf;
 
   /**
-   * The data used as the input for the encoding parameter source.
+   * The other party's public key value.
    */
-  private final byte[] sourceData;
+  protected byte[] publicData;
 
   /**
-   * Create a new RSAPkcsOaepParameters object with the given attributes.
+   * Create a new DHKeyDerivationParameters object with the given attributes.
    *
-   * @param hashAlgorithm
-   *          The message digest algorithm used to calculate the digest of the
-   *          encoding parameter.
-   * @param maskGenerationFunction
-   *          The mask to apply to the encoded block. One of the constants
-   *          defined in the MessageGenerationFunctionType interface.
-   * @param source
-   *          The source of the encoding parameter. One of the constants
-   *          defined in the SourceType interface.
-   * @param sourceData
-   *          The data used as the input for the encoding parameter source.
+   * @param kdf
+   *          The key derivation function used on the shared secret value.
+   *          One of the values defined in CKD_
+   * @param publicData
+   *          The other party's public key value.
    */
-  public RSAPkcsOaepParameters(long hashAlgorithm, long maskGenerationFunction, long source, byte[] sourceData) {
-    super(hashAlgorithm, maskGenerationFunction);
-    this.source = Functions.requireAmong("source", source, 0, CKZ_SALT_SPECIFIED);
-    this.sourceData = sourceData;
-  }
-
-  /**
-   * Get this parameters object as an object of the CK_RSA_PKCS_OAEP_PARAMS
-   * class.
-   *
-   * @return This object as a CK_RSA_PKCS_OAEP_PARAMS object.
-   */
-  public CK_RSA_PKCS_OAEP_PARAMS getPKCS11ParamsObject() {
-    CK_RSA_PKCS_OAEP_PARAMS params = new CK_RSA_PKCS_OAEP_PARAMS();
-
-    params.hashAlg = hashAlg;
-    params.mgf = mgf;
-    params.source = source;
-    params.pSourceData = sourceData;
-
-    return params;
+  public DHKeyDerivationParameters(long kdf, byte[] publicData) {
+    this.publicData = Functions.requireNonNull("publicData", publicData);
+    this.kdf = Functions.requireAmong("kdf", kdf,
+                  CKD_NULL, CKD_SHA1_KDF, CKD_SHA1_KDF_ASN1, CKD_SHA1_KDF_CONCATENATE);
   }
 
   /**
@@ -111,8 +88,8 @@ public class RSAPkcsOaepParameters extends RSAPkcsParameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return super.toString() + "\n  Source: " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKZ, source)
-        + "\n  Source Data (hex): " + Functions.toHex(sourceData);
+    return "Class: " + getClass().getName() + "\n  Key Derivation Function: " + codeToName(Category.CKD, kdf) +
+        "\n  Public Data: " + Functions.toHex(publicData);
   }
 
 }

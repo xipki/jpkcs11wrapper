@@ -40,22 +40,78 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.attrs;
+
+import sun.security.pkcs11.wrapper.CK_DATE;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
- * Every Parameters-class implements this interface through which the module.
+ * Objects of this class represent a date attribute of a PKCS#11 object
+ * as specified by PKCS#11.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public interface Parameters {
+public class DateAttribute extends Attribute {
 
   /**
-   * Get this parameters object as an object of the corresponding *_PARAMS
-   * class of the sun.security.pkcs11.wrapper package.
+   * Constructor taking the PKCS#11 type of the attribute.
    *
-   * @return The object of the corresponding *_PARAMS class.
+   * @param type
+   *          The PKCS#11 type of this attribute; e.g. CKA_START_DATE.
    */
-  Object getPKCS11ParamsObject();
+  public DateAttribute(long type) {
+    super(type);
+  }
+
+  /**
+   * Set the date value of this attribute. Null, is also valid.
+   * A call to this method sets the present flag to true.
+   *
+   * @param value
+   *          The date value to set. May be null.
+   */
+  public DateAttribute dateValue(Date value) {
+    if (value == null) {
+      ckAttribute.pValue = null;
+    } else {
+      //poor memory/performance behavior, consider alternatives
+      Calendar calendar = new GregorianCalendar();
+      calendar.setTime(value);
+      int year = calendar.get(Calendar.YEAR);
+      // month counting starts with zero
+      int month = calendar.get(Calendar.MONTH) + 1;
+      int day = calendar.get(Calendar.DAY_OF_MONTH);
+      ckAttribute.pValue = new CK_DATE(
+          Integer.toString(year).toCharArray(),
+          (month < 10 ? "0" + month: Integer.toString(month)).toCharArray(),
+          (day < 10 ? "0" + day: Integer.toString(day)).toCharArray());
+    }
+    present = true;
+    return this;
+  }
+
+  /**
+   * Get the date value of this attribute. Null, is also possible.
+   *
+   * @return The date value of this attribute or null.
+   */
+  @Override
+  public Date getValue() {
+    if (ckAttribute.pValue == null) return null;
+
+    CK_DATE ckDate = (CK_DATE) ckAttribute.pValue;
+    int year = Integer.parseInt(new String(ckDate.year));
+    int month = Integer.parseInt(new String(ckDate.month));
+    int day = Integer.parseInt(new String(ckDate.day));
+    // poor performance, consider alternatives
+    Calendar calendar = new GregorianCalendar();
+    // calendar starts months with 0
+    calendar.set(year, Calendar.JANUARY + (month - 1), day);
+    return calendar.getTime();
+  }
 
 }

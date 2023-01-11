@@ -42,7 +42,7 @@
 
 package org.xipki.pkcs11;
 
-import org.xipki.pkcs11.parameters.Parameters;
+import org.xipki.pkcs11.params.Parameters;
 
 /**
  * Objects of this class represent a mechanism as defined in PKCS#11. There are

@@ -40,45 +40,44 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
 
-import static org.xipki.pkcs11.PKCS11Constants.*;
-
 /**
- * This abstract class encapsulates parameters for the DH mechanisms
- * CKM_ECDH1_DERIVE, CKM_CDH1_COFACTOR_DERIVE, CKM_ECMQV_DERIVE,
- * CKM_X9_42_DH_DERIVE, CKM_X9_42_DH_HYBRID_DERIVE and CKM_X9_42_MQV_DERIVE.
+ * This class encapsulates parameters for general block ciphers in CBC mode.
+ * Those are all Mechanism.*_CBC and Mechanism.*_CBC_PAD mechanisms. This class
+ * also applies to other mechanisms which require just an initialization vector
+ * as parameter.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-abstract public class DHKeyDerivationParameters implements Parameters {
+public class InitializationVectorParameters implements Parameters {
 
   /**
-   * The key derivation function used on the shared secret value.
+   * The initialization vector.
    */
-  protected long kdf;
+  private final byte[] iv;
 
   /**
-   * The other party's public key value.
-   */
-  protected byte[] publicData;
-
-  /**
-   * Create a new DHKeyDerivationParameters object with the given attributes.
+   * Create a new InitializationVectorParameters object with the given
+   * initialization vector.
    *
-   * @param kdf
-   *          The key derivation function used on the shared secret value.
-   *          One of the values defined in CKD_
-   * @param publicData
-   *          The other party's public key value.
+   * @param iv
+   *          The initialization vector.
    */
-  public DHKeyDerivationParameters(long kdf, byte[] publicData) {
-    this.publicData = Functions.requireNonNull("publicData", publicData);
-    this.kdf = Functions.requireAmong("kdf", kdf,
-                  CKD_NULL, CKD_SHA1_KDF, CKD_SHA1_KDF_ASN1, CKD_SHA1_KDF_CONCATENATE);
+  public InitializationVectorParameters(byte[] iv) {
+    this.iv = Functions.requireNonNull("iv", iv);
+  }
+
+  /**
+   * Get this parameters object as a byte array.
+   *
+   * @return This object as a byte array.
+   */
+  public byte[] getPKCS11ParamsObject() {
+    return iv;
   }
 
   /**
@@ -88,8 +87,7 @@ abstract public class DHKeyDerivationParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  Key Derivation Function: " + codeToName(Category.CKD, kdf) +
-        "\n  Public Data: " + Functions.toHex(publicData);
+    return "Class: " + getClass().getName() + "\n  IV: " + Functions.toHex(iv);
   }
 
 }

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.Util;

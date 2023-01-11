@@ -40,70 +40,39 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.xipki.pkcs11.PKCS11Constants.*;
+package org.xipki.pkcs11.params;
 
 /**
- * This abstract class encapsulates parameters for the RSA PKCS mechanisms
- * Mechanism.RSA_PKCS_OAEP and Mechanism.RSA_PKCS_PSS.
+ * This class encapsulates parameters for Mechanisms.CONCATENATE_BASE_AND_KEY.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-abstract public class RSAPkcsParameters implements Parameters {
-
-  protected static final Map<Long, Long> mgf2HashAlgMap;
+public class ObjectHandleParameters implements Parameters {
 
   /**
-   * The message digest algorithm used to calculate the digest of the encoding
-   * parameter.
+   * The PKCS#11 object.
    */
-  protected final long hashAlg;
+  private final long objectHandle;
 
   /**
-   * The mask to apply to the encoded block.
+   * Create a new ObjectHandleParameters object using the given object.
+   *
+   * @param objectHandle
+   *          The PKCS#11 object whose handle to use.
    */
-  protected final long mgf;
-
-  static {
-    Map<Long, Long> map = new HashMap<>();
-    map.put(CKG_MGF1_SHA1,     CKM_SHA_1);
-    map.put(CKG_MGF1_SHA224,   CKM_SHA224);
-    map.put(CKG_MGF1_SHA256,   CKM_SHA256);
-    map.put(CKG_MGF1_SHA384,   CKM_SHA384);
-    map.put(CKG_MGF1_SHA512,   CKM_SHA512);
-    map.put(CKG_MGF1_SHA3_224, CKM_SHA3_224);
-    map.put(CKG_MGF1_SHA3_256, CKM_SHA3_256);
-    map.put(CKG_MGF1_SHA3_384, CKM_SHA3_384);
-    map.put(CKG_MGF1_SHA3_512, CKM_SHA3_512);
-    mgf2HashAlgMap = Collections.unmodifiableMap(map);
+  public ObjectHandleParameters(long objectHandle) {
+    this.objectHandle = objectHandle;
   }
 
   /**
-   * Create a new RSAPkcsParameters object with the given attributes.
+   * Get this parameters object as a Long object, which is the handle of the
+   * underlying object.
    *
-   * @param hashAlg
-   *          The message digest algorithm used to calculate the digest of the
-   *          encoding parameter.
-   * @param mgf
-   *          The mask to apply to the encoded block. One of the constants
-   *          defined in the MessageGenerationFunctionType interface.
-   *          Due to limitation in the underlying jdk.crypto.cryptoki
-   *          implementation, only MGF1 is allowed and the hash algorithm
-   *          in mgf must be same as hashAlg.
+   * @return This object as a Long object.
    */
-  protected RSAPkcsParameters(long hashAlg, long mgf) {
-    if (!mgf2HashAlgMap.containsKey(mgf)) {
-      throw new IllegalArgumentException("Illegal value for argument 'mgf': " + codeToName(Category.CKG_MGF, mgf));
-    }
-
-    this.hashAlg = hashAlg;
-    this.mgf = mgf;
+  public Long getPKCS11ParamsObject() {
+    return objectHandle;
   }
 
   /**
@@ -113,8 +82,7 @@ abstract public class RSAPkcsParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  Hash Algorithm: " + codeToName(Category.CKM, hashAlg) +
-        "\n  Mask Generation Function: " +  codeToName(Category.CKG_MGF, mgf);
+    return "Class: " + getClass().getName() + "\n  PKCS11Object: " + objectHandle;
   }
 
 }

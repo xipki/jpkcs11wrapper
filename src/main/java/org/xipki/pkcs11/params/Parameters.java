@@ -40,69 +40,22 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.params;
 
 /**
- * Objects of this class represent a char-array attribute of a PKCS#11 object
- * as specified by PKCS#11.
+ * Every Parameters-class implements this interface through which the module.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class CharArrayAttribute extends Attribute {
+public interface Parameters {
 
   /**
-   * Constructor taking the PKCS#11 type of the attribute.
+   * Get this parameters object as an object of the corresponding *_PARAMS
+   * class of the sun.security.pkcs11.wrapper package.
    *
-   * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_LABEL.
+   * @return The object of the corresponding *_PARAMS class.
    */
-  public CharArrayAttribute(long type) {
-    super(type);
-  }
-
-  /**
-   * Set the char-array value of this attribute. Null, is also valid.
-   * A call to this method sets the present flag to true.
-   *
-   * @param value
-   *          The char-array value to set. May be null.
-   */
-  protected CharArrayAttribute charArrayValue(char[] value) {
-    ckAttribute.pValue = value;
-    present = true;
-    return this;
-  }
-
-  /**
-   * Set the char-array value of this attribute. Null, is also valid.
-   * A call to this method sets the present flag to true.
-   *
-   * @param value
-   *          The char-array value to set. May be null.
-   */
-  public CharArrayAttribute stringValue(String value) {
-    return charArrayValue(value == null ? null : value.toCharArray());
-  }
-
-  /**
-   * Get the string value of this attribute. Null, is also possible.
-   *
-   * @return The char-array value of this attribute or null.
-   */
-  @Override
-  public String getValue() {
-    return ckAttribute.pValue == null ? null : new String((char[]) ckAttribute.pValue);
-  }
-
-  /**
-   * Get a string representation of the value of this attribute.
-   *
-   * @return A string representation of the value of this attribute.
-   */
-  protected String getValueString() {
-    String value = getValue();
-    return (value != null) ? value : "<NULL_PTR>";
-  }
+  Object getPKCS11ParamsObject();
 
 }

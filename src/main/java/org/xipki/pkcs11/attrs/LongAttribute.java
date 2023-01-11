@@ -40,60 +40,72 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
-
-import org.xipki.pkcs11.Functions;
-import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
+package org.xipki.pkcs11.attrs;
 
 /**
- * This abstract class encapsulates parameters for the DH mechanisms
- * Mechanism.ECDH1_DERIVE and Mechanism.ECDH1_COFACTOR_DERIVE.
+ * Objects of this class represent a long attribute of a PKCS#11 object
+ * as specified by PKCS#11.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class EcDH1KeyDerivationParameters extends DHKeyDerivationParameters {
+public class LongAttribute extends Attribute {
 
   /**
-   * The data shared between the two parties.
-   */
-  private final byte[] sharedData;
-
-  /**
-   * Create a new EcDH1KeyDerivationParameters object with the given
-   * attributes.
+   * Constructor taking the PKCS#11 type of the attribute.
    *
-   * @param kdf
-   *          The key derivation function used on the shared secret value.
-   *          One of the values defined in KeyDerivationFunctionType.
-   * @param sharedData
-   *          The data shared between the two parties.
-   * @param publicData
-   *          The other party's public key value.
+   * @param type
+   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE_LEN.
    */
-  public EcDH1KeyDerivationParameters(long kdf, byte[] sharedData, byte[] publicData) {
-    super(kdf, publicData);
-    this.sharedData = sharedData;
+  public LongAttribute(long type) {
+    super(type);
   }
 
   /**
-   * Get this parameters object as an object of the CK_ECDH1_DERIVE_PARAMS
-   * class.
+   * Set the long value of this attribute. Null, is also valid.
+   * A call to this method sets the present flag to true.
    *
-   * @return This object as a CK_ECDH1_DERIVE_PARAMS object.
+   * @param value
+   *          The long value to set. May be null.
    */
-  public CK_ECDH1_DERIVE_PARAMS getPKCS11ParamsObject() {
-    return new CK_ECDH1_DERIVE_PARAMS(kdf, sharedData, publicData);
+  public LongAttribute longValue(Long value) {
+    ckAttribute.pValue = value;
+    present = true;
+    return this;
   }
 
   /**
-   * Returns the string representation of this object. Do not parse data from
-   * this string, it is for debugging only.
+   * Get the long value of this attribute. Null, is also possible.
    *
-   * @return A string representation of this object.
+   * @return The long value of this attribute or null.
    */
-  public String toString() {
-    return super.toString() + "\n  Shared Data: " + Functions.toHex(sharedData);
+  @Override
+  public Long getValue() {
+    return (Long) ckAttribute.pValue;
+  }
+
+  /**
+   * Get the int value of this attribute. Null, is also possible.
+   *
+   * @return The int value of this attribute or null.
+   */
+  public Integer getIntValue() {
+    return ckAttribute.pValue == null ? null : ((Long) ckAttribute.pValue).intValue();
+  }
+
+  /**
+   * Get a string representation of this attribute. The radix for the
+   * presentation of the value can be specified; e.g. 16 for hex, 10 for
+   * decimal.
+   *
+   * @param radix
+   *          The radix for the representation of the value.
+   * @return A string representation of the value of this attribute.
+   */
+  public String toString(int radix) {
+    String valueText = ((ckAttribute != null) && (ckAttribute.pValue != null))
+        ? Long.toString(((Long) ckAttribute.pValue), radix) : "<NULL_PTR>";
+    return present ? (sensitive ? "<Value is sensitive>" : valueText) : "<Attribute not present>";
   }
 
 }

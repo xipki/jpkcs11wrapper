@@ -40,44 +40,40 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
-
-import org.xipki.pkcs11.Functions;
+package org.xipki.pkcs11.params;
 
 /**
- * This class encapsulates parameters for general block ciphers in CBC mode.
- * Those are all Mechanism.*_CBC and Mechanism.*_CBC_PAD mechanisms. This class
- * also applies to other mechanisms which require just an initialization vector
- * as parameter.
+ * This class encapsulates parameters for the MAC algorithms for the following
+ * mechanisms: DES, DES3 (triple-DES), CAST, CAST3, CAST128 (CAST5), IDEA, and
+ * CDMF ciphers.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class InitializationVectorParameters implements Parameters {
+public class MacGeneralParameters implements Parameters {
 
   /**
-   * The initialization vector.
+   * The length of the MAC produced, in bytes.
    */
-  private final byte[] iv;
+  private final int macLength;
 
   /**
-   * Create a new InitializationVectorParameters object with the given
-   * initialization vector.
+   * Create a new MacGeneralParameters object with the given MAC length.
    *
-   * @param iv
-   *          The initialization vector.
+   * @param macLength
+   *          The length of the MAC produced, in bytes.
    */
-  public InitializationVectorParameters(byte[] iv) {
-    this.iv = Functions.requireNonNull("iv", iv);
+  public MacGeneralParameters(int macLength) {
+    this.macLength = macLength;
   }
 
   /**
-   * Get this parameters object as a byte array.
+   * Get this parameters object as a Long object.
    *
-   * @return This object as a byte array.
+   * @return This object as a Long object.
    */
-  public byte[] getPKCS11ParamsObject() {
-    return iv;
+  public Long getPKCS11ParamsObject() {
+    return (long) macLength;
   }
 
   /**
@@ -87,7 +83,7 @@ public class InitializationVectorParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  IV: " + Functions.toHex(iv);
+    return "Class: " + getClass().getName() + "\n  Mac Length (dec): " + macLength;
   }
 
 }

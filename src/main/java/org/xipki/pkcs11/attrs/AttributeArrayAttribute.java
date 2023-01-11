@@ -40,72 +40,96 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.attrs;
+
+import org.xipki.pkcs11.AttributeVector;
+import org.xipki.pkcs11.PKCS11Constants;
+import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 
 /**
- * Objects of this class represent a long attribute of a PKCS#11 object
- * as specified by PKCS#11.
+ * Objects of this class represent an attribute array of a PKCS#11 object
+ * as specified by PKCS#11. This attribute is available since
+ * cryptoki version 2.20.
  *
- * @author Karl Scheibelhofer
+ *
+ * @author Birgit Haas
  * @author Lijun Liao (xipki)
  */
-public class LongAttribute extends Attribute {
+public class AttributeArrayAttribute extends Attribute {
+
+  /**
+   * The attributes of this attribute array in their object class
+   * representation. Needed for printing and comparing this attribute array.
+   */
+  private AttributeVector template;
 
   /**
    * Constructor taking the PKCS#11 type of the attribute.
    *
    * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE_LEN.
+   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE.
    */
-  public LongAttribute(long type) {
+  public AttributeArrayAttribute(long type) {
     super(type);
   }
 
   /**
-   * Set the long value of this attribute. Null, is also valid.
+   * Set the attributes of this attribute array by specifying a
+   * GenericTemplate. Null, is also valid.
    * A call to this method sets the present flag to true.
    *
    * @param value
-   *          The long value to set. May be null.
+   *          The AttributeArray value to set. May be null.
    */
-  public LongAttribute longValue(Long value) {
-    ckAttribute.pValue = value;
+  public AttributeArrayAttribute attributeArrayValue(AttributeVector value) {
+    template = value;
+    ckAttribute.pValue = value.toCkAttributes();
     present = true;
     return this;
   }
 
   /**
-   * Get the long value of this attribute. Null, is also possible.
+   * Get the attribute array value of this attribute. Null, is also possible.
    *
-   * @return The long value of this attribute or null.
+   * @return The attribute array value of this attribute or null.
    */
   @Override
-  public Long getValue() {
-    return (Long) ckAttribute.pValue;
+  public AttributeVector getValue() {
+    if (template != null) return template;
+
+    if (!(ckAttribute.pValue != null && ((CK_ATTRIBUTE[]) ckAttribute.pValue).length > 0)) return null;
+
+    CK_ATTRIBUTE[] attributesArray = (CK_ATTRIBUTE[]) ckAttribute.pValue;
+    AttributeVector template = new AttributeVector();
+    for (CK_ATTRIBUTE ck_attribute : attributesArray) {
+      long type = ck_attribute.type;
+      Class<?> implementation = getAttributeClass(type);
+      if (implementation == null) {
+        // ignore
+        System.err.println("Could not create attribute for the attribute type " +
+            PKCS11Constants.codeToName(PKCS11Constants.Category.CKA, type));
+      } else {
+        try {
+          Attribute attribute = (Attribute) implementation.getDeclaredConstructor(long.class).newInstance(type);
+          template.attr(attribute.ckAttribute(ck_attribute).present(true));
+        } catch (Exception ex) {
+          System.err.println("Error when trying to create a " + implementation
+              + " instance for " + type + ": " + ex.getMessage());
+        }
+      }
+    }
+    return template;
   }
 
   /**
-   * Get the int value of this attribute. Null, is also possible.
+   * Get a string representation of the value of this attribute.
    *
-   * @return The int value of this attribute or null.
-   */
-  public Integer getIntValue() {
-    return ckAttribute.pValue == null ? null : ((Long) ckAttribute.pValue).intValue();
-  }
-
-  /**
-   * Get a string representation of this attribute. The radix for the
-   * presentation of the value can be specified; e.g. 16 for hex, 10 for
-   * decimal.
-   *
-   * @param radix
-   *          The radix for the representation of the value.
    * @return A string representation of the value of this attribute.
    */
-  public String toString(int radix) {
-    String valueText = ((ckAttribute != null) && (ckAttribute.pValue != null))
-        ? Long.toString(((Long) ckAttribute.pValue), radix) : "<NULL_PTR>";
-    return present ? (sensitive ? "<Value is sensitive>" : valueText) : "<Attribute not present>";
+  protected String getValueString() {
+    if (template == null) template = getValue();
+
+    return (template == null) ? "<NULL_PTR>" : template.toString();
   }
 
 }

@@ -40,7 +40,7 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.Util;

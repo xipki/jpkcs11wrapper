@@ -22,7 +22,7 @@ import org.xipki.pkcs11.AttributeVector;
 import org.xipki.pkcs11.Mechanism;
 import org.xipki.pkcs11.PKCS11Exception;
 import org.xipki.pkcs11.Token;
-import org.xipki.pkcs11.parameters.Salsa20Chacha20Poly1305Parameters;
+import org.xipki.pkcs11.params.Salsa20Chacha20Poly1305Parameters;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 

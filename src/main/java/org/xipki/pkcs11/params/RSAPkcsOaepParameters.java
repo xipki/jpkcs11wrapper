@@ -40,40 +40,68 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
+
+import org.xipki.pkcs11.Functions;
+import org.xipki.pkcs11.PKCS11Constants;
+import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
+
+import static org.xipki.pkcs11.PKCS11Constants.CKZ_SALT_SPECIFIED;
 
 /**
- * This class encapsulates parameters for the MAC algorithms for the following
- * mechanisms: DES, DES3 (triple-DES), CAST, CAST3, CAST128 (CAST5), IDEA, and
- * CDMF ciphers.
+ * This class encapsulates parameters for the Mechanism.RSA_PKCS_OAEP.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class MacGeneralParameters implements Parameters {
+public class RSAPkcsOaepParameters extends RSAPkcsParameters {
 
   /**
-   * The length of the MAC produced, in bytes.
+   * The source of the encoding parameter.
    */
-  private final int macLength;
+  private final long source;
 
   /**
-   * Create a new MacGeneralParameters object with the given MAC length.
+   * The data used as the input for the encoding parameter source.
+   */
+  private final byte[] sourceData;
+
+  /**
+   * Create a new RSAPkcsOaepParameters object with the given attributes.
    *
-   * @param macLength
-   *          The length of the MAC produced, in bytes.
+   * @param hashAlgorithm
+   *          The message digest algorithm used to calculate the digest of the
+   *          encoding parameter.
+   * @param maskGenerationFunction
+   *          The mask to apply to the encoded block. One of the constants
+   *          defined in the MessageGenerationFunctionType interface.
+   * @param source
+   *          The source of the encoding parameter. One of the constants
+   *          defined in the SourceType interface.
+   * @param sourceData
+   *          The data used as the input for the encoding parameter source.
    */
-  public MacGeneralParameters(int macLength) {
-    this.macLength = macLength;
+  public RSAPkcsOaepParameters(long hashAlgorithm, long maskGenerationFunction, long source, byte[] sourceData) {
+    super(hashAlgorithm, maskGenerationFunction);
+    this.source = Functions.requireAmong("source", source, 0, CKZ_SALT_SPECIFIED);
+    this.sourceData = sourceData;
   }
 
   /**
-   * Get this parameters object as a Long object.
+   * Get this parameters object as an object of the CK_RSA_PKCS_OAEP_PARAMS
+   * class.
    *
-   * @return This object as a Long object.
+   * @return This object as a CK_RSA_PKCS_OAEP_PARAMS object.
    */
-  public Long getPKCS11ParamsObject() {
-    return (long) macLength;
+  public CK_RSA_PKCS_OAEP_PARAMS getPKCS11ParamsObject() {
+    CK_RSA_PKCS_OAEP_PARAMS params = new CK_RSA_PKCS_OAEP_PARAMS();
+
+    params.hashAlg = hashAlg;
+    params.mgf = mgf;
+    params.source = source;
+    params.pSourceData = sourceData;
+
+    return params;
   }
 
   /**
@@ -83,7 +111,8 @@ public class MacGeneralParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  Mac Length (dec): " + macLength;
+    return super.toString() + "\n  Source: " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKZ, source)
+        + "\n  Source Data (hex): " + Functions.toHex(sourceData);
   }
 
 }

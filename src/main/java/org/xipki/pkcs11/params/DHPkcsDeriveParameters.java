@@ -40,40 +40,52 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
-import org.xipki.pkcs11.Version;
-import sun.security.pkcs11.wrapper.CK_VERSION;
+import org.xipki.pkcs11.Functions;
 
 /**
- * This class is used for the Mechanism.SSL3_PRE_MASTER_KEY_GEN.
+ * This class encapsulates parameters for the algorithms
+ * Mechanism.DH_PKCS_DERIVE.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
- *
  */
-public class VersionParameters extends Version implements Parameters {
+public class DHPkcsDeriveParameters implements Parameters {
 
   /**
-   * Create a new VersionParameters object with the given major and minor
-   * version.
-   *
-   * @param major
-   *          The major version number.
-   * @param minor
-   *          The minor version number.
+   * The initialization vector.
    */
-  public VersionParameters(byte major, byte minor) {
-    super(major, minor);
+  private final byte[] publicValue;
+
+  /**
+   * Create a new DHPkcsDeriveParameters object with the given public value.
+   *
+   * @param publicValue
+   *          The public value of the other party in the key agreement
+   *          protocol.
+   */
+  public DHPkcsDeriveParameters(byte[] publicValue) {
+    this.publicValue = Functions.requireNonNull("publicValue", publicValue);
   }
 
   /**
-   * Get this parameters object as a CK_VERSION object.
+   * Get this parameters object as a byte array.
    *
-   * @return This object as a CK_VERSION object.
+   * @return This object as a byte array.
    */
-  public CK_VERSION getPKCS11ParamsObject() {
-    return new CK_VERSION(getMajor(), getMinor());
+  public byte[] getPKCS11ParamsObject() {
+    return publicValue;
+  }
+
+  /**
+   * Returns the string representation of this object. Do not parse data from
+   * this string, it is for debugging only.
+   *
+   * @return A string representation of this object.
+   */
+  public String toString() {
+    return "Class: " + getClass().getName() + "\n  Public Value: " + Functions.toHex(publicValue);
   }
 
 }

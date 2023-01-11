@@ -40,71 +40,59 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
-
-import org.xipki.pkcs11.Functions;
-
-import java.math.BigInteger;
+package org.xipki.pkcs11.attrs;
 
 /**
- * Objects of this class represent a byte-array attribute of a PKCS#11 object
+ * Objects of this class represent a char-array attribute of a PKCS#11 object
  * as specified by PKCS#11.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class ByteArrayAttribute extends Attribute {
+public class CharArrayAttribute extends Attribute {
 
   /**
    * Constructor taking the PKCS#11 type of the attribute.
    *
    * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_VALUE.
+   *          The PKCS#11 type of this attribute; e.g. CKA_LABEL.
    */
-  public ByteArrayAttribute(long type) {
+  public CharArrayAttribute(long type) {
     super(type);
   }
 
   /**
-   * Set the byte-array value of this attribute. Null, is also valid.
+   * Set the char-array value of this attribute. Null, is also valid.
    * A call to this method sets the present flag to true.
    *
    * @param value
-   *          The byte-array value to set. May be null.
+   *          The char-array value to set. May be null.
    */
-  public ByteArrayAttribute byteArrayValue(byte[] value) {
+  protected CharArrayAttribute charArrayValue(char[] value) {
     ckAttribute.pValue = value;
     present = true;
     return this;
   }
 
   /**
-   * Set the big integer value whose byte-array representation is the content of this attribute.
-   * Null, is also valid. A call to this method sets the present flag to true.
+   * Set the char-array value of this attribute. Null, is also valid.
+   * A call to this method sets the present flag to true.
    *
    * @param value
-   *          The byte-array value to set. May be null.
+   *          The char-array value to set. May be null.
    */
-  public ByteArrayAttribute bigIntValue(BigInteger value) {
-    return byteArrayValue(value == null ? null : value.toByteArray());
+  public CharArrayAttribute stringValue(String value) {
+    return charArrayValue(value == null ? null : value.toCharArray());
   }
 
   /**
-   * Get the byte-array value of this attribute. Null, is also possible.
+   * Get the string value of this attribute. Null, is also possible.
    *
-   * @return The byte-array value of this attribute or null.
+   * @return The char-array value of this attribute or null.
    */
   @Override
-  public byte[] getValue() {
-    return (byte[]) ckAttribute.pValue;
-  }
-
-  public BigInteger getBigIntValue() {
-    return new BigInteger(1, (byte[]) ckAttribute.pValue);
-  }
-
-  public BigInteger getSignedBigIntValue() {
-    return new BigInteger((byte[]) ckAttribute.pValue);
+  public String getValue() {
+    return ckAttribute.pValue == null ? null : new String((char[]) ckAttribute.pValue);
   }
 
   /**
@@ -113,8 +101,8 @@ public class ByteArrayAttribute extends Attribute {
    * @return A string representation of the value of this attribute.
    */
   protected String getValueString() {
-    return ((ckAttribute != null) && (ckAttribute.pValue != null))
-      ? Functions.toHex((byte[]) ckAttribute.pValue) : "<NULL_PTR>";
+    String value = getValue();
+    return (value != null) ? value : "<NULL_PTR>";
   }
 
 }

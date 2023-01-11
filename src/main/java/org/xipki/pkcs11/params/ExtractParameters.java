@@ -40,39 +40,40 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.parameters;
+package org.xipki.pkcs11.params;
 
 /**
- * This class encapsulates parameters for Mechanisms.CONCATENATE_BASE_AND_KEY.
+ * This class encapsulates parameters for Mechanisms.EXTRACT_KEY_FROM_KEY.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class ObjectHandleParameters implements Parameters {
+public class ExtractParameters implements Parameters {
 
   /**
-   * The PKCS#11 object.
+   * The bit of the base key that should be used as the first bit of the
+   * derived key.
    */
-  private final long objectHandle;
+  private final int bitIndex;
 
   /**
-   * Create a new ObjectHandleParameters object using the given object.
+   * Create a new ExtractParameters object with the given bit index.
    *
-   * @param objectHandle
-   *          The PKCS#11 object whose handle to use.
+   * @param bitIndex
+   *          The bit of the base key that should be used as the first bit of
+   *          the derived key.
    */
-  public ObjectHandleParameters(long objectHandle) {
-    this.objectHandle = objectHandle;
+  public ExtractParameters(int bitIndex) {
+    this.bitIndex = bitIndex;
   }
 
   /**
-   * Get this parameters object as a Long object, which is the handle of the
-   * underlying object.
+   * Get this parameters object as a Long object.
    *
    * @return This object as a Long object.
    */
   public Long getPKCS11ParamsObject() {
-    return objectHandle;
+    return (long) bitIndex;
   }
 
   /**
@@ -82,7 +83,7 @@ public class ObjectHandleParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  PKCS11Object: " + objectHandle;
+    return "Class: " + getClass().getName() + "\n  Bit Index (dec): " + bitIndex;
   }
 
 }

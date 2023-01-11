@@ -40,28 +40,20 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.attrs;
 
-import org.xipki.pkcs11.AttributeVector;
-import org.xipki.pkcs11.PKCS11Constants;
-import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
+import org.xipki.pkcs11.Functions;
+
+import java.math.BigInteger;
 
 /**
- * Objects of this class represent an attribute array of a PKCS#11 object
- * as specified by PKCS#11. This attribute is available since
- * cryptoki version 2.20.
+ * Objects of this class represent a byte-array attribute of a PKCS#11 object
+ * as specified by PKCS#11.
  *
- *
- * @author Birgit Haas
+ * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class AttributeArrayAttribute extends Attribute {
-
-  /**
-   * The attributes of this attribute array in their object class
-   * representation. Needed for printing and comparing this attribute array.
-   */
-  private AttributeVector template;
+public class ByteArrayAttribute extends Attribute {
 
   /**
    * Constructor taking the PKCS#11 type of the attribute.
@@ -69,56 +61,50 @@ public class AttributeArrayAttribute extends Attribute {
    * @param type
    *          The PKCS#11 type of this attribute; e.g. CKA_VALUE.
    */
-  public AttributeArrayAttribute(long type) {
+  public ByteArrayAttribute(long type) {
     super(type);
   }
 
   /**
-   * Set the attributes of this attribute array by specifying a
-   * GenericTemplate. Null, is also valid.
+   * Set the byte-array value of this attribute. Null, is also valid.
    * A call to this method sets the present flag to true.
    *
    * @param value
-   *          The AttributeArray value to set. May be null.
+   *          The byte-array value to set. May be null.
    */
-  public AttributeArrayAttribute attributeArrayValue(AttributeVector value) {
-    template = value;
-    ckAttribute.pValue = value.toCkAttributes();
+  public ByteArrayAttribute byteArrayValue(byte[] value) {
+    ckAttribute.pValue = value;
     present = true;
     return this;
   }
 
   /**
-   * Get the attribute array value of this attribute. Null, is also possible.
+   * Set the big integer value whose byte-array representation is the content of this attribute.
+   * Null, is also valid. A call to this method sets the present flag to true.
    *
-   * @return The attribute array value of this attribute or null.
+   * @param value
+   *          The byte-array value to set. May be null.
+   */
+  public ByteArrayAttribute bigIntValue(BigInteger value) {
+    return byteArrayValue(value == null ? null : value.toByteArray());
+  }
+
+  /**
+   * Get the byte-array value of this attribute. Null, is also possible.
+   *
+   * @return The byte-array value of this attribute or null.
    */
   @Override
-  public AttributeVector getValue() {
-    if (template != null) return template;
+  public byte[] getValue() {
+    return (byte[]) ckAttribute.pValue;
+  }
 
-    if (!(ckAttribute.pValue != null && ((CK_ATTRIBUTE[]) ckAttribute.pValue).length > 0)) return null;
+  public BigInteger getBigIntValue() {
+    return new BigInteger(1, (byte[]) ckAttribute.pValue);
+  }
 
-    CK_ATTRIBUTE[] attributesArray = (CK_ATTRIBUTE[]) ckAttribute.pValue;
-    AttributeVector template = new AttributeVector();
-    for (CK_ATTRIBUTE ck_attribute : attributesArray) {
-      long type = ck_attribute.type;
-      Class<?> implementation = getAttributeClass(type);
-      if (implementation == null) {
-        // ignore
-        System.err.println("Could not create attribute for the attribute type " +
-            PKCS11Constants.codeToName(PKCS11Constants.Category.CKA, type));
-      } else {
-        try {
-          Attribute attribute = (Attribute) implementation.getDeclaredConstructor(long.class).newInstance(type);
-          template.attr(attribute.ckAttribute(ck_attribute).present(true));
-        } catch (Exception ex) {
-          System.err.println("Error when trying to create a " + implementation
-              + " instance for " + type + ": " + ex.getMessage());
-        }
-      }
-    }
-    return template;
+  public BigInteger getSignedBigIntValue() {
+    return new BigInteger((byte[]) ckAttribute.pValue);
   }
 
   /**
@@ -127,9 +113,8 @@ public class AttributeArrayAttribute extends Attribute {
    * @return A string representation of the value of this attribute.
    */
   protected String getValueString() {
-    if (template == null) template = getValue();
-
-    return (template == null) ? "<NULL_PTR>" : template.toString();
+    return ((ckAttribute != null) && (ckAttribute.pValue != null))
+      ? Functions.toHex((byte[]) ckAttribute.pValue) : "<NULL_PTR>";
   }
 
 }

@@ -40,78 +40,60 @@
 // OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package org.xipki.pkcs11.objects;
+package org.xipki.pkcs11.params;
 
-import sun.security.pkcs11.wrapper.CK_DATE;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import org.xipki.pkcs11.Functions;
+import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
 
 /**
- * Objects of this class represent a date attribute of a PKCS#11 object
- * as specified by PKCS#11.
+ * This abstract class encapsulates parameters for the DH mechanisms
+ * Mechanism.ECDH1_DERIVE and Mechanism.ECDH1_COFACTOR_DERIVE.
  *
  * @author Karl Scheibelhofer
  * @author Lijun Liao (xipki)
  */
-public class DateAttribute extends Attribute {
+public class EcDH1KeyDerivationParameters extends DHKeyDerivationParameters {
 
   /**
-   * Constructor taking the PKCS#11 type of the attribute.
-   *
-   * @param type
-   *          The PKCS#11 type of this attribute; e.g. CKA_START_DATE.
+   * The data shared between the two parties.
    */
-  public DateAttribute(long type) {
-    super(type);
+  private final byte[] sharedData;
+
+  /**
+   * Create a new EcDH1KeyDerivationParameters object with the given
+   * attributes.
+   *
+   * @param kdf
+   *          The key derivation function used on the shared secret value.
+   *          One of the values defined in KeyDerivationFunctionType.
+   * @param sharedData
+   *          The data shared between the two parties.
+   * @param publicData
+   *          The other party's public key value.
+   */
+  public EcDH1KeyDerivationParameters(long kdf, byte[] sharedData, byte[] publicData) {
+    super(kdf, publicData);
+    this.sharedData = sharedData;
   }
 
   /**
-   * Set the date value of this attribute. Null, is also valid.
-   * A call to this method sets the present flag to true.
+   * Get this parameters object as an object of the CK_ECDH1_DERIVE_PARAMS
+   * class.
    *
-   * @param value
-   *          The date value to set. May be null.
+   * @return This object as a CK_ECDH1_DERIVE_PARAMS object.
    */
-  public DateAttribute dateValue(Date value) {
-    if (value == null) {
-      ckAttribute.pValue = null;
-    } else {
-      //poor memory/performance behavior, consider alternatives
-      Calendar calendar = new GregorianCalendar();
-      calendar.setTime(value);
-      int year = calendar.get(Calendar.YEAR);
-      // month counting starts with zero
-      int month = calendar.get(Calendar.MONTH) + 1;
-      int day = calendar.get(Calendar.DAY_OF_MONTH);
-      ckAttribute.pValue = new CK_DATE(
-          Integer.toString(year).toCharArray(),
-          (month < 10 ? "0" + month: Integer.toString(month)).toCharArray(),
-          (day < 10 ? "0" + day: Integer.toString(day)).toCharArray());
-    }
-    present = true;
-    return this;
+  public CK_ECDH1_DERIVE_PARAMS getPKCS11ParamsObject() {
+    return new CK_ECDH1_DERIVE_PARAMS(kdf, sharedData, publicData);
   }
 
   /**
-   * Get the date value of this attribute. Null, is also possible.
+   * Returns the string representation of this object. Do not parse data from
+   * this string, it is for debugging only.
    *
-   * @return The date value of this attribute or null.
+   * @return A string representation of this object.
    */
-  @Override
-  public Date getValue() {
-    if (ckAttribute.pValue == null) return null;
-
-    CK_DATE ckDate = (CK_DATE) ckAttribute.pValue;
-    int year = Integer.parseInt(new String(ckDate.year));
-    int month = Integer.parseInt(new String(ckDate.month));
-    int day = Integer.parseInt(new String(ckDate.day));
-    // poor performance, consider alternatives
-    Calendar calendar = new GregorianCalendar();
-    // calendar starts months with 0
-    calendar.set(year, Calendar.JANUARY + (month - 1), day);
-    return calendar.getTime();
+  public String toString() {
+    return super.toString() + "\n  Shared Data: " + Functions.toHex(sharedData);
   }
 
 }
