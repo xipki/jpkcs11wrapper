@@ -29,7 +29,7 @@ To use pkcs11wrapper in JDK 17 or above, please add the following java option:
 
 JUnit tests
 =====
-- Configure the library and PIN of your HSM module in the file `example/data/pkcs11.properties`.
+- Configure the library and PIN of your HSM module in the file `src/test/resources/pkcs11.properties`.
 - `mvn test`  
    - To activate the speed tests use `-PspeedTests`
    - By default, the speed test will run with 2 threads, you can change the
