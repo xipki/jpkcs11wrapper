@@ -16,6 +16,7 @@
  */
 package org.xipki.pkcs11;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,6 +96,11 @@ public class Functions {
 
   public static String getHashAlgName(long hashMechanism) {
     return hashMechCodeToHashNames.get(hashMechanism);
+  }
+
+  public static byte[] asUnsignedByteArray(BigInteger bn) {
+    byte[] bytes = bn.toByteArray();
+    return bytes[0] != 0 ? bytes : Arrays.copyOfRange(bytes, 1, bytes.length);
   }
 
   /**

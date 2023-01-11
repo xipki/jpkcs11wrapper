@@ -63,12 +63,12 @@ abstract public class RSAPkcsParameters implements Parameters {
    * The message digest algorithm used to calculate the digest of the encoding
    * parameter.
    */
-  protected final long hashAlg;
+  protected long hashAlg;
 
   /**
    * The mask to apply to the encoded block.
    */
-  protected final long mgf;
+  protected long mgf;
 
   static {
     Map<Long, Long> map = new HashMap<>();
@@ -113,8 +113,8 @@ abstract public class RSAPkcsParameters implements Parameters {
    * @return A string representation of this object.
    */
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  Hash Algorithm: " + codeToName(Category.CKM, hashAlg) +
-        "\n  Mask Generation Function: " +  codeToName(Category.CKG_MGF, mgf);
+    return "Class: " + getClass().getName() + "\n  Hash Algorithm: " + ckmCodeToName(hashAlg) +
+        "\n  Mask Generation Function: " + codeToName(Category.CKG_MGF, mgf);
   }
 
 }
