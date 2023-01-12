@@ -1415,6 +1415,7 @@ public class Session {
    *
    * @return the string representation of this object
    */
+  @Override
   public String toString() {
     return "Session Handle: 0x" + Long.toHexString(sessionHandle) +  "\nToken: " + token;
   }

@@ -41,6 +41,7 @@ public class OpaqueParameters implements Parameters {
     return bytes;
   }
 
+  @Override
   public String toString() {
     return "Class: " + getClass().getName() + "\n  Bytes (hex): " + Functions.toHex(bytes);
   }

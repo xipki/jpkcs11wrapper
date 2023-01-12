@@ -51,6 +51,7 @@ public class GcmParameters implements Parameters {
     this.tagBits = tagBits;
   }
 
+  @Override
   public Object getPKCS11ParamsObject() {
     try {
       return constructor.newInstance(tagBits, iv, aad);
@@ -65,6 +66,7 @@ public class GcmParameters implements Parameters {
    *
    * @return A string representation of this object.
    */
+  @Override
   public String toString() {
     return "Class: " + getClass().getName() + "\n   IV: " + Functions.toHex(iv) +
         "\n  AAD: " + (aad == null ? " " : Functions.toHex(aad)) + "\n   TagBits: " + tagBits;

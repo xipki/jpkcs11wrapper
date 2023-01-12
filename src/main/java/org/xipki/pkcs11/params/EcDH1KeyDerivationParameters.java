@@ -82,6 +82,7 @@ public class EcDH1KeyDerivationParameters extends DHKeyDerivationParameters {
    *
    * @return This object as a CK_ECDH1_DERIVE_PARAMS object.
    */
+  @Override
   public CK_ECDH1_DERIVE_PARAMS getPKCS11ParamsObject() {
     return new CK_ECDH1_DERIVE_PARAMS(kdf, sharedData, publicData);
   }
@@ -92,6 +93,7 @@ public class EcDH1KeyDerivationParameters extends DHKeyDerivationParameters {
    *
    * @return A string representation of this object.
    */
+  @Override
   public String toString() {
     return super.toString() + "\n  Shared Data: " + Functions.toHex(sharedData);
   }

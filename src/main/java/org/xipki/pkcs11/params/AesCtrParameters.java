@@ -48,10 +48,12 @@ public class AesCtrParameters implements Parameters {
    *
    * @return A string representation of this object.
    */
+  @Override
   public String toString() {
     return "Class: " + getClass().getName() + "\n  cb: " + Functions.toHex(cb);
   }
 
+  @Override
   public CK_AES_CTR_PARAMS getPKCS11ParamsObject() {
     return new CK_AES_CTR_PARAMS(cb);
   }

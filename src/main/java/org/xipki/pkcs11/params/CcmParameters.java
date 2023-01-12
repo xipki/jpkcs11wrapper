@@ -56,12 +56,14 @@ public class CcmParameters implements Parameters {
     this.dataLen = dataLen;
   }
 
+  @Override
   public String toString() {
     return "Class: " + getClass().getName() + "\n  ulDataLen: " + dataLen +
         "\n  nonce: " + Functions.toHex(nonce) +
         "\n  aad: " + (aad == null ? " " : Functions.toHex(aad)) + "\n  macLen: " + macLen;
   }
 
+  @Override
   public Object getPKCS11ParamsObject() {
     try {
       return constructor.newInstance(macLen, nonce, aad, dataLen);
