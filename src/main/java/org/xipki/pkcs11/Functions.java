@@ -16,10 +16,7 @@
  */
 package org.xipki.pkcs11;
 
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
@@ -98,7 +95,7 @@ public class Functions {
     return hashMechCodeToHashNames.get(hashMechanism);
   }
 
-  public static byte[] asUnsignedByteArray(BigInteger bn) {
+  public static byte[] asUnsignedByteArray(java.math.BigInteger bn) {
     byte[] bytes = bn.toByteArray();
     return bytes[0] != 0 ? bytes : Arrays.copyOfRange(bytes, 1, bytes.length);
   }
@@ -172,21 +169,22 @@ public class Functions {
   }
 
   public static String toStringFlags(Category category, String prefix, long flags, long... flagMasks) {
-    StringBuilder sb = new StringBuilder(prefix.length() + 100);
-    sb.append(prefix).append("0x").append(toFullHex(flags)).append(" (");
-    boolean first = true;
+    ArrayList<Long> sortedMasks = new ArrayList<>(flagMasks.length);
     for (long flagMask : flagMasks) {
+      sortedMasks.add(flagMask);
+    }
+    Collections.sort(sortedMasks);
+
+    StringBuilder sb = new StringBuilder(100);
+    for (long flagMask : sortedMasks) {
       if ((flags & flagMask) != 0L) {
-        if (first) {
-          first = false;
-        } else {
-          sb.append(" | ");
-        }
+        if (sb.length() > 0) sb.append(" | ");
+
         sb.append(codeToName(category, flagMask).substring(4)); // 4 = "CKF_".length
       }
     }
 
-    return sb.append(")").toString();
+    return prefix + "0x" + toFullHex(flags) + " (" + sb + ")";
   }
 
   public static byte[] fixECDSASignature(byte[] sig) {
