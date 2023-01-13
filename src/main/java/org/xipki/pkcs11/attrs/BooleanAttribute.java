@@ -84,4 +84,9 @@ public class BooleanAttribute extends Attribute {
     return (Boolean) ckAttribute.pValue;
   }
 
+  protected String getValueString() {
+    return (ckAttribute == null || ckAttribute.pValue == null) ? "<NULL_PTR>"
+        : (boolean) ckAttribute.pValue ? "TRUE" : "FALSE";
+  }
+
 }
