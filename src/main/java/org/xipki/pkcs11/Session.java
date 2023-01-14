@@ -1573,7 +1573,6 @@ public class Session {
     for (int i = 0; i < attributeTemplateList.length; i++) {
       attributeTemplateList[i] = new CK_ATTRIBUTE();
       attributeTemplateList[i].type = attributes[i].getType();
-      attributes[i].stateKnown(false);
     }
 
     PKCS11Exception delayedEx = null;
@@ -1587,13 +1586,13 @@ public class Session {
       Attribute attribute = attributes[i];
       CK_ATTRIBUTE template = attributeTemplateList[i];
       if (template != null) {
-        attribute.stateKnown(true).present(true).sensitive(false);
+        attribute.present(true).sensitive(false);
 
         if (attribute instanceof BooleanAttribute) fixBooleanAttrValue(template);
 
         attribute.ckAttribute(template);
       } else {
-        attribute.stateKnown(false).present(false).sensitive(true);
+        attribute.present(false).sensitive(true);
       }
     }
 
@@ -1644,7 +1643,7 @@ public class Session {
    *              If getting the attribute failed.
    */
   private void doGetAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
-    attribute.stateKnown(false).present(false);
+    attribute.present(false);
 
     try {
       CK_ATTRIBUTE[] attributeTemplateList = new CK_ATTRIBUTE[1];
@@ -1654,7 +1653,7 @@ public class Session {
 
       if (attribute instanceof BooleanAttribute) fixBooleanAttrValue(attributeTemplateList[0]);
 
-      attribute.ckAttribute(attributeTemplateList[0]).stateKnown(true).present(true).sensitive(false);
+      attribute.ckAttribute(attributeTemplateList[0]).present(true).sensitive(false);
       postProcessGetAttribute(attribute);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       long ec = ex.getErrorCode();
@@ -1662,15 +1661,15 @@ public class Session {
         // this means, that some requested attributes are missing, but
         // we can ignore this and proceed; e.g. a v2.01 module won't
         // have the object ID attribute
-        attribute.stateKnown(true).present(false).getCkAttribute().pValue = null;
+        attribute.present(false).getCkAttribute().pValue = null;
       } else if (ec == CKR_ATTRIBUTE_SENSITIVE) {
         // this means, that some requested attributes are missing, but
         // we can ignore this and proceed; e.g. a v2.01 module won't
         // have the object ID attribute
         attribute.getCkAttribute().pValue = null;
-        attribute.stateKnown(true).present(true).sensitive(true).getCkAttribute().pValue = null;
+        attribute.present(true).sensitive(true).getCkAttribute().pValue = null;
       } else if (ec == CKR_ARGUMENTS_BAD || ec == CKR_FUNCTION_FAILED || ec == CKR_FUNCTION_REJECTED) {
-        attribute.stateKnown(true).present(false).sensitive(false).getCkAttribute().pValue = null;
+        attribute.present(false).sensitive(false).getCkAttribute().pValue = null;
       } else {
         // there was a different error that we should propagate
         throw new PKCS11Exception(ex.getErrorCode());
