@@ -1489,13 +1489,13 @@ public class Session {
 
   public Long getLongAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     LongAttribute attr = new LongAttribute(attributeType);
-    getAttrValue(objectHandle, attr);
+    doGetAttrValue(objectHandle, attr);
     return attr.getValue();
   }
 
   public String getStringAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     CharArrayAttribute attr = new CharArrayAttribute(attributeType);
-    getAttrValue(objectHandle, attr);
+    doGetAttrValue(objectHandle, attr);
     return attr.getValue();
   }
 
@@ -1506,13 +1506,13 @@ public class Session {
 
   public byte[] getByteArrayAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     ByteArrayAttribute attr = new ByteArrayAttribute(attributeType);
-    getAttrValue(objectHandle, attr);
+    doGetAttrValue(objectHandle, attr);
     return attr.getValue();
   }
 
   public Boolean getBooleanAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     BooleanAttribute attr = new BooleanAttribute(attributeType);
-    getAttrValue(objectHandle, attr);
+    doGetAttrValue(objectHandle, attr);
     return attr.getValue();
   }
 
@@ -1538,7 +1538,7 @@ public class Session {
 
   public Object getAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
     Attribute attr = Attribute.getInstance(attributeType);
-    getAttrValue(objectHandle, attr);
+    doGetAttrValue(objectHandle, attr);
     return attr.getValue();
   }
 
@@ -1548,7 +1548,7 @@ public class Session {
     for (int i = 0; i < n; i++) {
       attrs[i] = Attribute.getInstance(attributeTypes[i]);
     }
-    getAttrValues(objectHandle, attrs);
+    doGetAttrValues(objectHandle, attrs);
     return new AttributeVector(attrs);
   }
 
@@ -1566,7 +1566,7 @@ public class Session {
      * @exception PKCS11Exception
      *              If getting the attributes failed.
      */
-  private void getAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
+  private void doGetAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
     Functions.requireNonNull("attributes", attributes);
 
     CK_ATTRIBUTE[] attributeTemplateList = new CK_ATTRIBUTE[attributes.length];
@@ -1604,13 +1604,15 @@ public class Session {
       return;
     }
 
-    // do all separately again.
-    delayedEx = null;
-    for (Attribute attr : attributes) {
-      try {
-        getAttrValue(objectHandle, attr);
-      } catch (PKCS11Exception ex) {
-        if (delayedEx == null) delayedEx = ex;
+    if (attributes.length > 1) {
+      // do all separately again.
+      delayedEx = null;
+      for (Attribute attr : attributes) {
+        try {
+          doGetAttrValue(objectHandle, attr);
+        } catch (PKCS11Exception ex) {
+          if (delayedEx == null) delayedEx = ex;
+        }
       }
     }
 
@@ -1641,7 +1643,7 @@ public class Session {
    * @exception PKCS11Exception
    *              If getting the attribute failed.
    */
-  private void getAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
+  private void doGetAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
     attribute.stateKnown(false).present(false);
 
     try {
