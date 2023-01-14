@@ -1569,8 +1569,13 @@ public class Session {
   private void doGetAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
     Functions.requireNonNull("attributes", attributes);
 
+    if (attributes.length == 1) {
+      doGetAttrValue(objectHandle, attributes[0], null);
+      return;
+    }
+
     CK_ATTRIBUTE[] attributeTemplateList = new CK_ATTRIBUTE[attributes.length];
-    for (int i = 0; i < attributeTemplateList.length; i++) {
+    for (int i = 0; i < attributes.length; i++) {
       attributeTemplateList[i] = new CK_ATTRIBUTE();
       attributeTemplateList[i].type = attributes[i].getType();
     }
@@ -1586,31 +1591,21 @@ public class Session {
       Attribute attribute = attributes[i];
       CK_ATTRIBUTE template = attributeTemplateList[i];
       if (template != null) {
-        attribute.present(true).sensitive(false);
-
-        if (attribute instanceof BooleanAttribute) fixBooleanAttrValue(template);
-
-        attribute.ckAttribute(template);
-      } else {
-        attribute.present(false).sensitive(true);
+        attribute.present(true).sensitive(false).ckAttribute(template);
+        postProcessGetAttribute(attribute);
       }
     }
 
-    if (delayedEx == null) {
-      for (Attribute attr : attributes) {
-        postProcessGetAttribute(attr);
-      }
-      return;
-    }
-
-    if (attributes.length > 1) {
-      // do all separately again.
+    if (delayedEx != null) {
+      // do all failed separately again.
       delayedEx = null;
       for (Attribute attr : attributes) {
-        try {
-          doGetAttrValue(objectHandle, attr);
-        } catch (PKCS11Exception ex) {
-          if (delayedEx == null) delayedEx = ex;
+        if (attr.getCkAttribute() == null || attr.getCkAttribute().pValue == null) {
+          try {
+            doGetAttrValue(objectHandle, attr, attributes);
+          } catch (PKCS11Exception ex) {
+            if (delayedEx == null) delayedEx = ex;
+          }
         }
       }
     }
@@ -1642,7 +1637,8 @@ public class Session {
    * @exception PKCS11Exception
    *              If getting the attribute failed.
    */
-  private void doGetAttrValue(long objectHandle, Attribute attribute) throws PKCS11Exception {
+  private void doGetAttrValue(long objectHandle, Attribute attribute, Attribute... otherAttributes)
+      throws PKCS11Exception {
     attribute.present(false);
 
     try {
@@ -1651,17 +1647,38 @@ public class Session {
       attributeTemplateList[0].type = attribute.getType();
       pkcs11.C_GetAttributeValue(sessionHandle, objectHandle, attributeTemplateList);
 
-      if (attribute instanceof BooleanAttribute) fixBooleanAttrValue(attributeTemplateList[0]);
-
       attribute.ckAttribute(attributeTemplateList[0]).present(true).sensitive(false);
-      postProcessGetAttribute(attribute);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       long ec = ex.getErrorCode();
       if (ec == CKR_ATTRIBUTE_TYPE_INVALID) {
-        // this means, that some requested attributes are missing, but
-        // we can ignore this and proceed; e.g. a v2.01 module won't
-        // have the object ID attribute
-        attribute.present(false).getCkAttribute().pValue = null;
+        if (attribute.getType() == CKA_EC_PARAMS) {
+          // this means, that some requested attributes are missing, but
+          // we can ignore this and proceed; e.g. a v2.01 module won't
+          // have the object ID attribute
+          attribute.present(false).getCkAttribute().pValue = null;
+
+          // Maybe we can fix it.
+          // Some HSMs do not return EC_PARAMS
+          Long keyType = null;
+          if (otherAttributes != null) {
+            for (Attribute otherAttr : otherAttributes) {
+              if (otherAttr.type() == CKA_KEY_TYPE) {
+                keyType = ((LongAttribute) otherAttr).getValue();
+              }
+            }
+          }
+
+          if (keyType == null) {
+            try {
+              keyType = getCkaKeyType(objectHandle);
+            } catch (PKCS11Exception e2) {
+            }
+          }
+
+          if (keyType != null && keyType == CKK_VENDOR_SM2) {
+            attribute.present(false).getCkAttribute().pValue = Functions.decodeHex("06082a811ccf5501822d");
+          }
+        }
       } else if (ec == CKR_ATTRIBUTE_SENSITIVE) {
         // this means, that some requested attributes are missing, but
         // we can ignore this and proceed; e.g. a v2.01 module won't
@@ -1675,6 +1692,8 @@ public class Session {
         throw new PKCS11Exception(ex.getErrorCode());
       }
     }
+
+    postProcessGetAttribute(attribute);
   }
 
   private CK_ATTRIBUTE[] toOutCKAttributes(AttributeVector template) {
@@ -1692,23 +1711,25 @@ public class Session {
 
   private void postProcessGetAttribute(Attribute attr) {
     CK_ATTRIBUTE ckAttr = attr.getCkAttribute();
+    if (ckAttr == null || ckAttr.pValue == null) return;
+
     if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
       long value = (long) ckAttr.pValue;
-      if ((value & CKK_VENDOR_DEFINED) != 0L) ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
-    }
-  }
-
-  private static void fixBooleanAttrValue(CK_ATTRIBUTE attr) {
-    if (attr.pValue instanceof byte[]) {
-      byte[] value = (byte[]) attr.pValue;
-      boolean allZeros = true;
-      for (byte b : value) {
-        if (b != 0) {
-          allZeros = false;
-          break;
-        }
+      if ((value & CKK_VENDOR_DEFINED) != 0L) {
+        ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
       }
-      attr.pValue = !allZeros;
+    } else if (attr instanceof BooleanAttribute) {
+      if (ckAttr.pValue instanceof byte[]) {
+        byte[] value = (byte[]) ckAttr.pValue;
+        boolean allZeros = true;
+        for (byte b : value) {
+          if (b != 0) {
+            allZeros = false;
+            break;
+          }
+        }
+        ckAttr.pValue = !allZeros;
+      }
     }
   }
 
