@@ -53,6 +53,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
@@ -486,7 +488,7 @@ public class Session {
   }
 
   /**
-   * Encrypts the given data with the key and mechansim given to the encryptInit method. This method
+   * Encrypts the given data with the key and mechanism given to the encryptInit method. This method
    * finalizes the current encryption operation; i.e. the application need (and should) not call
    * encryptFinal() after this call. For encrypting multiple pices of data use encryptUpdate and
    * encryptFinal.
@@ -503,7 +505,7 @@ public class Session {
   }
 
   /**
-   * Encrypts the given data with the key and mechansim given to the encryptInit method. This method
+   * Encrypts the given data with the key and mechanism given to the encryptInit method. This method
    * finalizes the current encryption operation; i.e. the application need (and should) not call
    * encryptFinal() after this call. For encrypting multiple pices of data use encryptUpdate and
    * encryptFinal.
@@ -542,7 +544,7 @@ public class Session {
 
   /**
    * This method can be used to encrypt multiple pieces of data; e.g. buffer-size pieces when
-   * reading the data from a stream. Encrypts the given data with the key and mechansim given to the
+   * reading the data from a stream. Encrypts the given data with the key and mechanism given to the
    * encryptInit method. The application must call encryptFinal to get the final result of the
    * encryption after feeding in all data using this method.
    *
@@ -559,7 +561,7 @@ public class Session {
 
   /**
    * This method can be used to encrypt multiple pieces of data; e.g. buffer-size pieces when
-   * reading the data from a stream. Encrypts the given data with the key and mechansim given to the
+   * reading the data from a stream. Encrypts the given data with the key and mechanism given to the
    * encryptInit method. The application must call encryptFinal to get the final result of the
    * encryption after feeding in all data using this method.
    *
@@ -681,7 +683,7 @@ public class Session {
 
   /**
    * This method can be used to decrypt multiple pieces of data; e.g. buffer-size pieces when
-   * reading the data from a stream. Decrypts the given data with the key and mechansim given to the
+   * reading the data from a stream. Decrypts the given data with the key and mechanism given to the
    * decryptInit method. The application must call decryptFinal to get the final result of the
    * encryption after feeding in all data using this method.
    *
@@ -698,7 +700,7 @@ public class Session {
 
   /**
    * This method can be used to decrypt multiple pieces of data; e.g. buffer-size pieces when
-   * reading the data from a stream. Decrypts the given data with the key and mechansim given to the
+   * reading the data from a stream. Decrypts the given data with the key and mechanism given to the
    * decryptInit method. The application must call decryptFinal to get the final result of the
    * encryption after feeding in all data using this method.
    *
@@ -843,7 +845,7 @@ public class Session {
 
   /**
    * This method can be used to digest multiple pieces of data; e.g. buffer-size pieces when reading
-   * the data from a stream. Digests the given data with the mechansim given to the digestInit
+   * the data from a stream. Digests the given data with the mechanism given to the digestInit
    * method. The application must call digestFinal to get the final result of the digesting after
    * feeding in all data using this method.
    *
@@ -856,7 +858,7 @@ public class Session {
 
   /**
    * This method can be used to digest multiple pieces of data; e.g. buffer-size pieces when reading
-   * the data from a stream. Digests the given data with the mechansim given to the digestInit
+   * the data from a stream. Digests the given data with the mechanism given to the digestInit
    * method. The application must call digestFinal to get the final result of the digesting after
    * feeding in all data using this method.
    *
@@ -940,7 +942,7 @@ public class Session {
   }
 
   /**
-   * Signs the given data with the key and mechansim given to the signInit method. This method
+   * Signs the given data with the key and mechanism given to the signInit method. This method
    * finalizes the current signing operation; i.e. the application need (and should) not call
    * signFinal() after this call. For signing multiple pices of data use signUpdate and signFinal.
    *
@@ -961,7 +963,7 @@ public class Session {
 
   /**
    * This method can be used to sign multiple pieces of data; e.g. buffer-size pieces when reading
-   * the data from a stream. Signs the given data with the mechansim given to the signInit method.
+   * the data from a stream. Signs the given data with the mechanism given to the signInit method.
    * The application must call signFinal to get the final result of the signing after feeding in all
    * data using this method.
    *
@@ -974,7 +976,7 @@ public class Session {
 
   /**
    * This method can be used to sign multiple pieces of data; e.g. buffer-size pieces when reading
-   * the data from a stream. Signs the given data with the mechansim given to the signInit method.
+   * the data from a stream. Signs the given data with the mechanism given to the signInit method.
    * The application must call signFinal to get the final result of the signing after feeding in all
    * data using this method.
    *
@@ -1095,7 +1097,7 @@ public class Session {
   }
 
   /**
-   * Verifies the given signature against the given data with the key and mechansim given to the
+   * Verifies the given signature against the given data with the key and mechanism given to the
    * verifyInit method. This method finalizes the current verification operation; i.e. the
    * application need (and should) not call verifyFinal() after this call. For verifying with
    * multiple pices of data use verifyUpdate and verifyFinal. This method throws an exception, if
@@ -1174,7 +1176,7 @@ public class Session {
    * Initializes a new verification operation for verification with data recovery. The application
    * must call this method before calling verifyRecover. Before initializing a new operation, any
    * currently pending operation must be finalized using the appropriate *Final method (e.g.
-   * digestFinal()). This method requires the mechansim to use for verification and the key for this
+   * digestFinal()). This method requires the mechanism to use for verification and the key for this
    * oepration. The key must have set its verify-recover flag. For the mechanism the application may
    * use a constant defined in the Mechanism class. Notice that the key and the mechanism must be
    * compatible; i.e. you cannot use a DES key with the RSA mechanism.
@@ -1192,7 +1194,7 @@ public class Session {
   }
 
   /**
-   * Verifies the given data with the key and mechansim given to the verifyRecoverInit method. This
+   * Verifies the given data with the key and mechanism given to the verifyRecoverInit method. This
    * method finalizes the current verify-recover operation; there is no equivalent method to
    * verifyUpdate for signing with recovery.
    *
@@ -1213,7 +1215,7 @@ public class Session {
   }
 
   /**
-   * Verifies the given data with the key and mechansim given to the verifyRecoverInit method. This
+   * Verifies the given data with the key and mechanism given to the verifyRecoverInit method. This
    * method finalizes the current verify-recover operation; there is no equivalent method to
    * verifyUpdate for signing with recovery.
    *
@@ -1543,34 +1545,55 @@ public class Session {
   }
 
   public AttributeVector getAttrValues(long objectHandle, long... attributeTypes) throws PKCS11Exception {
-    final int n = attributeTypes.length;
-    Attribute[] attrs = new Attribute[n];
-    for (int i = 0; i < n; i++) {
-      attrs[i] = Attribute.getInstance(attributeTypes[i]);
+    List<Long> typeList = new ArrayList<>(attributeTypes.length);
+    for (long attrType : attributeTypes) {
+      typeList.add(attrType);
     }
+
+    if (typeList.contains(CKA_EC_POINT) && !typeList.contains(CKA_EC_PARAMS)) {
+      typeList.add(CKA_EC_PARAMS);
+    }
+
+    Attribute[] attrs = new Attribute[typeList.size()];
+    int index = 0;
+
+    // we need to fix attributes EC_PARAMS and EC_POINT. Where EC_POINT needs EC_PARAMS,
+    // and EC_PARAMS needs KEY_TYPE.
+    long[] firstTypes = {CKA_CLASS, CKA_KEY_TYPE, CKA_EC_PARAMS, CKA_EC_POINT};
+
+    for (long type : firstTypes) {
+      if (typeList.remove(type)) {
+        attrs[index++] =  Attribute.getInstance(type);
+      }
+    }
+
+    for (long type : typeList) {
+      attrs[index++] =  Attribute.getInstance(type);
+    }
+
     doGetAttrValues(objectHandle, attrs);
     return new AttributeVector(attrs);
   }
 
   /**
-     * This method reads the attributes at once. This can lead  to performance
-     * improvements. If reading all attributes at once fails, it tries to read
-     * each attributes individually.
-     *
-     * @param objectHandle
-     *          The handle of the object which contains the attributes.
-     * @param attributes
-     *          The objects specifying the attribute types
-     *          (see {@link Attribute#getType()}) and receiving the attribute
-     *          values (see {@link Attribute#ckAttribute(CK_ATTRIBUTE)}).
-     * @exception PKCS11Exception
-     *              If getting the attributes failed.
-     */
+   * This method reads the attributes at once. This can lead  to performance
+   * improvements. If reading all attributes at once fails, it tries to read
+   * each attributes individually.
+   *
+   * @param objectHandle
+   *          The handle of the object which contains the attributes.
+   * @param attributes
+   *          The objects specifying the attribute types
+   *          (see {@link Attribute#getType()}) and receiving the attribute
+   *          values (see {@link Attribute#ckAttribute(CK_ATTRIBUTE)}).
+   * @exception PKCS11Exception
+   *              If getting the attributes failed.
+   */
   private void doGetAttrValues(long objectHandle, Attribute... attributes) throws PKCS11Exception {
     Functions.requireNonNull("attributes", attributes);
 
     if (attributes.length == 1) {
-      doGetAttrValue(objectHandle, attributes[0], null);
+      doGetAttrValue(objectHandle, attributes[0]);
       return;
     }
 
@@ -1592,7 +1615,6 @@ public class Session {
       CK_ATTRIBUTE template = attributeTemplateList[i];
       if (template != null) {
         attribute.present(true).sensitive(false).ckAttribute(template);
-        postProcessGetAttribute(attribute);
       }
     }
 
@@ -1602,12 +1624,16 @@ public class Session {
       for (Attribute attr : attributes) {
         if (attr.getCkAttribute() == null || attr.getCkAttribute().pValue == null) {
           try {
-            doGetAttrValue(objectHandle, attr, attributes);
+            doGetAttrValue0(objectHandle, attr, false);
           } catch (PKCS11Exception ex) {
             if (delayedEx == null) delayedEx = ex;
           }
         }
       }
+    }
+
+    for (Attribute attr : attributes) {
+      postProcessGetAttribute(attr, objectHandle, attributes);
     }
 
     if (delayedEx != null) throw delayedEx;
@@ -1637,7 +1663,16 @@ public class Session {
    * @exception PKCS11Exception
    *              If getting the attribute failed.
    */
-  private void doGetAttrValue(long objectHandle, Attribute attribute, Attribute... otherAttributes)
+  private void doGetAttrValue(long objectHandle, Attribute attribute)
+      throws PKCS11Exception {
+    if (attribute.getType() == CKA_EC_POINT) {
+      doGetAttrValues(objectHandle, new ByteArrayAttribute(CKA_EC_PARAMS), attribute);
+    } else {
+      doGetAttrValue0(objectHandle, attribute, true);
+    }
+  }
+
+  private void doGetAttrValue0(long objectHandle, Attribute attribute, boolean postProcess)
       throws PKCS11Exception {
     attribute.present(false);
 
@@ -1656,28 +1691,6 @@ public class Session {
           // we can ignore this and proceed; e.g. a v2.01 module won't
           // have the object ID attribute
           attribute.present(false).getCkAttribute().pValue = null;
-
-          // Maybe we can fix it.
-          // Some HSMs do not return EC_PARAMS
-          Long keyType = null;
-          if (otherAttributes != null) {
-            for (Attribute otherAttr : otherAttributes) {
-              if (otherAttr.type() == CKA_KEY_TYPE) {
-                keyType = ((LongAttribute) otherAttr).getValue();
-              }
-            }
-          }
-
-          if (keyType == null) {
-            try {
-              keyType = getCkaKeyType(objectHandle);
-            } catch (PKCS11Exception e2) {
-            }
-          }
-
-          if (keyType != null && keyType == CKK_VENDOR_SM2) {
-            attribute.present(false).getCkAttribute().pValue = Functions.decodeHex("06082a811ccf5501822d");
-          }
         }
       } else if (ec == CKR_ATTRIBUTE_SENSITIVE) {
         // this means, that some requested attributes are missing, but
@@ -1689,14 +1702,18 @@ public class Session {
         attribute.present(false).sensitive(false).getCkAttribute().pValue = null;
       } else {
         // there was a different error that we should propagate
-        throw new PKCS11Exception(ex.getErrorCode());
+        throw new PKCS11Exception(ec);
       }
     }
 
-    postProcessGetAttribute(attribute);
+    if (postProcess) {
+      postProcessGetAttribute(attribute, objectHandle, null);
+    }
   }
 
   private CK_ATTRIBUTE[] toOutCKAttributes(AttributeVector template) {
+    if (template == null) return null;
+
     CK_ATTRIBUTE[] ret = template.toCkAttributes();
     if (vendorCode != null) {
       for (CK_ATTRIBUTE ckAttr : ret) {
@@ -1709,14 +1726,74 @@ public class Session {
     return ret;
   }
 
-  private void postProcessGetAttribute(Attribute attr) {
+  private void postProcessGetAttribute(Attribute attr, long objectHandle, Attribute... otherAttrs) {
+    long type = attr.getType();
     CK_ATTRIBUTE ckAttr = attr.getCkAttribute();
+
+    if (type == CKA_EC_PARAMS) {
+      if (ckAttr.pValue == null) {
+        // Some HSMs do not return EC_PARAMS
+        Long keyType = null;
+        if (otherAttrs != null) {
+          for (Attribute otherAttr : otherAttrs) {
+            if (otherAttr.type() == CKA_KEY_TYPE) {
+              keyType = ((LongAttribute) otherAttr).getValue();
+            }
+          }
+        }
+
+        if (keyType == null) {
+          try {
+            keyType = getCkaKeyType(objectHandle);
+          } catch (PKCS11Exception e2) {
+          }
+        }
+
+        if (keyType != null && keyType == CKK_VENDOR_SM2) {
+          attr.present(false).getCkAttribute().pValue = Functions.decodeHex("06082a811ccf5501822d");
+        }
+      }
+
+      return;
+    }
+
     if (ckAttr == null || ckAttr.pValue == null) return;
 
-    if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
-      long value = (long) ckAttr.pValue;
-      if ((value & CKK_VENDOR_DEFINED) != 0L) {
-        ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
+    if (type == CKA_KEY_TYPE) {
+      if (ckAttr.pValue != null) {
+        long value = (long) ckAttr.pValue;
+        if ((value & CKK_VENDOR_DEFINED) != 0L) {
+          ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
+        }
+      }
+    } else if (type == CKA_KEY_GEN_MECHANISM) {
+      if (ckAttr.pValue != null) {
+        long value = (long) ckAttr.pValue;
+        if ((value & CKM_VENDOR_DEFINED) != 0L) {
+          ckAttr.pValue = vendorCode.ckmVendorToGeneric(value);
+        }
+      }
+    } else if (type == CKA_ALLOWED_MECHANISMS) {
+      if (ckAttr.pValue != null) {
+        long[] mechs = ((MechanismArrayAttribute) attr).getValue();
+        for (long mech : mechs) {
+          if ((mech & CKM_VENDOR_DEFINED) != 0L) {
+            ckAttr.pValue = vendorCode.ckmVendorToGeneric(mech);
+          }
+        }
+      }
+    } else if (type == CKA_EC_POINT) {
+      byte[] ecParams = null;
+      if (otherAttrs != null) {
+        for (Attribute otherAttr : otherAttrs) {
+          if (otherAttr.getType() == CKA_EC_PARAMS) {
+            ecParams = ((ByteArrayAttribute) otherAttr).getValue();
+          }
+        }
+      }
+
+      if (ecParams != null) {
+        ckAttr.pValue = Functions.fixECPoint((byte[]) ckAttr.pValue, ecParams);
       }
     } else if (attr instanceof BooleanAttribute) {
       if (ckAttr.pValue instanceof byte[]) {
