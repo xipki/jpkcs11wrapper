@@ -54,6 +54,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
@@ -97,6 +98,10 @@ import static org.xipki.pkcs11.PKCS11Constants.*;
  */
 public class Session {
 
+  private static final int SIGN_TYPE_ECDSA = 1;
+
+  private static final int SIGN_TYPE_SM2 = 2;
+
   private static final Method encrypt0;
 
   private static final Method encrypt1;
@@ -137,7 +142,11 @@ public class Session {
    */
   private final Token token;
 
-  private boolean isEcdsaSign;
+  private int signatureType;
+
+  private long signKeyHandle;
+
+  private final LruCache<Long, byte[]> handleEcParamsMap = new LruCache<>(1000);
 
   static {
     Class<?> clazz = PKCS11.class;
@@ -930,11 +939,19 @@ public class Session {
    */
   public void signInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     try {
+      this.signKeyHandle = keyHandle;
+
       long code = mechanism.getMechanismCode();
-      isEcdsaSign = code == CKM_ECDSA   || code == CKM_ECDSA_SHA1     || code == CKM_ECDSA_SHA224
-          || code == CKM_ECDSA_SHA256   || code == CKM_ECDSA_SHA384   || code == CKM_ECDSA_SHA512
-          || code == CKM_VENDOR_SM2     || code == CKM_VENDOR_SM2_SM3 || code == CKM_ECDSA_SHA3_224
-          || code == CKM_ECDSA_SHA3_256 || code == CKM_ECDSA_SHA3_384 || code == CKM_ECDSA_SHA3_512;
+      if (code == CKM_ECDSA || code == CKM_ECDSA_SHA1 || code == CKM_ECDSA_SHA224 || code == CKM_ECDSA_SHA256
+          || code == CKM_ECDSA_SHA384   || code == CKM_ECDSA_SHA512   || code == CKM_ECDSA_SHA3_224
+          || code == CKM_ECDSA_SHA3_256 || code == CKM_ECDSA_SHA3_384 || code == CKM_ECDSA_SHA3_512) {
+        signatureType = SIGN_TYPE_ECDSA;
+      } else if (code == CKM_VENDOR_SM2 || code == CKM_VENDOR_SM2_SM3) {
+        signatureType = SIGN_TYPE_SM2;
+      } else {
+        signatureType = 0;
+      }
+
       pkcs11.C_SignInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
@@ -955,7 +972,7 @@ public class Session {
 
     try {
       byte[] sigValue = pkcs11.C_Sign(sessionHandle, data);
-      return isEcdsaSign ? Functions.fixECDSASignature(sigValue) : sigValue;
+      return fixSignature(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
@@ -1007,9 +1024,54 @@ public class Session {
   public byte[] signFinal() throws PKCS11Exception {
     try {
       byte[] sigValue = pkcs11.C_SignFinal(sessionHandle, 0);
-      return isEcdsaSign ? Functions.fixECDSASignature(sigValue) : sigValue;
+      return fixSignature(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
+    }
+  }
+
+  private byte[] fixSignature(byte[] signatureValue) {
+    if (signatureType == 0) return signatureValue;
+
+    ModuleFix moduleFix = module.getModuleFix();
+    synchronized (module) {
+      if (signatureType == SIGN_TYPE_ECDSA) {
+        Boolean b = moduleFix.getEcdsaSignatureFixNeeded();
+        if (b == null || b) {
+          // get the ecParams
+          byte[] ecParams = handleEcParamsMap.get(signKeyHandle);
+          if (ecParams == null) {
+            try {
+              ecParams = getByteArrayAttrValue(signKeyHandle, CKA_EC_PARAMS);
+            } catch (PKCS11Exception e) {
+              return signatureValue;
+            }
+
+            handleEcParamsMap.put(signKeyHandle, ecParams);
+          }
+
+          if (ecParams != null) {
+            byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, ecParams);
+            boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
+            if (b == null) {
+              moduleFix.setEcdsaSignatureFixNeeded(fixed);
+            }
+            return fixedSigValue;
+          }
+        }
+      } else if (signatureType == SIGN_TYPE_SM2) {
+        Boolean b = moduleFix.getSm2SignatureFixNeeded();
+        if (b == null || b) {
+          byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, 32);
+          boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
+          if (b == null) {
+            moduleFix.setSm2SignatureFixNeeded(fixed);
+          }
+          return fixedSigValue;
+        }
+      }
+
+      return signatureValue;
     }
   }
 

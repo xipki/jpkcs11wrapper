@@ -121,6 +121,8 @@ public class PKCS11Module {
 
   private VendorCode vendorCode;
 
+  private final ModuleFix moduleFix = new ModuleFix();
+
   /**
    * Create a new module that uses the given PKCS11 interface to interact with
    * the token.
@@ -152,6 +154,10 @@ public class PKCS11Module {
     if (!file.canRead()) throw new IOException("Can not read file " + pkcs11ModulePath + "");
 
     return new PKCS11Module(pkcs11ModulePath);
+  }
+
+  ModuleFix getModuleFix() {
+    return moduleFix;
   }
 
   public VendorCode getVendorCode() {
