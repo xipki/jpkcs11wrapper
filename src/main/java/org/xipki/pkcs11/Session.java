@@ -228,8 +228,22 @@ public class Session {
    * @throws PKCS11Exception If getting the information failed.
    */
   public SessionInfo getSessionInfo() throws PKCS11Exception {
+    Boolean b = module.getModuleFix().getGetSessionInfoSupported();
     try {
-      return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
+      if (b == null) {
+        boolean supported = false;
+        try {
+          SessionInfo si = new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
+          supported = true;
+          return si;
+        } finally {
+          module.getModuleFix().setGetSessionInfoSupported(supported);
+        }
+      } else if (b) {
+        return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
+      } else {
+        throw new PKCS11Exception(CKR_FUNCTION_NOT_SUPPORTED);
+      }
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
