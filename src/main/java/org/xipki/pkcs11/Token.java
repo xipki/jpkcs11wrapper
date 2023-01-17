@@ -151,15 +151,6 @@ public class Token {
     }
   }
 
-  public List<Long> getMechanismList2() throws PKCS11Exception {
-    long[] values = getMechanismList();
-    List<Long> list = new ArrayList<>(values.length);
-    for (long value : values) {
-      list.add(value);
-    }
-    return list;
-  }
-
   /**
    * Get the list of mechanisms that this token supports. An application can
    * use this method to determine, if this token supports the required
