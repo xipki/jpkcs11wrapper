@@ -7,6 +7,7 @@
 package org.xipki.pkcs11;
 
 import org.xipki.pkcs11.params.CkParams;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
  * Objects of this class represent a mechanism as defined in PKCS#11. There are
@@ -21,7 +22,7 @@ public class Mechanism {
    * The code of the mechanism as defined in PKCS11Constants (or pkcs11t.h
    * likewise).
    */
-  private final long pkcs11MechanismCode;
+  private final long mechanismCode;
 
   /**
    * The parameters of the mechanism. Not all mechanisms use these parameters.
@@ -31,21 +32,21 @@ public class Mechanism {
   /**
    * Constructor taking just the mechanism code as defined in PKCS11Constants.
    *
-   * @param pkcs11MechanismCode
+   * @param mechanismCode
    *          The mechanism code.
    */
-  public Mechanism(long pkcs11MechanismCode) {
-    this(pkcs11MechanismCode, null);
+  public Mechanism(long mechanismCode) {
+    this(mechanismCode, null);
   }
 
   /**
    * Constructor taking just the mechanism code as defined in PKCS11Constants.
    *
-   * @param pkcs11MechanismCode The mechanism code.
+   * @param mechanismCode The mechanism code.
    * @param parameters The mechanism parameters.
    */
-  public Mechanism(long pkcs11MechanismCode, CkParams parameters) {
-    this.pkcs11MechanismCode = pkcs11MechanismCode;
+  public Mechanism(long mechanismCode, CkParams parameters) {
+    this.mechanismCode = mechanismCode;
     this.parameters = parameters;
   }
 
@@ -65,7 +66,7 @@ public class Mechanism {
    * @return The code of this mechanism.
    */
   public long getMechanismCode() {
-    return pkcs11MechanismCode;
+    return mechanismCode;
   }
 
   /**
@@ -74,7 +75,11 @@ public class Mechanism {
    * @return The name of this mechanism.
    */
   public String getName() {
-    return PKCS11Constants.ckmCodeToName(pkcs11MechanismCode);
+    return PKCS11Constants.ckmCodeToName(mechanismCode);
+  }
+
+  public CK_MECHANISM toCkMechanism() {
+    return (parameters == null) ? new CK_MECHANISM(mechanismCode) : parameters.toCkMechanism(mechanismCode);
   }
 
   /**

@@ -5,6 +5,7 @@ package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.Util;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 import java.lang.reflect.Constructor;
 
@@ -15,7 +16,9 @@ import java.lang.reflect.Constructor;
  */
 public class CCM_PARAMS extends CkParams {
 
-  public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_CCM_PARAMS";
+  private static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_CCM_PARAMS";
+
+  private static final Constructor<?> constructor_CK_MECHANISM;
 
   private static final Constructor<?> constructor;
 
@@ -28,6 +31,7 @@ public class CCM_PARAMS extends CkParams {
 
   static {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class, int.class);
+    constructor_CK_MECHANISM = Util.getConstructofOfCK_MECHANISM(CLASS_CK_PARAMS);
   }
 
   public CCM_PARAMS(int dataLen, byte[] nonce, byte[] aad, int macLen) {
@@ -48,6 +52,11 @@ public class CCM_PARAMS extends CkParams {
 
   public void setDataLen(int dataLen) {
     this.dataLen = dataLen;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
   }
 
   @Override

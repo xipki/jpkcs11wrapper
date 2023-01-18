@@ -3,6 +3,8 @@
 
 package org.xipki.pkcs11.params;
 
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
+
 /**
  * This class encapsulates parameters CK_LONG.
  *
@@ -28,6 +30,11 @@ public class LongParams extends CkParams {
   @Override
   public Long getParams() {
     return params;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    return new CK_MECHANISM(mechanism, params);
   }
 
   @Override

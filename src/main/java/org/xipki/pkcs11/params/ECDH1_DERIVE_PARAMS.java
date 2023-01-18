@@ -5,6 +5,7 @@ package org.xipki.pkcs11.params;
 
 import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
 import org.xipki.pkcs11.Functions;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
@@ -39,6 +40,11 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
   @Override
   public CK_ECDH1_DERIVE_PARAMS getParams() {
     return params;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    return new CK_MECHANISM(mechanism, params);
   }
 
   @Override

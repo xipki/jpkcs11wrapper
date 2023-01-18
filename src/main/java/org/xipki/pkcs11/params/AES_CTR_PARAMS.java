@@ -5,6 +5,7 @@ package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
 import sun.security.pkcs11.wrapper.CK_AES_CTR_PARAMS;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
  * This class represents the necessary parameters required by
@@ -31,6 +32,16 @@ public class AES_CTR_PARAMS extends CkParams {
     this.params = new CK_AES_CTR_PARAMS(cb);
   }
 
+  @Override
+  public CK_AES_CTR_PARAMS getParams() {
+    return params;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    return new CK_MECHANISM(mechanism, params);
+  }
+
   /**
    * Returns the string representation of this object. Do not parse data from
    * this string, it is for debugging only.
@@ -41,11 +52,6 @@ public class AES_CTR_PARAMS extends CkParams {
   public String toString() {
     return "CK_AES_CTR_PARAMS:" +
         "\n  cb: " + ptrToString(cb);
-  }
-
-  @Override
-  public CK_AES_CTR_PARAMS getParams() {
-    return params;
   }
 
 }

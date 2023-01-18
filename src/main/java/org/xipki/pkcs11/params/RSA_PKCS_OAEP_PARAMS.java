@@ -3,6 +3,7 @@
 
 package org.xipki.pkcs11.params;
 
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.PKCS11Constants;
@@ -39,6 +40,11 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
     params.mgf = mgf;
     params.source = Functions.requireAmong("source", source, 0, CKZ_SALT_SPECIFIED);
     params.pSourceData = sourceData;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    throw new IllegalStateException("RSA OAEP unsupported in the underlying JDK");
   }
 
   @Override

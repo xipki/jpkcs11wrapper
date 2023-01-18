@@ -7,13 +7,10 @@
 package org.xipki.pkcs11;
 
 import org.xipki.pkcs11.attrs.*;
-import org.xipki.pkcs11.params.*;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.PKCS11;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -74,16 +71,6 @@ public class Session {
 
   private static final Method decrypt1;
 
-  private static final Field field_CK_MECHANISM_pParameter;
-
-  private static final Method method_CK_MECHANISM_setParameter;
-
-  private static final Constructor<?> constructor_CK_MECHANISM_CCM;
-
-  private static final Constructor<?> constructor_CK_MECHANISM_GCM;
-
-  private static final Constructor<?> constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305;
-
   /**
    * A reference to the underlying PKCS#11 module to perform the operations.
    */
@@ -125,28 +112,6 @@ public class Session {
 
     encrypt1 = encrypt0 != null ? null : Util.getMethod(clazz, "C_Encrypt",
         long.class, long.class, byte[].class, int.class, int.class, long.class, byte[].class, int.class, int.class);
-
-    clazz = CK_MECHANISM.class;
-    field_CK_MECHANISM_pParameter = Util.getField(clazz, "pParameter");
-
-    Class<?> paramClass = Util.getClass(RSA_PKCS_PSS_PARAMS.CLASS_CK_PARAMS);
-    method_CK_MECHANISM_setParameter = paramClass == null ? null : Util.getMethod(clazz, "setParameter", paramClass);
-
-    constructor_CK_MECHANISM_CCM = getConstructofOfCK_MECHANISM(CCM_PARAMS.CLASS_CK_PARAMS);
-    constructor_CK_MECHANISM_GCM = getConstructofOfCK_MECHANISM(GCM_PARAMS.CLASS_CK_PARAMS);
-    constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305 =
-        getConstructofOfCK_MECHANISM(SALSA20_CHACHA20_POLY1305_PARAMS.CLASS_CK_PARAMS);
-  }
-
-  private static Constructor<?> getConstructofOfCK_MECHANISM(String paramsClassName) {
-    Class<?> paramsClass;
-    try {
-      paramsClass = Class.forName(paramsClassName);
-    } catch (ClassNotFoundException ex) {
-      return null;
-    }
-
-    return Util.getConstructor(CK_MECHANISM.class, long.class, paramsClass);
   }
 
   /**
@@ -1463,57 +1428,12 @@ public class Session {
   }
 
   private CK_MECHANISM toCkMechanism(Mechanism mechanism) {
+    CK_MECHANISM ckMechanism = mechanism.toCkMechanism();
     long code = mechanism.getMechanismCode();
-    if ((code & CKM_VENDOR_DEFINED) != 0) {
-      if (vendorCode != null) code = vendorCode.ckmGenericToVendor(code);
+    if ((code & CKM_VENDOR_DEFINED) != 0 && vendorCode != null) {
+      ckMechanism.mechanism = vendorCode.ckmGenericToVendor(code);
     }
-
-    CkParams params = mechanism.getParameters();
-    if (params == null) {
-      return new CK_MECHANISM(code);
-    } else if (params instanceof AES_CTR_PARAMS) {
-      return new CK_MECHANISM(code, ((AES_CTR_PARAMS) params).getParams());
-    } else if (params instanceof ByteArrayParams) {
-      return new CK_MECHANISM(code, ((ByteArrayParams) params).getParams());
-    } else if (params instanceof LongParams) {
-      return new CK_MECHANISM(code, ((LongParams) params).getParams());
-    } else if (params instanceof ECDH1_DERIVE_PARAMS) {
-      return new CK_MECHANISM(code, ((ECDH1_DERIVE_PARAMS) params).getParams());
-    } else if (params instanceof RSA_PKCS_OAEP_PARAMS) {
-//      return new CK_MECHANISM(code, ((RSA_PKCS_OAEP_PARAMS) params).getParams());
-      throw new IllegalStateException("RSA OAEP unsupported in the underlying JDK");
-    } else if (params instanceof RSA_PKCS_PSS_PARAMS) {
-      CK_MECHANISM mech = new CK_MECHANISM(code);
-      Object pParams = params.getParams();
-      try {
-        if (field_CK_MECHANISM_pParameter != null) {
-          field_CK_MECHANISM_pParameter.set(mech, pParams);
-        } else if (method_CK_MECHANISM_setParameter != null) {
-          method_CK_MECHANISM_setParameter.invoke(mech, pParams);
-        } else {
-          throw new IllegalStateException("could not construct CK_MECHANISM for RSAPkcsPssParams");
-        }
-      } catch (IllegalAccessException | InvocationTargetException ex) {
-        throw new IllegalStateException("could not construct CK_MECHANISM for RSAPkcsPssParams", ex);
-      }
-      return mech;
-    } else if (params instanceof CCM_PARAMS) {
-      return buildCkMechanism(constructor_CK_MECHANISM_CCM, code, params);
-    } else if (params instanceof GCM_PARAMS) {
-      return buildCkMechanism(constructor_CK_MECHANISM_GCM, code, params);
-    } else if (params instanceof SALSA20_CHACHA20_POLY1305_PARAMS) {
-      return buildCkMechanism(constructor_CK_MECHANISM_Salsa20ChaCha20Poly1305, code, params);
-    } else {
-      throw new IllegalArgumentException("Unsupported Parameters " + params.getClass().getName());
-    }
-  }
-
-  private static CK_MECHANISM buildCkMechanism(Constructor<?> constructor, long mechanismCode, CkParams params) {
-    try {
-      return (CK_MECHANISM) constructor.newInstance(mechanismCode, params.getParams());
-    } catch (Exception ex) {
-      throw new IllegalArgumentException("could not construct CK_MECHANISM", ex);
-    }
+    return ckMechanism;
   }
 
   public Integer getIntAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {

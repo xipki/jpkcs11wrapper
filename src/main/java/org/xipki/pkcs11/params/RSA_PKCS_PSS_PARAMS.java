@@ -9,9 +9,12 @@ package org.xipki.pkcs11.params;
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.PKCS11Constants;
 import org.xipki.pkcs11.Util;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,6 +40,10 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   private static final Field mgfField;
 
   private static final Field sLenField;
+
+  private static final Method CK_MECHANISM_method_setParameter;
+
+  private static final Field CK_MECHANISM_field_pParameter;
 
   private static final Map<Long, Long> mgf2HashAlgMap;
 
@@ -87,6 +94,13 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
       mgfField = null;
       sLenField = null;
     }
+
+    // CK_MECHANISM
+    clazz = CK_MECHANISM.class;
+    CK_MECHANISM_field_pParameter = Util.getField(clazz, "pParameter");
+
+    Class<?> paramClass = Util.getClass(RSA_PKCS_PSS_PARAMS.CLASS_CK_PARAMS);
+    CK_MECHANISM_method_setParameter = paramClass == null ? null : Util.getMethod(clazz, "setParameter", paramClass);
   }
 
   /**
@@ -134,6 +148,23 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   @Override
   public Object getParams() {
     return params;
+  }
+
+  @Override
+  public CK_MECHANISM toCkMechanism(long mechanism) {
+    CK_MECHANISM mech = new CK_MECHANISM(mechanism);
+    try {
+      if (CK_MECHANISM_field_pParameter != null) {
+        CK_MECHANISM_field_pParameter.set(mech, params);
+      } else if (CK_MECHANISM_method_setParameter != null) {
+        CK_MECHANISM_method_setParameter.invoke(mech, params);
+      } else {
+        throw new IllegalStateException("could not construct CK_MECHANISM for RSA_PKCS_PSS_PARAMS");
+      }
+    } catch (IllegalAccessException | InvocationTargetException ex) {
+      throw new IllegalStateException("could not construct CK_MECHANISM for RSA_PKCS_PSS_PARAMS", ex);
+    }
+    return mech;
   }
 
   @Override

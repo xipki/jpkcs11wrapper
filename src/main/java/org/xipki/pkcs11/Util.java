@@ -3,6 +3,8 @@
 
 package org.xipki.pkcs11;
 
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -53,6 +55,17 @@ public class Util {
     } catch (Throwable th) {
       return null;
     }
+  }
+
+  public static Constructor<?> getConstructofOfCK_MECHANISM(String paramsClassName) {
+    Class<?> paramsClass;
+    try {
+      paramsClass = Class.forName(paramsClassName);
+    } catch (ClassNotFoundException ex) {
+      return null;
+    }
+
+    return getConstructor(CK_MECHANISM.class, long.class, paramsClass);
   }
 
 }

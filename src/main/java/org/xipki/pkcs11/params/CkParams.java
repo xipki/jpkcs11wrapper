@@ -4,6 +4,9 @@
 package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
+
+import java.lang.reflect.Constructor;
 
 /**
  * Every Parameters-class implements this interface through which the module.
@@ -12,9 +15,11 @@ import org.xipki.pkcs11.Functions;
  */
 public abstract class CkParams {
 
+  public abstract CK_MECHANISM toCkMechanism(long mechanism);
+
   /**
    * Get this parameters object as an object of the corresponding *_PARAMS
-   * class of the iaik.pkcs.pkcs11.wrapper package.
+   * class of the sun.security.pkcs11.wrapper package.
    *
    * @return The object of the corresponding *_PARAMS class.
    */
@@ -32,6 +37,14 @@ public abstract class CkParams {
     if (param == null) throw new NullPointerException("Argument '" + paramName + "' must not be null.");
 
     return param;
+  }
+
+  protected CK_MECHANISM buildCkMechanism(Constructor<?> constructor, long mechanismCode) {
+    try {
+      return (CK_MECHANISM) constructor.newInstance(mechanismCode, getParams());
+    } catch (Exception ex) {
+      throw new IllegalArgumentException("could not construct CK_MECHANISM", ex);
+    }
   }
 
 }
