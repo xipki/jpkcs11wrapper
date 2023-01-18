@@ -29,10 +29,6 @@ public abstract class CkParams {
     return data == null ? "<NULL_PTR>" : Functions.toString(data);
   }
 
-  protected String ptrToString(char[] data) {
-    return data == null ? "<NULL_PTR>" : new String(data);
-  }
-
   protected static <T> T requireNonNull(String paramName, T param) {
     return Functions.requireNonNull(paramName, param);
   }

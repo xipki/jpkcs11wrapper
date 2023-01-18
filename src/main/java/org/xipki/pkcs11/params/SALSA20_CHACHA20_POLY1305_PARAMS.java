@@ -24,9 +24,9 @@ public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
 
   private final Object params;
 
-  private byte[] nonce;
+  private final byte[] nonce;
 
-  private byte[] aad;
+  private final byte[] aad;
 
   static {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, byte[].class, byte[].class);
