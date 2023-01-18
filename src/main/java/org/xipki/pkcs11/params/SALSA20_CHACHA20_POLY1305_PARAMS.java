@@ -13,11 +13,13 @@ import java.lang.reflect.Constructor;
  *
  * @author Lijun Liao (xipki)
  */
-public class Salsa20Chacha20Poly1305Parameters implements Parameters {
+public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
 
   public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_SALSA20_CHACHA20_POLY1305_PARAMS";
 
   private static final Constructor<?> constructor;
+
+  private final Object params;
 
   private byte[] nonce;
 
@@ -36,13 +38,19 @@ public class Salsa20Chacha20Poly1305Parameters implements Parameters {
    * @param aad additional authentication data. This data is authenticated but not encrypted.
    *
    */
-  public Salsa20Chacha20Poly1305Parameters(byte[] nonce, byte[] aad) {
+  public SALSA20_CHACHA20_POLY1305_PARAMS(byte[] nonce, byte[] aad) {
     if (constructor == null) {
       throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
     }
 
     this.nonce = Functions.requireNonNull("nonce", nonce);
     this.aad = aad;
+
+    try {
+      this.params = constructor.newInstance(nonce, aad);
+    } catch (Exception ex) {
+      throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
+    }
   }
 
   /**
@@ -51,12 +59,8 @@ public class Salsa20Chacha20Poly1305Parameters implements Parameters {
    * @return This object as a CK_SALSA20_CHACHA20_POLY1305_PARAMS object.
    */
   @Override
-  public Object getPKCS11ParamsObject() {
-    try {
-      return constructor.newInstance(nonce, aad);
-    } catch (Exception ex) {
-      throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
-    }
+  public Object getParams() {
+    return params;
   }
 
   /**
@@ -66,8 +70,9 @@ public class Salsa20Chacha20Poly1305Parameters implements Parameters {
    */
   @Override
   public String toString() {
-    return "Class: " + getClass().getName() +
-        "\n  Nonce: " + Functions.toHex(nonce) + "\n  AAD: " + (aad == null ? " " : Functions.toHex(aad));
+    return "CK_SALSA20_CHACHA20_POLY1305_PARAMS:" +
+        "\n  pNonce: " + ptrToString(nonce) +
+        "\n  pAAD:   " + ptrToString(aad);
   }
 
 }

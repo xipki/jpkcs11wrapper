@@ -22,7 +22,7 @@ import org.xipki.pkcs11.AttributeVector;
 import org.xipki.pkcs11.Mechanism;
 import org.xipki.pkcs11.PKCS11Exception;
 import org.xipki.pkcs11.Token;
-import org.xipki.pkcs11.params.Salsa20Chacha20Poly1305Parameters;
+import org.xipki.pkcs11.params.SALSA20_CHACHA20_POLY1305_PARAMS;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
@@ -49,7 +49,7 @@ public class AESChaCha20Poly1305EncryptDecrypt extends SymmEncryptDecrypt {
   public void main() throws PKCS11Exception {
     // check whether supported in current JDK
     try {
-      new Salsa20Chacha20Poly1305Parameters(new byte[12], null);
+      new SALSA20_CHACHA20_POLY1305_PARAMS(new byte[12], null);
     } catch (IllegalStateException ex) {
       System.err.println("AES-GCM unsupported in current JDK, skip");
       return;
@@ -65,7 +65,7 @@ public class AESChaCha20Poly1305EncryptDecrypt extends SymmEncryptDecrypt {
 
   @Override
   protected Mechanism getEncryptionMech(Token token) throws PKCS11Exception {
-    return getSupportedMechanism(token, CKM_CHACHA20_POLY1305, new Salsa20Chacha20Poly1305Parameters(iv, aad));
+    return getSupportedMechanism(token, CKM_CHACHA20_POLY1305, new SALSA20_CHACHA20_POLY1305_PARAMS(iv, aad));
   }
 
   @Override

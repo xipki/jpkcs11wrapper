@@ -9,15 +9,17 @@ import org.xipki.pkcs11.Util;
 import java.lang.reflect.Constructor;
 
 /**
- * CK_CCM_PARAMS
+ * Represents the CK_GCM_PARAMS.
  *
  * @author Lijun Liao (xipki)
  */
-public class GcmParameters implements Parameters {
+public class GCM_PARAMS extends CkParams {
 
   public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_GCM_PARAMS";
 
   private static final Constructor<?> constructor;
+
+  private final Object params;
 
   private final byte[] iv;
   private final byte[] aad;
@@ -27,7 +29,7 @@ public class GcmParameters implements Parameters {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class);
   }
 
-  public GcmParameters(byte[] iv, byte[] aad, int tagBits) {
+  public GCM_PARAMS(byte[] iv, byte[] aad, int tagBits) {
     if (constructor == null) {
       throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
     }
@@ -35,15 +37,17 @@ public class GcmParameters implements Parameters {
     this.iv = iv;
     this.aad = aad;
     this.tagBits = tagBits;
-  }
 
-  @Override
-  public Object getPKCS11ParamsObject() {
     try {
-      return constructor.newInstance(tagBits, iv, aad);
+      this.params = constructor.newInstance(tagBits, iv, aad);
     } catch (Exception ex) {
       throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
     }
+  }
+
+  @Override
+  public Object getParams() {
+    return params;
   }
 
   /**

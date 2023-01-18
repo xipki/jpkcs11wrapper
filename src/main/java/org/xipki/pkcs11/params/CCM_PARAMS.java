@@ -9,15 +9,17 @@ import org.xipki.pkcs11.Util;
 import java.lang.reflect.Constructor;
 
 /**
- * CK_CCM_PARAMS
+ * Represents the CK_CCM_PARAMS.
  *
  * @author Lijun Liao (xipki)
  */
-public class CcmParameters implements Parameters {
+public class CCM_PARAMS extends CkParams {
 
   public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_CCM_PARAMS";
 
   private static final Constructor<?> constructor;
+
+  private final Object params;
 
   private int dataLen;
   private final byte[] nonce;
@@ -28,7 +30,7 @@ public class CcmParameters implements Parameters {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class, int.class);
   }
 
-  public CcmParameters(int dataLen, byte[] nonce, byte[] aad, int macLen) {
+  public CCM_PARAMS(int dataLen, byte[] nonce, byte[] aad, int macLen) {
     if (constructor == null) throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
 
     this.nonce = Functions.requireNonNull("nonce", nonce);
@@ -36,6 +38,12 @@ public class CcmParameters implements Parameters {
     this.macLen = Functions.requireAmong("macLen", macLen, 4, 6, 8, 10, 12, 14, 16);
     this.dataLen = dataLen;
     this.aad = aad;
+
+    try {
+      params = constructor.newInstance(macLen, nonce, aad, dataLen);
+    } catch (Exception ex) {
+      throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
+    }
   }
 
   public void setDataLen(int dataLen) {
@@ -43,19 +51,17 @@ public class CcmParameters implements Parameters {
   }
 
   @Override
-  public String toString() {
-    return "Class: " + getClass().getName() + "\n  ulDataLen: " + dataLen +
-        "\n  nonce: " + Functions.toHex(nonce) +
-        "\n  aad: " + (aad == null ? " " : Functions.toHex(aad)) + "\n  macLen: " + macLen;
+  public Object getParams() {
+    return params;
   }
 
   @Override
-  public Object getPKCS11ParamsObject() {
-    try {
-      return constructor.newInstance(macLen, nonce, aad, dataLen);
-    } catch (Exception ex) {
-      throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
-    }
+  public String toString() {
+    return "CK_CCM_PARAMS:" +
+        "\n  ulDataLen: " + dataLen+
+        "\n, pNonce:    " + ptrToString(nonce) +
+        "\n  pAAD:      " + ptrToString(aad) +
+        "\n  ulMacLen:  " + macLen;
   }
 
 }

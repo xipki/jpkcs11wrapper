@@ -10,26 +10,22 @@ import org.xipki.pkcs11.Functions;
  *
  * @author Lijun Liao (xipki)
  */
-public class OpaqueParameters implements Parameters {
+public class ByteArrayParams extends CkParams {
 
   private final byte[] bytes;
 
-  public OpaqueParameters(byte[] bytes) {
+  public ByteArrayParams(byte[] bytes) {
     this.bytes = Functions.requireNonNull("bytes", bytes);
   }
 
-  /**
-   * Get this parameters object as a byte array.
-   *
-   * @return This object as a byte array.
-   */
-  public byte[] getPKCS11ParamsObject() {
+  @Override
+  public byte[] getParams() {
     return bytes;
   }
 
   @Override
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  Bytes (hex): " + Functions.toHex(bytes);
+    return "ByteArray Params: " + getClass().getName() + "  : " + Functions.toHex(bytes);
   }
 
 }

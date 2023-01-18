@@ -7,18 +7,24 @@
 package org.xipki.pkcs11.params;
 
 import org.xipki.pkcs11.Functions;
+import org.xipki.pkcs11.PKCS11Constants;
 import org.xipki.pkcs11.Util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.xipki.pkcs11.PKCS11Constants.*;
+import static org.xipki.pkcs11.PKCS11Constants.CKM_SHA3_512;
 
 /**
- * This class encapsulates parameters for the Mechanism.RSA_PKCS_PSS.
+ * Represents the CK_RSA_PKCS_PSS_PARAMS.
  *
- * @author Karl Scheibelhofer (SIC)
  * @author Lijun Liao (xipki)
  */
-public class RSAPkcsPssParameters extends RSAPkcsParameters {
+public class RSA_PKCS_PSS_PARAMS extends CkParams {
 
   public static final String CLASS_CK_PARAMS = "sun.security.pkcs11.wrapper.CK_RSA_PKCS_PSS_PARAMS";
 
@@ -32,12 +38,39 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
 
   private static final Field sLenField;
 
+  private static final Map<Long, Long> mgf2HashAlgMap;
+
+  private final Object params;
+
+  /**
+   * The message digest algorithm used to calculate the digest of the encoding
+   * parameter.
+   */
+  protected long hashAlg;
+
+  /**
+   * The mask to apply to the encoded block.
+   */
+  protected long mgf;
+
   /**
    * The length of the salt value in octets.
    */
-  private final int saltLength;
+  private final int sLen;
 
   static {
+    Map<Long, Long> map = new HashMap<>();
+    map.put(CKG_MGF1_SHA1,     CKM_SHA_1);
+    map.put(CKG_MGF1_SHA224,   CKM_SHA224);
+    map.put(CKG_MGF1_SHA256,   CKM_SHA256);
+    map.put(CKG_MGF1_SHA384,   CKM_SHA384);
+    map.put(CKG_MGF1_SHA512,   CKM_SHA512);
+    map.put(CKG_MGF1_SHA3_224, CKM_SHA3_224);
+    map.put(CKG_MGF1_SHA3_256, CKM_SHA3_256);
+    map.put(CKG_MGF1_SHA3_384, CKM_SHA3_384);
+    map.put(CKG_MGF1_SHA3_512, CKM_SHA3_512);
+    mgf2HashAlgMap = Collections.unmodifiableMap(map);
+
     Class<?> clazz = Util.getClass(CLASS_CK_PARAMS);
 
     if (clazz != null) {
@@ -59,37 +92,31 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
   /**
    * Create a new RSAPkcsPssParameters object with the given attributes.
    *
-   * @param hashAlgorithm
+   * @param hashAlg
    *          The message digest algorithm used to calculate the digest of the encoding parameter.
-   * @param maskGenerationFunction
+   * @param mgf
    *          The mask to apply to the encoded block. One of the constants defined in the
    *          MessageGenerationFunctionType interface.
-   * @param saltLength
+   * @param sLen
    *          The length of the salt value in octets.
    *
    */
-  public RSAPkcsPssParameters(long hashAlgorithm, long maskGenerationFunction, int saltLength) {
-    super(hashAlgorithm, maskGenerationFunction);
+  public RSA_PKCS_PSS_PARAMS(long hashAlg, long mgf, int sLen) {
     if (constructor == null && constructorNoArgs == null) {
       throw new IllegalStateException("could not find constructor for class " + CLASS_CK_PARAMS);
     }
-    this.saltLength = saltLength;
-  }
 
-  /**
-   * Get this parameters object as an object of the CK_RSA_PKCS_PSS_PARAMS class.
-   *
-   * @return This object as a CK_RSA_PKCS_PSS_PARAMS object.
-   */
-  @Override
-  public Object getPKCS11ParamsObject() {
+    this.hashAlg = hashAlg;
+    this.mgf = mgf;
+    this.sLen = sLen;
+
     if (constructorNoArgs != null) {
       try {
         Object ret = constructorNoArgs.newInstance();
         hashAlgField.set(ret, hashAlg);
         mgfField.set(ret, mgf);
-        sLenField.set(ret, saltLength);
-        return ret;
+        sLenField.set(ret, sLen);
+        this.params = ret;
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
@@ -97,22 +124,24 @@ public class RSAPkcsPssParameters extends RSAPkcsParameters {
       String hashAlgName = Functions.getHashAlgName(hashAlg);
       String mgfHashAlgName = Functions.getHashAlgName(mgf2HashAlgMap.get(mgf));
       try {
-        return constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, saltLength);
+        this.params = constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, sLen);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
     }
   }
 
-  /**
-   * Returns the string representation of this object. Do not parse data from this string, it is for
-   * debugging only.
-   *
-   * @return A string representation of this object.
-   */
+  @Override
+  public Object getParams() {
+    return params;
+  }
+
   @Override
   public String toString() {
-    return super.toString() + "\n  Salt Length (octets, dec): " + saltLength;
+    return "CK_RSA_PKCS_PSS_PARAMS:" +
+        "\n  hashAlg: " + ckmCodeToName(hashAlg) +
+        "\n  mgf:     " + codeToName(PKCS11Constants.Category.CKG_MGF, mgf) +
+        "\n  sLen:    " + sLen;
   }
 
 }

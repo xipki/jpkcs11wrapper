@@ -19,13 +19,16 @@ import sun.security.pkcs11.wrapper.CK_AES_CTR_PARAMS;
  * </PRE>
  * @author Lijun Liao (xipki)
  */
-public class AesCtrParameters implements Parameters {
+public class AES_CTR_PARAMS extends CkParams {
+
+  private final CK_AES_CTR_PARAMS params;
 
   private final byte[] cb;
 
-  public AesCtrParameters(byte[] cb) {
-    this.cb = Functions.requireNonNull("cb", cb);
+  public AES_CTR_PARAMS(byte[] cb) {
+    this.cb = requireNonNull("cb", cb);
     Functions.requireAmong("cb.length", cb.length, 16);
+    this.params = new CK_AES_CTR_PARAMS(cb);
   }
 
   /**
@@ -36,12 +39,13 @@ public class AesCtrParameters implements Parameters {
    */
   @Override
   public String toString() {
-    return "Class: " + getClass().getName() + "\n  cb: " + Functions.toHex(cb);
+    return "CK_AES_CTR_PARAMS:" +
+        "\n  cb: " + ptrToString(cb);
   }
 
   @Override
-  public CK_AES_CTR_PARAMS getPKCS11ParamsObject() {
-    return new CK_AES_CTR_PARAMS(cb);
+  public CK_AES_CTR_PARAMS getParams() {
+    return params;
   }
 
 }
