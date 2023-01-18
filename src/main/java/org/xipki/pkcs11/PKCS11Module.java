@@ -102,11 +102,17 @@ public class PKCS11Module {
   public static PKCS11Module getInstance(String pkcs11ModulePath) throws IOException {
     Functions.requireNonNull("pkcs11ModulePath", pkcs11ModulePath);
     File file = new File(pkcs11ModulePath);
-    if (!file.exists()) throw new IOException("File " + pkcs11ModulePath + " does not exist");
+    if (!file.exists()) {
+      throw new IOException("File " + pkcs11ModulePath + " does not exist");
+    }
 
-    if (!file.isFile()) throw new IOException(pkcs11ModulePath + " is not a file");
+    if (!file.isFile()) {
+      throw new IOException(pkcs11ModulePath + " is not a file");
+    }
 
-    if (!file.canRead()) throw new IOException("Can not read file " + pkcs11ModulePath + "");
+    if (!file.canRead()) {
+      throw new IOException("Can not read file " + pkcs11ModulePath + "");
+    }
 
     return new PKCS11Module(pkcs11ModulePath);
   }
@@ -276,7 +282,9 @@ public class PKCS11Module {
   }
 
   private void assertInitialized() {
-    if (pkcs11 == null) throw new IllegalStateException("Module not initialized yet, please call initialize() first");
+    if (pkcs11 == null) {
+      throw new IllegalStateException("Module not initialized yet, please call initialize() first");
+    }
   }
 
 }

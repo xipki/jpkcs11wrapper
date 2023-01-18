@@ -974,7 +974,9 @@ public class Session {
   }
 
   private byte[] fixSignature(byte[] signatureValue) {
-    if (signatureType == 0) return signatureValue;
+    if (signatureType == 0) {
+      return signatureValue;
+    }
 
     ModuleFix moduleFix = module.getModuleFix();
     synchronized (module) {
@@ -1578,7 +1580,9 @@ public class Session {
           try {
             doGetAttrValue0(objectHandle, attr, false);
           } catch (PKCS11Exception ex) {
-            if (delayedEx == null) delayedEx = ex;
+            if (delayedEx == null) {
+              delayedEx = ex;
+            }
           }
         }
       }
@@ -1588,7 +1592,9 @@ public class Session {
       postProcessGetAttribute(attr, objectHandle, attributes);
     }
 
-    if (delayedEx != null) throw delayedEx;
+    if (delayedEx != null) {
+      throw delayedEx;
+    }
   }
 
   /**
@@ -1664,14 +1670,18 @@ public class Session {
   }
 
   private CK_ATTRIBUTE[] toOutCKAttributes(AttributeVector template) {
-    if (template == null) return null;
+    if (template == null) {
+      return null;
+    }
 
     CK_ATTRIBUTE[] ret = template.toCkAttributes();
     if (vendorCode != null) {
       for (CK_ATTRIBUTE ckAttr : ret) {
         if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
           long value = (long) ckAttr.pValue;
-          if ((value & CKK_VENDOR_DEFINED) != 0L) ckAttr.pValue = vendorCode.ckkGenericToVendor(value);
+          if ((value & CKK_VENDOR_DEFINED) != 0L) {
+            ckAttr.pValue = vendorCode.ckkGenericToVendor(value);
+          }
         }
       }
     }
@@ -1709,7 +1719,9 @@ public class Session {
       return;
     }
 
-    if (ckAttr == null || ckAttr.pValue == null) return;
+    if (ckAttr == null || ckAttr.pValue == null) {
+      return;
+    }
 
     if (type == CKA_KEY_TYPE) {
       if (vendorCode != null && ckAttr.pValue != null) {
@@ -1769,14 +1781,22 @@ public class Session {
 
   private static void checkInParams(byte[] in, int inOfs, int inLen) {
     Functions.requireNonNull("in", in);
-    if (inOfs < 0 || inLen <= 0) throw new IllegalArgumentException("inOfs or inLen is invalid");
-    if (in.length < inOfs + inLen) throw new IllegalArgumentException("inOfs + inLen > in.length");
+    if (inOfs < 0 || inLen <= 0) {
+      throw new IllegalArgumentException("inOfs or inLen is invalid");
+    }
+    if (in.length < inOfs + inLen) {
+      throw new IllegalArgumentException("inOfs + inLen > in.length");
+    }
   }
 
   private static void checkOutParams(byte[] out, int outOfs, int outLen) {
     Functions.requireNonNull("out", out);
-    if (outOfs < 0 || outLen <= 0) throw new IllegalArgumentException("outOfs or outLen is invalid");
-    if (out.length < outOfs + outLen) throw new IllegalArgumentException("outOfs + outLen > out.length");
+    if (outOfs < 0 || outLen <= 0) {
+      throw new IllegalArgumentException("outOfs or outLen is invalid");
+    }
+    if (out.length < outOfs + outLen) {
+      throw new IllegalArgumentException("outOfs + outLen > out.length");
+    }
   }
 
 }

@@ -34,9 +34,7 @@ public abstract class CkParams {
   }
 
   protected static <T> T requireNonNull(String paramName, T param) {
-    if (param == null) throw new NullPointerException("Argument '" + paramName + "' must not be null.");
-
-    return param;
+    return Functions.requireNonNull(paramName, param);
   }
 
   protected CK_MECHANISM buildCkMechanism(Constructor<?> constructor, long mechanismCode) {

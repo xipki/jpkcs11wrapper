@@ -35,7 +35,9 @@ public class CCM_PARAMS extends CkParams {
   }
 
   public CCM_PARAMS(int dataLen, byte[] nonce, byte[] aad, int macLen) {
-    if (constructor == null) throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
+    if (constructor == null) {
+      throw new IllegalStateException(CLASS_CK_PARAMS + " is not available in the JDK");
+    }
 
     this.nonce = Functions.requireNonNull("nonce", nonce);
     Functions.requireRange("nonce.length", nonce.length, 7, 13);
