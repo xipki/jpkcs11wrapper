@@ -1376,12 +1376,28 @@ public final class PKCS11Constants {
     return nameToCode(Category.CKA, name);
   }
 
+  public static String ckkCodeToName(long code) {
+    return codeToName(Category.CKK, code);
+  }
+
+  public static long ckkNameToCode(String name) {
+    return nameToCode(Category.CKK, name);
+  }
+
   public static String ckmCodeToName(long code) {
     return codeToName(Category.CKM, code);
   }
 
   public static long ckmNameToCode(String name) {
     return nameToCode(Category.CKM, name);
+  }
+
+  public static String ckoCodeToName(long code) {
+    return codeToName(Category.CKO, code);
+  }
+
+  public static long ckoNameToCode(String name) {
+    return nameToCode(Category.CKO, name);
   }
 
   public static String ckrCodeToName(long code) {

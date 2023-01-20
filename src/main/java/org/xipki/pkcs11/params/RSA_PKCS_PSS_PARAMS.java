@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
-import static org.xipki.pkcs11.PKCS11Constants.CKM_SHA3_512;
 
 /**
  * Represents the CK_RSA_PKCS_PSS_PARAMS.

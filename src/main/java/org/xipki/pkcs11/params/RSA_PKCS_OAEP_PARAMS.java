@@ -3,10 +3,10 @@
 
 package org.xipki.pkcs11.params;
 
-import sun.security.pkcs11.wrapper.CK_MECHANISM;
-import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 import org.xipki.pkcs11.Functions;
 import org.xipki.pkcs11.PKCS11Constants;
+import sun.security.pkcs11.wrapper.CK_MECHANISM;
+import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 

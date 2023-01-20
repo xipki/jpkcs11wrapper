@@ -14,9 +14,7 @@ import sun.security.pkcs11.wrapper.PKCS11;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
@@ -86,8 +84,6 @@ public class Session {
    */
   private long sessionHandle;
 
-  private final VendorCode vendorCode;
-
   /**
    * The token to perform the operations on.
    */
@@ -124,7 +120,6 @@ public class Session {
     this.token = Functions.requireNonNull("token", token);
     this.module = token.getSlot().getModule();
     this.pkcs11 = module.getPKCS11();
-    this.vendorCode = module.getVendorCode();
     this.sessionHandle = sessionHandle;
   }
 
@@ -157,22 +152,8 @@ public class Session {
    * @throws PKCS11Exception If getting the information failed.
    */
   public SessionInfo getSessionInfo() throws PKCS11Exception {
-    Boolean b = module.getModuleFix().getGetSessionInfoSupported();
     try {
-      if (b == null) {
-        boolean supported = false;
-        try {
-          SessionInfo si = new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
-          supported = true;
-          return si;
-        } finally {
-          module.getModuleFix().setGetSessionInfoSupported(supported);
-        }
-      } else if (b) {
-        return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
-      } else {
-        throw new PKCS11Exception(CKR_FUNCTION_NOT_SUPPORTED);
-      }
+      return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
@@ -978,10 +959,9 @@ public class Session {
       return signatureValue;
     }
 
-    ModuleFix moduleFix = module.getModuleFix();
     synchronized (module) {
       if (signatureType == SIGN_TYPE_ECDSA) {
-        Boolean b = moduleFix.getEcdsaSignatureFixNeeded();
+        Boolean b = module.getEcdsaSignatureFixNeeded();
         if (b == null || b) {
           // get the ecParams
           byte[] ecParams = handleEcParamsMap.get(signKeyHandle);
@@ -992,25 +972,27 @@ public class Session {
               return signatureValue;
             }
 
-            handleEcParamsMap.put(signKeyHandle, ecParams);
+            if (ecParams != null) {
+              handleEcParamsMap.put(signKeyHandle, ecParams);
+            }
           }
 
           if (ecParams != null) {
             byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, ecParams);
             boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
             if (b == null) {
-              moduleFix.setEcdsaSignatureFixNeeded(fixed);
+              module.setEcdsaSignatureFixNeeded(fixed);
             }
             return fixedSigValue;
           }
         }
       } else if (signatureType == SIGN_TYPE_SM2) {
-        Boolean b = moduleFix.getSm2SignatureFixNeeded();
+        Boolean b = module.getSm2SignatureFixNeeded();
         if (b == null || b) {
           byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, 32);
           boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
           if (b == null) {
-            moduleFix.setSm2SignatureFixNeeded(fixed);
+            module.setSm2SignatureFixNeeded(fixed);
           }
           return fixedSigValue;
         }
@@ -1432,8 +1414,8 @@ public class Session {
   private CK_MECHANISM toCkMechanism(Mechanism mechanism) {
     CK_MECHANISM ckMechanism = mechanism.toCkMechanism();
     long code = mechanism.getMechanismCode();
-    if ((code & CKM_VENDOR_DEFINED) != 0 && vendorCode != null) {
-      ckMechanism.mechanism = vendorCode.ckmGenericToVendor(code);
+    if ((code & CKM_VENDOR_DEFINED) != 0) {
+      ckMechanism.mechanism = module.ckmGenericToVendor(code);
     }
     return ckMechanism;
   }
@@ -1675,13 +1657,11 @@ public class Session {
     }
 
     CK_ATTRIBUTE[] ret = template.toCkAttributes();
-    if (vendorCode != null) {
-      for (CK_ATTRIBUTE ckAttr : ret) {
-        if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
-          long value = (long) ckAttr.pValue;
-          if ((value & CKK_VENDOR_DEFINED) != 0L) {
-            ckAttr.pValue = vendorCode.ckkGenericToVendor(value);
-          }
+    for (CK_ATTRIBUTE ckAttr : ret) {
+      if (ckAttr.type == CKA_KEY_TYPE && ckAttr.pValue != null) {
+        long value = (long) ckAttr.pValue;
+        if ((value & CKK_VENDOR_DEFINED) != 0L) {
+          ckAttr.pValue = module.ckkGenericToVendor(value);
         }
       }
     }
@@ -1724,25 +1704,25 @@ public class Session {
     }
 
     if (type == CKA_KEY_TYPE) {
-      if (vendorCode != null && ckAttr.pValue != null) {
+      if (ckAttr.pValue != null) {
         long value = (long) ckAttr.pValue;
         if ((value & CKK_VENDOR_DEFINED) != 0L && !isUnavailableInformation(value)) {
-          ckAttr.pValue = vendorCode.ckkVendorToGeneric(value);
+          ckAttr.pValue = module.ckkVendorToGeneric(value);
         }
       }
     } else if (type == CKA_KEY_GEN_MECHANISM) {
-      if (vendorCode != null && ckAttr.pValue != null) {
+      if (ckAttr.pValue != null) {
         long value = (long) ckAttr.pValue;
         if ((value & CKM_VENDOR_DEFINED) != 0L && !isUnavailableInformation(value)) {
-          ckAttr.pValue = vendorCode.ckmVendorToGeneric(value);
+          ckAttr.pValue = module.ckmVendorToGeneric(value);
         }
       }
     } else if (type == CKA_ALLOWED_MECHANISMS) {
-      if (vendorCode != null && ckAttr.pValue != null) {
+      if (ckAttr.pValue != null) {
         long[] mechs = ((MechanismArrayAttribute) attr).getValue();
         for (long mech : mechs) {
           if ((mech & CKM_VENDOR_DEFINED) != 0L) {
-            ckAttr.pValue = vendorCode.ckmVendorToGeneric(mech);
+            ckAttr.pValue = module.ckmVendorToGeneric(mech);
           }
         }
       }
@@ -1798,5 +1778,122 @@ public class Session {
       throw new IllegalArgumentException("outOfs + outLen > out.length");
     }
   }
+
+  private static class LruCache<K, V> {
+
+    private final LinkedHashMap<K, V> map;
+
+    /** Size of this cache in units. Not necessarily the number of elements. */
+    private int size;
+
+    private int maxSize;
+
+    private int hitCount;
+
+    private int missCount;
+
+    public LruCache(int maxSize) {
+      if (maxSize < 0) {
+        throw new IllegalArgumentException("maxSize is not positive: " + maxSize);
+      }
+      this.maxSize = maxSize;
+      this.map = new LinkedHashMap<>(0, 0.75f, true);
+    }
+
+    public final V get(K key) {
+      if (key == null) {
+        throw new NullPointerException("key == null");
+      }
+
+      V mapValue;
+      synchronized (this) {
+        mapValue = map.get(key);
+        if (mapValue != null) {
+          hitCount++;
+          return mapValue;
+        }
+        missCount++;
+      }
+
+      return null;
+    }
+
+    public final V put(K key, V value) {
+      if (key == null || value == null) {
+        throw new NullPointerException("key == null || value == null");
+      }
+
+      V previous;
+      synchronized (this) {
+        size += safeSizeOf(key, value);
+        previous = map.put(key, value);
+        if (previous != null) {
+          size -= safeSizeOf(key, previous);
+        }
+      }
+
+      trimToSize(maxSize);
+      return previous;
+    }
+
+    /**
+     * Remove the eldest entries until the total of remaining entries is at or
+     * below the requested size.
+     *
+     * @param maxSize the maximum size of the cache before returning. Could be -1
+     *            to evict even 0-sized elements.
+     */
+    public void trimToSize(int maxSize) {
+      while (true) {
+        K key;
+        V value;
+        synchronized (this) {
+          if (size < 0 || (map.isEmpty() && size != 0)) {
+            throw new IllegalStateException(getClass().getName()
+                + ".sizeOf() is reporting inconsistent results!");
+          }
+
+          if (size <= maxSize || map.isEmpty()) {
+            break;
+          }
+
+          Map.Entry<K, V> toEvict = map.entrySet().iterator().next();
+          key = toEvict.getKey();
+          value = toEvict.getValue();
+          map.remove(key);
+          size -= safeSizeOf(key, value);
+        }
+      }
+    }
+
+    private int safeSizeOf(K key, V value) {
+      int result = sizeOf(key, value);
+      if (result < 0) {
+        throw new IllegalStateException("Negative size: " + key + "=" + value);
+      }
+      return result;
+    }
+
+    protected int sizeOf(K key, V value) {
+      return 1;
+    }
+
+    public final void evictAll() {
+      trimToSize(-1); // -1 will evict 0-sized elements
+    }
+
+    public final synchronized int size() {
+      return size;
+    }
+
+    @Override
+    public final synchronized String toString() {
+      int accesses = hitCount + missCount;
+      int hitPercent = (accesses == 0) ? 0 : (100 * hitCount / accesses);
+      return String.format("LruCache[maxSize=%d,hits=%d,misses=%d,hitRate=%d%%]",
+          maxSize, hitCount, missCount, hitPercent);
+    }
+
+  } // class LruCache
 
 }

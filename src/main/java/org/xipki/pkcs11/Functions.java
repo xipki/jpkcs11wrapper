@@ -264,11 +264,7 @@ public class Functions {
   }
 
   static byte[] fixECDSASignature(byte[] sig, int fieldLen) {
-    if (sig.length == 2 * fieldLen) {
-      return sig;
-    }
-
-    if (sig[0] != 0x30) {
+    if (sig.length == 2 * fieldLen || sig[0] != 0x30) {
       return sig;
     }
 
@@ -278,11 +274,7 @@ public class Functions {
     int len = ((b & 0x80) == 0) ? 0xFF & b
         : (b == (byte) 0x81) ? 0xFF & sig[ofs++] : 0;
 
-    if (len == 0) {
-      return sig;
-    }
-
-    if (ofs + len != sig.length) {
+    if (len == 0 || ofs + len != sig.length) {
       return sig;
     }
 

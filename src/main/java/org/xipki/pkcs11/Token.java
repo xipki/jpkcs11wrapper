@@ -6,9 +6,6 @@
 
 package org.xipki.pkcs11;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.xipki.pkcs11.PKCS11Constants.*;
 
 /**
@@ -132,13 +129,10 @@ public class Token {
       throw new PKCS11Exception(ex.getErrorCode());
     }
 
-    VendorCode vendorCode = slot.getModule().getVendorCode();
-    if (vendorCode != null) {
-      for (int i = 0; i < mechanisms.length; i++) {
-        long code = mechanisms[i];
-        if (vendorCode != null && (code & CKM_VENDOR_DEFINED) != 0L) {
-          mechanisms[i] = vendorCode.ckmVendorToGeneric(code);
-        }
+    for (int i = 0; i < mechanisms.length; i++) {
+      long code = mechanisms[i];
+      if ((code & CKM_VENDOR_DEFINED) != 0L) {
+        mechanisms[i] = slot.getModule().ckmVendorToGeneric(code);
       }
     }
 
@@ -158,10 +152,7 @@ public class Token {
    */
   public MechanismInfo getMechanismInfo(long mechanism) throws PKCS11Exception {
     if ((mechanism & CKM_VENDOR_DEFINED) != 0L) {
-      VendorCode vendorCode = slot.getModule().getVendorCode();
-      if (vendorCode != null) {
-        mechanism = vendorCode.ckmGenericToVendor(mechanism);
-      }
+      mechanism = slot.getModule().ckmGenericToVendor(mechanism);
     }
 
     try {
