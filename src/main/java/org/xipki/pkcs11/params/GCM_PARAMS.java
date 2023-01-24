@@ -30,7 +30,7 @@ public class GCM_PARAMS extends CkParams {
 
   static {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class);
-    constructor_CK_MECHANISM = Util.getConstructofOfCK_MECHANISM(CLASS_CK_PARAMS);
+    constructor_CK_MECHANISM = Util.getConstructOfOfCK_MECHANISM(CLASS_CK_PARAMS);
   }
 
   public GCM_PARAMS(byte[] iv, byte[] aad, int tagBits) {

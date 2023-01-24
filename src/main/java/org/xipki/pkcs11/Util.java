@@ -57,7 +57,7 @@ public class Util {
     }
   }
 
-  public static Constructor<?> getConstructofOfCK_MECHANISM(String paramsClassName) {
+  public static Constructor<?> getConstructOfOfCK_MECHANISM(String paramsClassName) {
     Class<?> paramsClass;
     try {
       paramsClass = Class.forName(paramsClassName);
