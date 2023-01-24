@@ -30,7 +30,7 @@ public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
 
   static {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, byte[].class, byte[].class);
-    constructor_CK_MECHANISM = Util.getConstructOfOfCK_MECHANISM(CLASS_CK_PARAMS);
+    constructor_CK_MECHANISM = Util.getConstructorOfCK_MECHANISM(CLASS_CK_PARAMS);
   }
 
   /**

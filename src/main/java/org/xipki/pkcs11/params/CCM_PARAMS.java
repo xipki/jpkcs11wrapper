@@ -31,7 +31,7 @@ public class CCM_PARAMS extends CkParams {
 
   static {
     constructor = Util.getConstructor(CLASS_CK_PARAMS, int.class, byte[].class, byte[].class, int.class);
-    constructor_CK_MECHANISM = Util.getConstructOfOfCK_MECHANISM(CLASS_CK_PARAMS);
+    constructor_CK_MECHANISM = Util.getConstructorOfCK_MECHANISM(CLASS_CK_PARAMS);
   }
 
   public CCM_PARAMS(int dataLen, byte[] nonce, byte[] aad, int macLen) {
