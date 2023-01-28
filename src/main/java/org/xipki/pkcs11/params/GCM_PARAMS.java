@@ -67,8 +67,10 @@ public class GCM_PARAMS extends CkParams {
    */
   @Override
   public String toString() {
-    return "Class: " + getClass().getName() + "\n   IV: " + Functions.toHex(iv) +
-        "\n  AAD: " + (aad == null ? " " : Functions.toHex(aad)) + "\n   TagBits: " + tagBits;
+    return "CK_GCM_PARAMS:" +
+        ptrToString("\n  pIv:       ", iv) +
+        ptrToString("\n  pAAD:      ", aad) +
+        "\n  ulTagBits: " + tagBits;
   }
 
 }

@@ -51,7 +51,7 @@ public class AES_CTR_PARAMS extends CkParams {
   @Override
   public String toString() {
     return "CK_AES_CTR_PARAMS:" +
-        "\n  cb: " + ptrToString(cb);
+        ptrToString("\n  cb: ", cb);
   }
 
 }

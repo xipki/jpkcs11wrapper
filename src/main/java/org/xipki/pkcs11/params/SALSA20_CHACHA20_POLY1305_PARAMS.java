@@ -80,8 +80,8 @@ public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
   @Override
   public String toString() {
     return "CK_SALSA20_CHACHA20_POLY1305_PARAMS:" +
-        "\n  pNonce: " + ptrToString(nonce) +
-        "\n  pAAD:   " + ptrToString(aad);
+        ptrToString("\n  pNonce: ", nonce) +
+        ptrToString("\n  pAAD:   ", aad);
   }
 
 }

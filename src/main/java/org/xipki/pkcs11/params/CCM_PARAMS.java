@@ -70,8 +70,8 @@ public class CCM_PARAMS extends CkParams {
   public String toString() {
     return "CK_CCM_PARAMS:" +
         "\n  ulDataLen: " + dataLen+
-        "\n, pNonce:    " + ptrToString(nonce) +
-        "\n  pAAD:      " + ptrToString(aad) +
+        ptrToString("\n, pNonce:    ", nonce) +
+        ptrToString("\n  pAAD:      ", aad) +
         "\n  ulMacLen:  " + macLen;
   }
 

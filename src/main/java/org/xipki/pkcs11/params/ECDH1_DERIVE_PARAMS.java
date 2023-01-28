@@ -50,9 +50,9 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
   @Override
   public String toString() {
     return "CK_ECDH1_DERIVE_PARAMS:" +
-        "\n  Key Derivation Function: " + codeToName(Category.CKD, params.kdf) +
-        "\n  Public Data: " + ptrToString(params.pPublicData) +
-        "\n  Shared Data: " + ptrToString(params.pSharedData);
+        "\n  KDF:         " + codeToName(Category.CKD, params.kdf) +
+        ptrToString("\n  Public Data: ", params.pPublicData) +
+        ptrToString("\n  Shared Data: ", params.pSharedData);
   }
 
 }

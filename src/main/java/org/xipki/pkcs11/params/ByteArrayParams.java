@@ -31,7 +31,7 @@ public class ByteArrayParams extends CkParams {
 
   @Override
   public String toString() {
-    return "ByteArray Params: " + Functions.toHex(bytes);
+    return "ByteArray Params: " + ptrToString("\n  ", bytes);
   }
 
 }
