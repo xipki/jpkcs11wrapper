@@ -1,5 +1,4 @@
 import org.xipki.pkcs11.Functions;
-import org.xipki.pkcs11.attrs.*;
 
 import java.util.*;
 
