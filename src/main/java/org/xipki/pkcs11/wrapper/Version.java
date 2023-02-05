@@ -30,7 +30,8 @@ public class Version {
 
   /**
    * Constructor for internal use only.
-   *
+   * @param major The major version.
+   * @param minor  The minor version.
    */
   protected Version(byte major, byte minor) {
     this.major = major;

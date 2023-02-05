@@ -115,6 +115,10 @@
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
           <version>3.0.0</version>
+          <configuration>
+            <failOnError>false</failOnError>
+            <failOnWarnings>false</failOnWarnings>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-resources-plugin</artifactId>

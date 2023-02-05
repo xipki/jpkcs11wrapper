@@ -739,6 +739,7 @@ public class Session {
    * the current digesting operation; i.e. the application need (and should) not call digestFinal()
    * after this call. For digesting multiple pieces of data use digestUpdate and digestFinal.
    *
+   * @param mechanism the mechanism
    * @param in     the to-be-digested data
    * @param out    buffer for the digested data
    * @param outOfs buffer offset for the digested data
@@ -755,6 +756,7 @@ public class Session {
    * the current digesting operation; i.e. the application need (and should) not call digestFinal()
    * after this call. For digesting multiple pieces of data use digestUpdate and digestFinal.
    *
+   * @param mechanism the mechanism
    * @param in     buffer containing the to-be-digested data
    * @param inOfs  buffer offset of the to-be-digested data
    * @param inLen  length of the to-be-digested data
