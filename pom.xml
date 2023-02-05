@@ -10,10 +10,10 @@
   </parent>
   <groupId>org.xipki</groupId>
   <artifactId>jpkcs11wrapper</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <properties>
     <!--must match the version defined above-->
-    <bundle.version>1.0.0.SNAPSHOT</bundle.version>
+    <bundle.version>1.0.0</bundle.version>
     <test.excludes>**/*Speed.java</test.excludes>
     <test.junit.argline></test.junit.argline>
   </properties>
@@ -166,7 +166,7 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <Export-Package>org.xipki.pkcs11,org.xipki.pkcs11.attrs,org.xipki.pkcs11.params</Export-Package>
+              <Export-Package>org.xipki.pkcs11.wrapper,org.xipki.pkcs11.wrapper.attrs,org.xipki.pkcs11.wrapper.params</Export-Package>
               <Import-Package>sun.security.pkcs11.wrapper</Import-Package>
               <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
               <Bundle-Name>jpkcs11wrapper</Bundle-Name>
