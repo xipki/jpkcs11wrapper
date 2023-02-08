@@ -82,11 +82,26 @@ public class Functions {
     byte[] baseX;
   }
 
+  private static final Map<Long, String> hashMechCodeToHashNames;
+
   private static final Map<String, ECInfo> ecParamsInfoMap;
 
   private static final Set<String> edwardsMontgomeryEcParams;
 
   static {
+    hashMechCodeToHashNames = new HashMap<>();
+    hashMechCodeToHashNames.put(CKM_SHA_1, "SHA1");
+    hashMechCodeToHashNames.put(CKM_SHA224, "SHA224");
+    hashMechCodeToHashNames.put(CKM_SHA256, "SHA256");
+    hashMechCodeToHashNames.put(CKM_SHA384, "SHA384");
+    hashMechCodeToHashNames.put(CKM_SHA512, "SHA512");
+    hashMechCodeToHashNames.put(CKM_SHA512_224, "SHA512/224");
+    hashMechCodeToHashNames.put(CKM_SHA512_256, "SHA512/256");
+    hashMechCodeToHashNames.put(CKM_SHA3_224, "SHA3-224");
+    hashMechCodeToHashNames.put(CKM_SHA3_256, "SHA3-256");
+    hashMechCodeToHashNames.put(CKM_SHA3_384, "SHA3-384");
+    hashMechCodeToHashNames.put(CKM_SHA3_512, "SHA3-512");
+
     edwardsMontgomeryEcParams = new HashSet<>(6);
     // X25519 (1.3.101.110)
     edwardsMontgomeryEcParams.add("06032b656e");
@@ -137,6 +152,10 @@ public class Functions {
     } catch (Throwable t) {
       throw new IllegalStateException("error reading properties file " + propFile + ": " + t.getMessage());
     }
+  }
+
+  public static String getHashAlgName(long hashMechanism) {
+    return hashMechCodeToHashNames.get(hashMechanism);
   }
 
   public static byte[] asUnsignedByteArray(java.math.BigInteger bn) {
@@ -272,21 +291,31 @@ public class Functions {
     return sb.append(")").toString();
   }
 
-  public static String getCurveName(byte[] ecParams) {
-    ECInfo ecInfo = ecParamsInfoMap.get(Hex.encode(ecParams, 0, ecParams.length));
-    return (ecInfo == null) ? null : ecInfo.names[0];
-  }
-
-  public static String getCurveName(BigInteger order, BigInteger baseX) {
+  public static byte[] getEcParams(BigInteger order, BigInteger baseX) {
     byte[] orderBytes = order.toByteArray();
     byte[] baseXBytes = baseX.toByteArray();
     for (Map.Entry<String, ECInfo> m : ecParamsInfoMap.entrySet()) {
       ECInfo ei = m.getValue();
       if (Arrays.equals(ei.order, orderBytes) && Arrays.equals(ei.baseX, baseXBytes)) {
-        return ei.names[0];
+        return Hex.decode(m.getKey());
       }
     }
     return null;
+  }
+
+  public static String getCurveName(byte[] ecParams) {
+    ECInfo ecInfo = ecParamsInfoMap.get(Hex.encode(ecParams, 0, ecParams.length));
+    return (ecInfo == null) ? null : ecInfo.names[0];
+  }
+
+  public static String[] getCurveNames(byte[] ecParams) {
+    ECInfo ecInfo = ecParamsInfoMap.get(Hex.encode(ecParams, 0, ecParams.length));
+    return (ecInfo == null) ? null : ecInfo.names.clone();
+  }
+
+  public static String getCurveOid(byte[] ecParams) {
+    ECInfo ecInfo = ecParamsInfoMap.get(Hex.encode(ecParams, 0, ecParams.length));
+    return (ecInfo == null) ? null : ecInfo.oid;
   }
 
   static Integer getECFieldSize(byte[] ecParams) {
@@ -617,7 +646,7 @@ public class Functions {
     return ecPoint;
   }
 
-  private static byte[] toOctetString(byte[] bytes) {
+  public static byte[] toOctetString(byte[] bytes) {
     int len = bytes.length;
 
     int numLenBytes = (len <= 0x7F) ? 1 : (len <= 0xFF) ? 2 : (len <= 0xFFFF) ? 3 : 4;

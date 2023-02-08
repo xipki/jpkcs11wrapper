@@ -85,7 +85,7 @@ public class PKCS11Module {
   /**
    * The private key of type CKK_VENDOR_SM2 has the attribute CKA_EC_POINT.
    */
-  static final int BEHAVIOUR_SM2_PRIVATEKEY_ECPOINT = 3;
+  static final int BEHAVIOUR_SM2_PRIVATEKEY_ECPOINT = 4;
 
   /**
    * Interface to the underlying PKCS#11 module.
@@ -372,7 +372,7 @@ public class PKCS11Module {
 
           // vendor behaviours
           if (block.vendoBehaviours != null) {
-            StringTokenizer tokenizer = new StringTokenizer(block.vendoBehaviours, ", \t");
+            StringTokenizer tokenizer = new StringTokenizer(block.vendoBehaviours, ":, \t");
             while (tokenizer.hasMoreTokens()) {
               String token = tokenizer.nextToken();
               if ("SM2_SIGNATURE_X962".equalsIgnoreCase(token)) {
