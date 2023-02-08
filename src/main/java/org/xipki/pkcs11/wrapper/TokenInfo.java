@@ -295,13 +295,17 @@ public class TokenInfo {
         ni + "Firmware Version:     " + firmwareVersion +
         ni + "Time:                 " + time;
 
-    return text + "\n" + Functions.toStringFlags(PKCS11Constants.Category.CKF_TOKEN, indent + "Flags: ", ckTokenInfo.flags,
-        PKCS11Constants.CKF_RNG,                    PKCS11Constants.CKF_WRITE_PROTECTED,        PKCS11Constants.CKF_LOGIN_REQUIRED,
-        PKCS11Constants.CKF_RESTORE_KEY_NOT_NEEDED, PKCS11Constants.CKF_CLOCK_ON_TOKEN,         PKCS11Constants.CKF_PROTECTED_AUTHENTICATION_PATH,
-        PKCS11Constants.CKF_DUAL_CRYPTO_OPERATIONS, PKCS11Constants.CKF_TOKEN_INITIALIZED,      PKCS11Constants.CKF_SECONDARY_AUTHENTICATION,
-        PKCS11Constants.CKF_USER_PIN_INITIALIZED,   PKCS11Constants.CKF_USER_PIN_COUNT_LOW,     PKCS11Constants.CKF_USER_PIN_FINAL_TRY,
-        PKCS11Constants.CKF_USER_PIN_LOCKED,        PKCS11Constants.CKF_USER_PIN_TO_BE_CHANGED, PKCS11Constants.CKF_SO_PIN_COUNT_LOW,
-        PKCS11Constants.CKF_SO_PIN_FINAL_TRY,       PKCS11Constants.CKF_SO_PIN_LOCKED,          PKCS11Constants.CKF_SO_PIN_TO_BE_CHANGED);
+    return text + "\n" + Functions.toStringFlags(PKCS11Constants.Category.CKF_TOKEN,
+        indent + "Flags: ", ckTokenInfo.flags,
+        PKCS11Constants.CKF_RNG,                      PKCS11Constants.CKF_WRITE_PROTECTED,
+        PKCS11Constants.CKF_LOGIN_REQUIRED,           PKCS11Constants.CKF_RESTORE_KEY_NOT_NEEDED,
+        PKCS11Constants.CKF_CLOCK_ON_TOKEN,           PKCS11Constants.CKF_PROTECTED_AUTHENTICATION_PATH,
+        PKCS11Constants.CKF_DUAL_CRYPTO_OPERATIONS,   PKCS11Constants.CKF_TOKEN_INITIALIZED,
+        PKCS11Constants.CKF_SECONDARY_AUTHENTICATION, PKCS11Constants.CKF_USER_PIN_INITIALIZED,
+        PKCS11Constants.CKF_USER_PIN_COUNT_LOW,       PKCS11Constants.CKF_USER_PIN_FINAL_TRY,
+        PKCS11Constants.CKF_USER_PIN_LOCKED,          PKCS11Constants.CKF_USER_PIN_TO_BE_CHANGED,
+        PKCS11Constants.CKF_SO_PIN_COUNT_LOW,         PKCS11Constants.CKF_SO_PIN_FINAL_TRY,
+        PKCS11Constants.CKF_SO_PIN_LOCKED,            PKCS11Constants.CKF_SO_PIN_TO_BE_CHANGED);
   }
 
   private static String mct(long count) {
