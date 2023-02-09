@@ -6,7 +6,6 @@ package test.pkcs.pkcs11.wrapper;
 import test.pkcs.pkcs11.wrapper.util.KeyUtil;
 import test.pkcs.pkcs11.wrapper.util.Util;
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
-import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.slf4j.Logger;
@@ -130,7 +129,8 @@ public class TestBase {
   }
 
   protected Session openReadOnlySession(Token token) throws PKCS11Exception {
-    return test.pkcs.pkcs11.wrapper.util.Util.openAuthorizedSession(token, false, modulePin == null ? null : modulePin.toCharArray());
+    return test.pkcs.pkcs11.wrapper.util.Util.openAuthorizedSession(
+        token, false, modulePin == null ? null : modulePin.toCharArray());
   }
 
   protected Session openReadOnlySession() throws PKCS11Exception {
@@ -138,7 +138,8 @@ public class TestBase {
   }
 
   protected Session openReadWriteSession(Token token) throws PKCS11Exception {
-    return test.pkcs.pkcs11.wrapper.util.Util.openAuthorizedSession(token, true, modulePin == null ? null : modulePin.toCharArray());
+    return test.pkcs.pkcs11.wrapper.util.Util.openAuthorizedSession(
+        token, true, modulePin == null ? null : modulePin.toCharArray());
   }
 
   protected Session openReadWriteSession() throws PKCS11Exception {
@@ -265,7 +266,6 @@ public class TestBase {
     } else if (keyType == CKK_EC || keyType == CKK_EC_EDWARDS
         || keyType == CKK_EC_MONTGOMERY || keyType == CKK_VENDOR_SM2) {
       byte[] encodedPoint = session.getByteArrayAttrValue(p11Key, CKA_EC_POINT);
-      encodedPoint = ASN1OctetString.getInstance(encodedPoint).getOctets();
 
       byte[] ecParams;
       try {
