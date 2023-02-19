@@ -1345,6 +1345,7 @@ public class Session {
   public PKCS11KeyPair generateKeyPair(Mechanism mechanism, KeyPairTemplate template) throws PKCS11Exception {
     long[] objectHandles;
     try {
+      template.id();
       objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
           toOutCKAttributes(template.publicKey()), toOutCKAttributes(template.privateKey()));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
