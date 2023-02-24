@@ -51,12 +51,17 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
   }
 
   @Override
-  public String toString() {
-    return "CK_RSA_PKCS_OAEP_PARAMS:" +
-        "\n  hashAlg:     " + PKCS11Constants.ckmCodeToName(params.hashAlg) +
-        "\n  mgf:         " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKG_MGF, params.mgf) +
-        "\n  source:      " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKZ, params.source) +
-        ptrToString("\n  pSourceData: ", params.pSourceData);
+  protected int getMaxFieldLen() {
+    return 11; // pSourceData
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_RSA_PKCS_OAEP_PARAMS:" +
+        val2Str(indent, "hashAlg", PKCS11Constants.ckmCodeToName(params.hashAlg)) +
+        val2Str(indent, "mgf", PKCS11Constants.codeToName(PKCS11Constants.Category.CKG_MGF, params.mgf)) +
+        val2Str(indent, "source", PKCS11Constants.codeToName(PKCS11Constants.Category.CKZ, params.source)) +
+        ptr2str(indent, "pSourceData", params.pSourceData);
   }
 
 }

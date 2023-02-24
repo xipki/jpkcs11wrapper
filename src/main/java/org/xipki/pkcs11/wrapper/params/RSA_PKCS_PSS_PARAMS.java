@@ -165,11 +165,16 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   }
 
   @Override
-  public String toString() {
-    return "CK_RSA_PKCS_PSS_PARAMS:" +
-        "\n  hashAlg: " + PKCS11Constants.ckmCodeToName(hashAlg) +
-        "\n  mgf:     " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKG_MGF, mgf) +
-        "\n  sLen:    " + sLen;
+  protected int getMaxFieldLen() {
+    return 7; // hashAlg
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_RSA_PKCS_PSS_PARAMS:" +
+        val2Str(indent, "hashAlg", PKCS11Constants.ckmCodeToName(hashAlg)) +
+        val2Str(indent, "mgf", PKCS11Constants.codeToName(PKCS11Constants.Category.CKG_MGF, mgf)) +
+        val2Str(indent, "sLen", sLen);
   }
 
 }

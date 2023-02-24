@@ -58,18 +58,17 @@ public class GCM_PARAMS extends CkParams {
     return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
   }
 
-  /**
-   * Returns the string representation of this object. Do not parse data from this string, it is for
-   * debugging only.
-   *
-   * @return A string representation of this object.
-   */
   @Override
-  public String toString() {
-    return "CK_GCM_PARAMS:" +
-        ptrToString("\n  pIv:       ", iv) +
-        ptrToString("\n  pAAD:      ", aad) +
-        "\n  ulTagBits: " + tagBits;
+  protected int getMaxFieldLen() {
+    return 9; // ulTagBits
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_GCM_PARAMS:" +
+        ptr2str(indent, "pIv", iv) +
+        ptr2str(indent, "pAAD", aad) +
+        val2Str(indent, "ulTagBits", tagBits);
   }
 
 }

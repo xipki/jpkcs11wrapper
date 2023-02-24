@@ -72,16 +72,16 @@ public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
     return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
   }
 
-  /**
-   * Returns the string representation of this object.
-   *
-   * @return A string representation of this object.
-   */
   @Override
-  public String toString() {
-    return "CK_SALSA20_CHACHA20_POLY1305_PARAMS:" +
-        ptrToString("\n  pNonce: ", nonce) +
-        ptrToString("\n  pAAD:   ", aad);
+  protected int getMaxFieldLen() {
+    return 6; // pNonce
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_SALSA20_CHACHA20_POLY1305_PARAMS:" +
+        ptr2str(indent, "pNonce", nonce) +
+        ptr2str(indent, "pAAD", aad);
   }
 
 }

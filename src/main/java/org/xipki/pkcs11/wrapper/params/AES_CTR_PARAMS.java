@@ -42,16 +42,15 @@ public class AES_CTR_PARAMS extends CkParams {
     return new CK_MECHANISM(mechanism, params);
   }
 
-  /**
-   * Returns the string representation of this object. Do not parse data from
-   * this string, it is for debugging only.
-   *
-   * @return A string representation of this object.
-   */
   @Override
-  public String toString() {
-    return "CK_AES_CTR_PARAMS:" +
-        ptrToString("\n  cb: ", cb);
+  protected int getMaxFieldLen() {
+    return 2; // cb
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_AES_CTR_PARAMS:" +
+        ptr2str(indent, "cb", cb);
   }
 
 }

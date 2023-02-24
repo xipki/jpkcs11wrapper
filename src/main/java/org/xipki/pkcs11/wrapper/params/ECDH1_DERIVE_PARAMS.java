@@ -47,11 +47,16 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
   }
 
   @Override
-  public String toString() {
-    return "CK_ECDH1_DERIVE_PARAMS:" +
-        "\n  KDF:         " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKD, params.kdf) +
-        ptrToString("\n  Public Data: ", params.pPublicData) +
-        ptrToString("\n  Shared Data: ", params.pSharedData);
+  protected int getMaxFieldLen() {
+    return 11; // pSharedData
+  }
+
+  @Override
+  public String toString(String indent) {
+    return indent + "CK_ECDH1_DERIVE_PARAMS:" +
+        val2Str(indent, "kdf", PKCS11Constants.codeToName(PKCS11Constants.Category.CKD, params.kdf)) +
+        ptr2str(indent, "pPublicData", params.pPublicData) +
+        ptr2str(indent, "pSharedData", params.pSharedData);
   }
 
 }
