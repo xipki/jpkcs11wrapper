@@ -307,7 +307,7 @@ public class Session {
 
       byte[] ecPoint = new byte[1 + 2 * fieldSize];
       ecPoint[0] = 4;
-      System.arraycopy(wx, 0, ecPoint, 1 + fieldSize - wx.length,  wx.length);
+      System.arraycopy(wx, 0, ecPoint, 1 + fieldSize - wx.length, wx.length);
       System.arraycopy(wy, 0, ecPoint, ecPoint.length - wy.length, wy.length);
 
       template.ecPoint(ecPoint);
@@ -451,6 +451,15 @@ public class Session {
     }
   }
 
+  public long[] findObjectsSingle(AttributeVector template, int maxObjectCount) throws PKCS11Exception {
+    findObjectsInit(template);
+    try {
+      return findObjects(maxObjectCount);
+    } finally {
+      findObjectsFinal();
+    }
+  }
+
   /**
    * Initializes a new encryption operation. The application must call this method before calling
    * any other encrypt* operation. Before initializing a new operation, any currently pending
@@ -480,13 +489,15 @@ public class Session {
    *
    * @param in     the to-be-encrypted data
    * @param out    buffer for the encrypted data
-   * @param outOfs buffer offset for the encrypted data
-   * @param outLen buffer size for the encrypted data
    * @return the length of encrypted data
    * @throws PKCS11Exception If encrypting failed.
    */
-  public int encrypt(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return encrypt(in, 0, in.length, out, outOfs, outLen);
+  public int encrypt(byte[] in, byte[] out) throws PKCS11Exception {
+    return encrypt(in, 0, in.length, out, 0, out.length);
+  }
+
+  public int encryptSingle(Mechanism mechanism, long keyHandle, byte[] in, byte[] out) throws PKCS11Exception {
+    return encryptSingle(mechanism, keyHandle, in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -527,6 +538,12 @@ public class Session {
     }
   }
 
+  public int encryptSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
+                           byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    encryptInit(mechanism, keyHandle);
+    return encrypt(in, inOfs, inLen, out, outOfs, outLen);
+  }
+
   /**
    * This method can be used to encrypt multiple pieces of data; e.g. buffer-size pieces when
    * reading the data from a stream. Encrypts the given data with the key and mechanism given to the
@@ -535,13 +552,11 @@ public class Session {
    *
    * @param in     the to-be-encrypted data
    * @param out    buffer for the encrypted data
-   * @param outOfs buffer offset for the encrypted data
-   * @param outLen buffer size for the encrypted data
    * @return the length of encrypted data for this update
    * @throws PKCS11Exception If encrypting the data failed.
    */
-  public int encryptUpdate(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return encryptUpdate(in, 0, in.length, out, outOfs, outLen);
+  public int encryptUpdate(byte[] in, byte[] out) throws PKCS11Exception {
+    return encryptUpdate(in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -619,13 +634,16 @@ public class Session {
    *
    * @param in     the to-be-decrypted data
    * @param out    buffer for the decrypted data
-   * @param outOfs buffer offset for the decrypted data
-   * @param outLen buffer size for the decrypted data
    * @return the length of decrypted data
    * @throws PKCS11Exception If decrypting failed.
    */
-  public int decrypt(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return decrypt(in, 0, in.length, out, outOfs, outLen);
+  public int decrypt(byte[] in, byte[] out) throws PKCS11Exception {
+    return decrypt(in, 0, in.length, out, 0, out.length);
+  }
+
+  public int decryptSingle(Mechanism mechanism, long keyHandle, byte[] in, byte[] out) throws PKCS11Exception {
+    decryptInit(mechanism, keyHandle);
+    return decryptSingle(mechanism, keyHandle, in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -666,6 +684,12 @@ public class Session {
     }
   }
 
+  public int decryptSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
+                           byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    decryptInit(mechanism, keyHandle);
+    return decrypt(in, inOfs, inLen, out, outOfs, outLen);
+  }
+
   /**
    * This method can be used to decrypt multiple pieces of data; e.g. buffer-size pieces when
    * reading the data from a stream. Decrypts the given data with the key and mechanism given to the
@@ -674,13 +698,11 @@ public class Session {
    *
    * @param in     the to-be-decrypted data
    * @param out    buffer for the decrypted data
-   * @param outOfs buffer offset for the decrypted data
-   * @param outLen buffer size for the decrypted data
    * @return the length of decrypted data for this update
    * @throws PKCS11Exception If decrypting the data failed.
    */
-  public int decryptUpdate(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return decryptUpdate(in, 0, in.length, out, outOfs, outLen);
+  public int decryptUpdate(byte[] in, byte[] out) throws PKCS11Exception {
+    return decryptUpdate(in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -756,13 +778,11 @@ public class Session {
    *
    * @param in     the to-be-digested data
    * @param out    buffer for the digested data
-   * @param outOfs buffer offset for the digested data
-   * @param outLen buffer size for the digested data
    * @return the length of digested data for this update
    * @throws PKCS11Exception If digesting the data failed.
    */
-  public int digestFinal(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return digestFinal(in, 0, in.length, out, outOfs, outLen);
+  public int digestFinal(byte[] in, byte[] out) throws PKCS11Exception {
+    return digestFinal(in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -792,16 +812,17 @@ public class Session {
    * the current digesting operation; i.e. the application need (and should) not call digestFinal()
    * after this call. For digesting multiple pieces of data use digestUpdate and digestFinal.
    *
-   * @param mechanism the mechanism
    * @param in     the to-be-digested data
    * @param out    buffer for the digested data
-   * @param outOfs buffer offset for the digested data
-   * @param outLen buffer size for the digested data
    * @return the length of digested data for this update
    * @throws PKCS11Exception If digesting the data failed.
    */
-  public int digest(Mechanism mechanism, byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return digest(mechanism, in, 0, in.length, out, outOfs, outLen);
+  public int digest(byte[] in, byte[] out) throws PKCS11Exception {
+    return digest(in, 0, in.length, out, 0, out.length);
+  }
+
+  public int digestSingle(Mechanism mechanism, byte[] in, byte[] out) throws PKCS11Exception {
+    return digestSingle(mechanism, in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -809,7 +830,6 @@ public class Session {
    * the current digesting operation; i.e. the application need (and should) not call digestFinal()
    * after this call. For digesting multiple pieces of data use digestUpdate and digestFinal.
    *
-   * @param mechanism the mechanism
    * @param in     buffer containing the to-be-digested data
    * @param inOfs  buffer offset of the to-be-digested data
    * @param inLen  length of the to-be-digested data
@@ -819,7 +839,12 @@ public class Session {
    * @return the length of digested data for this update
    * @throws PKCS11Exception If digesting the data failed.
    */
-  public int digest(Mechanism mechanism, byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
+  public int digest(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
+      throws PKCS11Exception {
+    return digestFinal(in, inOfs, inLen, out, outOfs, outLen);
+  }
+
+  public int digestSingle(Mechanism mechanism, byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
       throws PKCS11Exception {
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
@@ -958,6 +983,11 @@ public class Session {
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
+  }
+
+  public byte[] signSingle(Mechanism mechanism, long keyHandle, byte[] data) throws PKCS11Exception {
+    signInit(mechanism, keyHandle);
+    return sign(data);
   }
 
   /**
@@ -1102,13 +1132,16 @@ public class Session {
    *
    * @param in     buffer containing the to-be-signed data
    * @param out    buffer for the signed data
-   * @param outOfs buffer offset for the signed data
-   * @param outLen buffer size for the signed data
    * @return the length of signed data
    * @throws PKCS11Exception If signing the data failed.
    */
-  public int signRecover(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return signRecover(in, 0, in.length, out, outOfs, outLen);
+  public int signRecover(byte[] in, byte[] out) throws PKCS11Exception {
+    return signRecover(in, 0, in.length, out, 0, out.length);
+  }
+
+  public int signRecoverSingle(Mechanism mechanism, long keyHandle, byte[] in, byte[] out) throws PKCS11Exception {
+    signRecoverInit(mechanism, keyHandle);
+    return signRecoverSingle(mechanism, keyHandle, in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -1133,6 +1166,12 @@ public class Session {
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
+  }
+
+  public int signRecoverSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
+                         byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    signRecoverInit(mechanism, keyHandle);
+    return signRecover(in, inOfs, inLen, out, outOfs, outLen);
   }
 
   /**
@@ -1178,6 +1217,11 @@ public class Session {
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
+  }
+
+  public void verifySingle(Mechanism mechanism, long keyHandle, byte[] data, byte[] signature) throws PKCS11Exception {
+    verifyInit(mechanism, keyHandle);
+    verify(data, signature);
   }
 
   /**
@@ -1264,16 +1308,17 @@ public class Session {
    *          the to-be-verified data
    * @param out
    *          the verified data
-   * @param outOfs
-   *          buffer offset for the verified data
-   * @param outLen
-   *          buffer size for the verified data
    * @return the length of verified data
    * @exception PKCS11Exception
    *              If signing the data failed.
    */
-  public int verifyRecover(byte[] in, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
-    return verifyRecover(in, 0, in.length, out, outOfs, outLen);
+  public int verifyRecover(byte[] in, byte[] out) throws PKCS11Exception {
+    return verifyRecover(in, 0, in.length, out, 0, out.length);
+  }
+
+  public int verifyRecoverSingle(Mechanism mechanism, long keyHandle, byte[] in, byte[] out) throws PKCS11Exception {
+    verifyRecoverInit(mechanism, keyHandle);
+    return verifyRecoverSingle(mechanism, keyHandle, in, 0, in.length, out, 0, out.length);
   }
 
   /**
@@ -1305,6 +1350,12 @@ public class Session {
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }
+  }
+
+  public int verifyRecoverSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
+                           byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    verifyRecoverInit(mechanism, keyHandle);
+    return verifyRecover(in, inOfs, inLen, out, outOfs, outLen);
   }
 
   /**
