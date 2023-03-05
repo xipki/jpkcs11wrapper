@@ -14,7 +14,7 @@ Use xipki/jpkcs11wrapper in your project
   <dependency>
       <groupId>org.xipki</groupId>
       <artifactId>jpkcs11wrapper</artifactId>
-      <version>1.0.2-SNAPSHOT</version>
+      <version>1.0.2</version>
   </dependency>
   ```
 - Or copy the following jar file to your classpath:
