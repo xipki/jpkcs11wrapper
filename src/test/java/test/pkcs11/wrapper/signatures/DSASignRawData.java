@@ -6,7 +6,6 @@ package test.pkcs11.wrapper.signatures;
 import test.pkcs11.wrapper.util.Util;
 import org.junit.Test;
 import org.xipki.pkcs11.wrapper.*;
-import test.pkcs11.wrapper.TestBase;
 
 import java.security.MessageDigest;
 
@@ -46,15 +45,12 @@ public class DSASignRawData extends SignatureTestBase {
 
     LOG.info("##################################################");
     LOG.info("signing data");
-    byte[] dataToBeSigned = TestBase.randomBytes(1057); // hash value
+    byte[] dataToBeSigned = randomBytes(1057); // hash value
     MessageDigest md = MessageDigest.getInstance("SHA-256");
     byte[] hashValue = md.digest(dataToBeSigned);
 
-    // initialize for signing
-    session.signInit(signatureMechanism, generatedKeyPair.getPrivateKey());
-
     // This signing operation is implemented in most of the drivers
-    byte[] signatureValue = session.sign(hashValue);
+    byte[] signatureValue = session.signSingle(signatureMechanism, generatedKeyPair.getPrivateKey(), hashValue);
     LOG.info("The signature value is : (len={}) {}", signatureValue.length, Functions.toHex(signatureValue));
 
     // verify with JCE
@@ -62,9 +58,8 @@ public class DSASignRawData extends SignatureTestBase {
         dataToBeSigned, Util.dsaSigPlainToX962(signatureValue));
 
     // verify with PKCS#11
-    session.verifyInit(signatureMechanism, generatedKeyPair.getPublicKey());
     // error will be thrown if signature is invalid
-    session.verify(hashValue, signatureValue);
+    session.verifySingle(signatureMechanism, generatedKeyPair.getPublicKey(), hashValue, signatureValue);
 
     LOG.info("##################################################");
   }

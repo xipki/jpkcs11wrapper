@@ -51,11 +51,9 @@ public class WrapUnwrapEncrKey extends TestBase {
     byte[] encryptIV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     Mechanism encryptionMechanism = getSupportedMechanism(token, CKM_AES_CBC_PAD, new ByteArrayParams(encryptIV));
 
-    // initialize for encryption
-    session.encryptInit(encryptionMechanism, encryptionKey);
-
     byte[] buffer = new byte[rawData.length + 64];
-    int cipherLen = session.encrypt(rawData, 0, rawData.length, buffer, 0, buffer.length);
+    int cipherLen = session.encryptSingle(encryptionMechanism, encryptionKey,
+        rawData, 0, rawData.length, buffer, 0, buffer.length);
     byte[] encryptedData = Arrays.copyOf(buffer, cipherLen);
 
     LOG.info("##################################################");
@@ -82,10 +80,8 @@ public class WrapUnwrapEncrKey extends TestBase {
     byte[] decryptIV = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     Mechanism decryptionMechanism = getSupportedMechanism(token, CKM_AES_CBC_PAD, new ByteArrayParams(decryptIV));
 
-    // initialize for decryption
-    session.decryptInit(decryptionMechanism, unwrappedKey);
-
-    int decryptLen = session.decrypt(encryptedData, 0, encryptedData.length, buffer, 0, buffer.length);
+    int decryptLen = session.decryptSingle(decryptionMechanism, unwrappedKey,
+                      encryptedData, 0, encryptedData.length, buffer, 0, buffer.length);
     byte[] decryptedData = Arrays.copyOf(buffer, decryptLen);
     Arrays.fill(buffer, (byte) 0);
 

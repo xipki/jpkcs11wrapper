@@ -31,11 +31,7 @@ public abstract class VerifyExecutor extends Pkcs11Executor {
         try {
           ConcurrentSessionBagEntry sessionBag = borrowSession();
           try {
-            Session session = sessionBag.value();
-            // initialize for signing
-            session.verifyInit(signMechanism, keypair.getPublicKey());
-            // This signing operation is implemented in most of the drivers
-            session.verify(dataToVerify, signatureToVerify);
+            sessionBag.value().verifySingle(signMechanism, keypair.getPublicKey(), dataToVerify, signatureToVerify);
           } finally {
             requiteSession(sessionBag);
           }
@@ -79,10 +75,7 @@ public abstract class VerifyExecutor extends Pkcs11Executor {
       keypair = session.generateKeyPair(keypairGenMechanism, template);
 
       dataToVerify = TestBase.randomBytes(inputLen);
-      // initialize for signing
-      session.signInit(signMechanism, keypair.getPrivateKey());
-      // This signing operation is implemented in most of the drivers
-      signatureToVerify = session.sign(dataToVerify);
+      signatureToVerify = session.signSingle(signMechanism, keypair.getPrivateKey(), dataToVerify);
     } finally {
       requiteSession(sessionBag);
     }

@@ -64,11 +64,9 @@ public abstract class SymmEncryptDecrypt extends TestBase {
       ((CCM_PARAMS) params).setDataLen(rawData.length);
     }
 
-    // initialize for encryption
-    session.encryptInit(encryptionMechanism, encryptionKey);
-
     byte[] buffer = new byte[rawData.length + 32];
-    int len = session.encrypt(rawData, 0, rawData.length, buffer, 0, buffer.length);
+    int len = session.encryptSingle(encryptionMechanism, encryptionKey, rawData, 0, rawData.length,
+        buffer, 0, buffer.length);
     byte[] encryptedData = Arrays.copyOf(buffer, len);
 
     LOG.info("##################################################");
@@ -80,10 +78,8 @@ public abstract class SymmEncryptDecrypt extends TestBase {
       ((CCM_PARAMS) params).setDataLen(encryptedData.length - 16);
     }
 
-    // initialize for decryption
-    session.decryptInit(decryptionMechanism, encryptionKey);
-
-    len = session.decrypt(encryptedData, 0, encryptedData.length, buffer, 0, buffer.length);
+    len = session.decryptSingle(decryptionMechanism, encryptionKey, encryptedData, 0, encryptedData.length,
+        buffer, 0, buffer.length);
     byte[] decryptedData = Arrays.copyOf(buffer, len);
     Arrays.fill(buffer, (byte) 0);
     Assert.assertArrayEquals(rawData, decryptedData);

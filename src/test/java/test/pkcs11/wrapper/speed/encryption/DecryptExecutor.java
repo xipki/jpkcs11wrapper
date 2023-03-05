@@ -35,10 +35,8 @@ public abstract class DecryptExecutor extends Pkcs11Executor {
           ConcurrentSessionBagEntry sessionBag = borrowSession();
           try {
             Session session = sessionBag.value();
-            // initialize for signing
-            session.decryptInit(encryptMechanism, key);
-            // This signing operation is implemented in most of the drivers
-            int len = session.decrypt(dataToDecrypt, 0, dataToDecrypt.length, out, 0, out.length);
+            int len = session.decryptSingle(encryptMechanism, key, dataToDecrypt, 0, dataToDecrypt.length,
+                out, 0, out.length);
             byte[] decryptedData = Arrays.copyOf(out, len);
             Assert.assertArrayEquals(plainData, decryptedData);
           } finally {
@@ -83,9 +81,9 @@ public abstract class DecryptExecutor extends Pkcs11Executor {
       Session session = sessionBag.value();
       key = session.generateKey(keyGenMechanism, keyTemplate);
 
-      session.encryptInit(encryptMechanism, key);
       byte[] buffer = new byte[inputLen + 64];
-      int len = session.encrypt(plainData, 0, inputLen, buffer, 0, buffer.length);
+      int len = session.encryptSingle(encryptMechanism, key, plainData, 0, inputLen,
+          buffer, 0, buffer.length);
       this.dataToDecrypt = Arrays.copyOf(buffer, len);
     } finally {
       requiteSession(sessionBag);

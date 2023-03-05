@@ -47,14 +47,14 @@ public class RSADecrypt extends TestBase {
 
     byte[] sessionKey = new byte[16];
     byte[] buffer = new byte[keysize / 8];
-    session.encryptInit(encMech, pubKey);
-    int len = session.encrypt(sessionKey, 0, sessionKey.length, buffer, 0, buffer.length);
+    int len = session.encryptSingle(encMech, pubKey, sessionKey, 0, sessionKey.length,
+        buffer, 0, buffer.length);
     byte[] encryptedSessionKey = Arrays.copyOf(buffer, len);
     Arrays.fill(buffer, (byte) 0);
 
     // decrypt
-    session.decryptInit(encMech, privKey);
-    len = session.decrypt(encryptedSessionKey, 0, encryptedSessionKey.length, buffer, 0, buffer.length);
+    len = session.decryptSingle(encMech, privKey, encryptedSessionKey, 0, encryptedSessionKey.length,
+        buffer, 0, buffer.length);
     byte[] decryptedSessionKey = Arrays.copyOf(buffer, len);
     Arrays.fill(buffer, (byte) 0);
 
