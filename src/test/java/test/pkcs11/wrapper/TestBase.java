@@ -75,6 +75,8 @@ public class TestBase {
   static {
     Properties props = new Properties();
     try {
+      StaticLogger.setLogger(TestLogger.INSTANCE);
+
       props.load(TestBase.class.getResourceAsStream("/pkcs11.properties"));
       modulePath = props.getProperty("module.path");
       modulePin = props.getProperty("module.pin");
@@ -129,8 +131,7 @@ public class TestBase {
   }
 
   protected Session openReadOnlySession(Token token) throws PKCS11Exception {
-    return Util.openAuthorizedSession(
-        token, false, modulePin == null ? null : modulePin.toCharArray());
+    return Util.openAuthorizedSession(token, false, modulePin == null ? null : modulePin.toCharArray());
   }
 
   protected Session openReadOnlySession() throws PKCS11Exception {
@@ -138,8 +139,7 @@ public class TestBase {
   }
 
   protected Session openReadWriteSession(Token token) throws PKCS11Exception {
-    return Util.openAuthorizedSession(
-        token, true, modulePin == null ? null : modulePin.toCharArray());
+    return Util.openAuthorizedSession(token, true, modulePin == null ? null : modulePin.toCharArray());
   }
 
   protected Session openReadWriteSession() throws PKCS11Exception {

@@ -200,6 +200,8 @@ public class Token {
     long sessionHandle;
     try {
       sessionHandle = slot.getPKCS11().C_OpenSession(slot.getSlotID(), flags, application, null);
+      StaticLogger.info("C_OpenSession: slotID={}, flags=0x{}, sessionHandle={}",
+          slot.getSlotID(), Functions.toFullHex(flags), sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       throw new PKCS11Exception(ex.getErrorCode());
     }

@@ -119,6 +119,16 @@ public class AttributeVector {
     return Collections.unmodifiableList(attributes);
   }
 
+  AttributeVector copyWithoutByteArrayAttributes() {
+    AttributeVector copy = new AttributeVector();
+    for (Attribute attr : attributes) {
+      if (!(attr instanceof ByteArrayAttribute)) {
+        copy.attr(attr);
+      }
+    }
+    return copy;
+  }
+
   public CK_ATTRIBUTE[] toCkAttributes() {
     List<CK_ATTRIBUTE> attributeList = new ArrayList<>();
     for (Attribute attribute : attributes) {
@@ -178,7 +188,7 @@ public class AttributeVector {
 
     // sort the attributes to print
     List<Attribute> copy = new ArrayList<>(attributes);
-    Collections.sort(copy, Comparator.comparingLong(Attribute::getType));
+    copy.sort(Comparator.comparingLong(Attribute::getType));
 
     int nameLen = 0;
     for (Attribute attribute : copy) {

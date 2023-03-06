@@ -219,6 +219,8 @@ public class PKCS11Module {
 
     final String functionList = "C_GetFunctionList";
     final boolean omitInitialize = false;
+    StaticLogger.info("C_Initialize: pkcs11ModulePath={}, flags=0x{}", pkcs11ModulePath,
+        Functions.toFullHex(wrapperInitArgs.flags));
     try {
       pkcs11 = PKCS11.getInstance(pkcs11ModulePath, functionList, wrapperInitArgs, omitInitialize);
     } catch (IOException ex) {
@@ -385,9 +387,11 @@ public class PKCS11Module {
             continue;
           }
 
+          StaticLogger.info("found <vendor> configuration: {}", block);
+
           // vendor behaviours
-          if (block.vendoBehaviours != null) {
-            StringTokenizer tokenizer = new StringTokenizer(block.vendoBehaviours, ":, \t");
+          if (block.vendorBehaviours != null) {
+            StringTokenizer tokenizer = new StringTokenizer(block.vendorBehaviours, ":, \t");
             while (tokenizer.hasMoreTokens()) {
               String token = tokenizer.nextToken();
               if ("SM2_SIGNATURE_X962".equalsIgnoreCase(token)) {
@@ -493,7 +497,7 @@ public class PKCS11Module {
           int idx = line.indexOf(' ');
           String value = line.substring(idx + 1).trim();
           if (!value.isEmpty()) {
-            block.vendoBehaviours = value;
+            block.vendorBehaviours = value;
           }
         }
       }
@@ -507,7 +511,7 @@ public class PKCS11Module {
     private List<String> manufacturerIDs;
     private List<String> descriptions;
     private List<String> versions;
-    private String vendoBehaviours;
+    private String vendorBehaviours;
     private final Map<String, String> nameToCodeMap = new HashMap<>();
 
     void validate() throws IOException {
@@ -561,6 +565,18 @@ public class PKCS11Module {
       }
       return false;
     }
+
+    @Override
+    public String toString() {
+      return "VendorConfBlock" +
+          "\n  modulePaths:      " + modulePaths +
+          "\n  manufacturerIDs:  " + manufacturerIDs +
+          "\n  descriptions:     " + descriptions +
+          "\n  versions:         " + versions +
+          "\n  vendorBehaviours: " + vendorBehaviours +
+          "\n  nameToCodeMap:    " + nameToCodeMap;
+    }
+
   } // class VendorConfBlock
 
 }
