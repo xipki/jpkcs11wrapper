@@ -94,9 +94,7 @@ public class Session {
 
   private int signatureType;
 
-  private long signKeyHandle;
-
-  private final LruCache<Long, byte[]> handleEcParamsMap = new LruCache<>(1000);
+  private long signOrVerifyKeyHandle;
 
   static {
     Class<?> clazz = PKCS11.class;
@@ -132,11 +130,13 @@ public class Session {
    * @throws PKCS11Exception If closing the session failed.
    */
   public void closeSession() throws PKCS11Exception {
-    handleEcParamsMap.evictAll();
+    final String method = "C_CloseSession";
     try {
-      debug("C_CloseSession");
+      debugIn(method);
       pkcs11.C_CloseSession(sessionHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -235,12 +235,15 @@ public class Session {
    * @throws PKCS11Exception If login fails.
    */
   public void login(long userType, char[] pin) throws PKCS11Exception {
+    final String method = "C_Login";
     if (StaticLogger.isDebugEnabled()) {
-      debug("C_Login", "userType={}", codeToName(Category.CKU, userType));
+      debugIn(method, "userType={}", codeToName(Category.CKU, userType));
     }
     try {
       pkcs11.C_Login(sessionHandle, userType, pin);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -251,10 +254,13 @@ public class Session {
    * @throws PKCS11Exception If logging out the session fails.
    */
   public void logout() throws PKCS11Exception {
-    debug("C_Logout");
+    final String method = "C_Logout";
+    debugIn(method);
     try {
       pkcs11.C_Logout(sessionHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -287,6 +293,7 @@ public class Session {
    *                         created on the token.
    */
   public long createObject(AttributeVector template) throws PKCS11Exception {
+    final String method = "C_CreateObject";
     if (StaticLogger.isDebugEnabled()) {
       long objClass = template.class_();
       if (objClass == CKO_PRIVATE_KEY || objClass == CKO_SECRET_KEY) {
@@ -295,15 +302,18 @@ public class Session {
             .modulus(template.modulus()).publicExponent(template.publicExponent()) // RSA
             .ecParams(template.ecParams()).ecPoint(template.ecPoint()) // EC
             .prime(template.prime()).subprime(template.subprime()).base(template.base()); // DSA
-        debug("C_CreateObject", "part of template={}", template);
+        debugIn(method, "part of template={}", template);
       } else {
-        debug("C_CreateObject", "template={}", template);
+        debugIn(method, "template={}", template);
       }
     }
 
     try {
-      return pkcs11.C_CreateObject(sessionHandle, toOutCKAttributes(template));
+      long hObject = pkcs11.C_CreateObject(sessionHandle, toOutCKAttributes(template));
+      debugOut(method, "hObject={}", hObject);
+      return hObject;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -370,10 +380,15 @@ public class Session {
    * @throws PKCS11Exception If copying the object fails for some reason.
    */
   public long copyObject(long sourceObjectHandle, AttributeVector template) throws PKCS11Exception {
-    debug("C_CopyObject", "sourceObjectHandle={}, template={}", sourceObjectHandle, template);
+    final String method = "C_CopyObject";
+
+    debugIn(method, "sourceObjectHandle={}, template={}", sourceObjectHandle, template);
     try {
-      return pkcs11.C_CopyObject(sessionHandle, sourceObjectHandle, toOutCKAttributes(template));
+      long hObject = pkcs11.C_CopyObject(sessionHandle, sourceObjectHandle, toOutCKAttributes(template));
+      debugOut(method, "hObject={}", hObject);
+      return hObject;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -393,10 +408,13 @@ public class Session {
    * @throws PKCS11Exception If updateing the attributes fails. All or no attributes are updated.
    */
   public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws PKCS11Exception {
-    debug("C_SetAttributeValue", "objectToUpdateHandle={}, template={}", objectToUpdateHandle, template);
+    final String method = "C_SetAttributeValue";
+    debugIn(method, "objectToUpdateHandle={}, template={}", objectToUpdateHandle, template);
     try {
       pkcs11.C_SetAttributeValue(sessionHandle, objectToUpdateHandle, toOutCKAttributes(template));
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -410,10 +428,13 @@ public class Session {
    * @throws PKCS11Exception If the object could not be destroyed.
    */
   public void destroyObject(long objectHandle) throws PKCS11Exception {
-    debug("C_DestroyObject", "objectHandle={}", objectHandle);
+    final String method = "C_DestroyObject";
+    debugIn(method, "objectHandle={}", objectHandle);
     try {
       pkcs11.C_DestroyObject(sessionHandle, objectHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -429,10 +450,13 @@ public class Session {
    * @throws PKCS11Exception If initializing the find operation fails.
    */
   public void findObjectsInit(AttributeVector template) throws PKCS11Exception {
-    debug("C_FindObjectsInit", "template={}", template);
+    final String method = "C_FindObjectsInit";
+    debugIn(method, "template={}", template);
     try {
       pkcs11.C_FindObjectsInit(sessionHandle, template == null ? null : toOutCKAttributes(template, true));
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -452,11 +476,16 @@ public class Session {
    *                         object parsing.
    */
   public long[] findObjects(int maxObjectCount) throws PKCS11Exception {
-    debug("C_FindObjects", "maxObjectCount={}", maxObjectCount);
+    final String method = "C_FindObjects";
+    debugIn(method, "maxObjectCount={}", maxObjectCount);
     try {
-      long[] handles = pkcs11.C_FindObjects(sessionHandle, maxObjectCount);
-      return handles == null ? new long[0] : handles;
+      long[] hObjects = pkcs11.C_FindObjects(sessionHandle, maxObjectCount);
+      if (StaticLogger.isDebugEnabled()) {
+        debugOut(method, "hObjects={}", Arrays.toString(hObjects));
+      }
+      return hObjects;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -468,10 +497,13 @@ public class Session {
    * @throws PKCS11Exception If finalizing the current find operation was not possible.
    */
   public void findObjectsFinal() throws PKCS11Exception {
-    debug("findObjectsFinal");
+    final String method = "C_FindObjectsFinal";
+    debugIn(method);
     try {
       pkcs11.C_FindObjectsFinal(sessionHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -499,10 +531,13 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void encryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
-    debug("C_EncryptInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    final String method = "C_EncryptInit";
+    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
     try {
       pkcs11.C_EncryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -544,12 +579,14 @@ public class Session {
   public int encrypt(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
-    debug("C_Encrypt", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    final String method = "C_Encrypt";
+    int resLen;
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
     try {
       if (encrypt0 != null) {
-        return (int) encrypt0.invoke(pkcs11, sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
+        resLen = (int) encrypt0.invoke(pkcs11, sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
       } else if (encrypt1 != null) {
-        return (int) encrypt1.invoke(pkcs11, sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
+        resLen = (int) encrypt1.invoke(pkcs11, sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
       } else {
         throw new IllegalStateException("could not find C_ENCRYPT method");
       }
@@ -558,11 +595,14 @@ public class Session {
     } catch (InvocationTargetException ex) {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
+        debugError(method, (sun.security.pkcs11.wrapper.PKCS11Exception) cause);
         throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
     }
+
+    return logOutLen(method, resLen);
   }
 
   public int encryptSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
@@ -602,11 +642,14 @@ public class Session {
    * @throws PKCS11Exception If encrypting the data failed.
    */
   public int encryptUpdate(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_EncryptUpdate";
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
-    debug("C_EncryptUpdate", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
     try {
-      return pkcs11.C_EncryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
+      return logOutLen(method,
+          pkcs11.C_EncryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -623,11 +666,13 @@ public class Session {
    * @throws PKCS11Exception If calculating the final result failed.
    */
   public int encryptFinal(byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_EncryptFinal";
     checkOutParams(out, outOfs, outLen);
-    debug("C_EncryptFinal", "outOfs={}, outLen", outOfs, outLen);
+    debugIn(method, "outOfs={}, outLen", outOfs, outLen);
     try {
-      return pkcs11.C_EncryptFinal(sessionHandle, 0, out, outOfs, outLen);
+      return logOutLen(method, pkcs11.C_EncryptFinal(sessionHandle, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -646,10 +691,13 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void decryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
-    debug("C_DecryptInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    final String method = "C_DecryptInit";
+    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
     try {
       pkcs11.C_DecryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -692,12 +740,15 @@ public class Session {
   public int decrypt(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
 
-    debug("C_Decrypt", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    final String method = "C_Decrypt";
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+
+    int resLen;
     try {
       if (decrypt0 != null) {
-        return (int) decrypt0.invoke(pkcs11, sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
+        resLen = (int) decrypt0.invoke(pkcs11, sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
       } else if (decrypt1 != null) {
-        return (int) decrypt1.invoke(pkcs11, sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
+        resLen = (int) decrypt1.invoke(pkcs11, sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
       } else {
         throw new IllegalStateException("could not find C_DECRYPT method");
       }
@@ -706,11 +757,14 @@ public class Session {
     } catch (InvocationTargetException ex) {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
+        debugError(method, (sun.security.pkcs11.wrapper.PKCS11Exception) cause);
         throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
     }
+
+    return logOutLen(method, resLen);
   }
 
   public int decryptSingle(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
@@ -750,11 +804,14 @@ public class Session {
    * @throws PKCS11Exception If decrypting the data failed.
    */
   public int decryptUpdate(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_DecryptUpdate";
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
-    debug("C_DecryptUpdate", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
     try {
-      return pkcs11.C_DecryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen);
+      return logOutLen(method,
+          pkcs11.C_DecryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -771,11 +828,13 @@ public class Session {
    * @throws PKCS11Exception If calculating the final result failed.
    */
   public int decryptFinal(byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_DecryptFinal";
     checkOutParams(out, outOfs, outLen);
-    debug("C_DecryptFinal", "outOfs={}, outLen", outOfs, outLen);
+    debugIn(method, "outOfs={}, outLen", outOfs, outLen);
     try {
-      return pkcs11.C_DecryptFinal(sessionHandle, 0, out, outOfs, outLen);
+      return logOutLen(method, pkcs11.C_DecryptFinal(sessionHandle, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -792,10 +851,13 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void digestInit(Mechanism mechanism) throws PKCS11Exception {
-    debug("C_DigestInit", "mechanism={}", mechanism);
+    final String method = "C_DigestInit";
+    debugIn(method, "mechanism={}", mechanism);
     try {
       pkcs11.C_DigestInit(sessionHandle, toCkMechanism(mechanism));
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -876,13 +938,16 @@ public class Session {
 
   public int digestSingle(Mechanism mechanism, byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen)
       throws PKCS11Exception {
+    final String method = "C_DigestSingle";
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
-    debug("C_DigestSingle", "mechanism={}, inOfs={}, inLen={}, outOfs={}, outLen",
+    debugIn(method, "mechanism={}, inOfs={}, inLen={}, outOfs={}, outLen",
         mechanism, inOfs, inLen, outOfs, outLen);
 
     try {
-      return pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism), in, inOfs, inLen, out, outOfs, outLen);
+      return logOutLen(method,
+          pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism), in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -912,12 +977,15 @@ public class Session {
    * @throws PKCS11Exception If digesting the data failed.
    */
   public void digestUpdate(byte[] in, int inOfs, int inLen) throws PKCS11Exception {
+    final String method = "C_DigestUpdate";
     checkInParams(in, inOfs, inLen);
-    debug("C_DigestUpdate", "inOfs={}, inLen={}", inOfs, inLen);
+    debugIn(method, "inOfs={}, inLen={}", inOfs, inLen);
 
     try {
       pkcs11.C_DigestUpdate(sessionHandle, 0, in, inOfs, inLen);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -930,10 +998,13 @@ public class Session {
    * @throws PKCS11Exception If digesting the key failed.
    */
   public void digestKey(long keyHandle) throws PKCS11Exception {
-    debug("C_DigestKey", "keyHandle={}", keyHandle);
+    final String method = "C_DigestUpdate";
+    debugIn(method, "keyHandle={}", keyHandle);
     try {
       pkcs11.C_DigestKey(sessionHandle, keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -951,17 +1022,19 @@ public class Session {
    * @throws PKCS11Exception If calculating the final message digest failed.
    */
   public int digestFinal(byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_DigestFinal";
     checkOutParams(out, outOfs, outLen);
-    debug("C_DigestFinal", "outOfs={}, outLen", outOfs, outLen);
+    debugIn(method, "outOfs={}, outLen", outOfs, outLen);
     try {
-      return pkcs11.C_DigestFinal(sessionHandle, out, outOfs, outLen);
+      return logOutLen(method, pkcs11.C_DigestFinal(sessionHandle, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
 
   private void initSignVerify(Mechanism mechanism, long keyHandle) {
-    this.signKeyHandle = keyHandle;
+    this.signOrVerifyKeyHandle = keyHandle;
     long code = mechanism.getMechanismCode();
     if (code == PKCS11Constants.CKM_ECDSA             || code == PKCS11Constants.CKM_ECDSA_SHA1
         || code == PKCS11Constants.CKM_ECDSA_SHA224   || code == PKCS11Constants.CKM_ECDSA_SHA256
@@ -991,11 +1064,14 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void signInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
+    final String method = "C_SignInit";
     try {
       initSignVerify(mechanism, keyHandle);
-      debug("C_SignInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+      debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
       pkcs11.C_SignInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1011,11 +1087,14 @@ public class Session {
    */
   public byte[] sign(byte[] data) throws PKCS11Exception {
     Functions.requireNonNull("data", data);
-    debug("C_Sign", "data.length={}", len(data));
+    final String method = "C_Sign";
+    debugIn(method, "data.length={}", len(data));
     try {
       byte[] sigValue = pkcs11.C_Sign(sessionHandle, data);
+      debugOut("C_Sign", "rv.length={]", len(sigValue));
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1050,12 +1129,15 @@ public class Session {
    * @throws PKCS11Exception If signing the data failed.
    */
   public void signUpdate(byte[] in, int inOfs, int inLen) throws PKCS11Exception {
+    final String method = "C_SignUpdate";
     checkInParams(in, inOfs, inLen);
-    debug("C_SignUpdate", "inOfs={}, inLen={}", inOfs, inLen);
+    debugIn(method, "inOfs={}, inLen={}", inOfs, inLen);
 
     try {
       pkcs11.C_SignUpdate(sessionHandle, 0, in, inOfs, inLen);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1070,11 +1152,14 @@ public class Session {
    * @throws PKCS11Exception If calculating the final signature value failed.
    */
   public byte[] signFinal() throws PKCS11Exception {
-    debug("signFinal");
+    final String method = "C_SignFinal";
+    debugIn(method);
     try {
       byte[] sigValue = pkcs11.C_SignFinal(sessionHandle, 0);
+      debugOut(method, "rv.length={]", len(sigValue));
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1087,36 +1172,48 @@ public class Session {
     synchronized (module) {
       if (signatureType == SIGN_TYPE_ECDSA) {
         Boolean b = module.getEcdsaSignatureFixNeeded();
+        if (b == null) {
+          StaticLogger.info("EcdsaSignatureFixNeeded: null");
+        } else {
+          StaticLogger.debug("EcdsaSignatureFixNeeded: {}", b);
+        }
+
         if (b == null || b) {
           // get the ecParams
-          byte[] ecParams = handleEcParamsMap.get(signKeyHandle);
+          byte[] ecParams;
+          try {
+            ecParams = getByteArrayAttrValue(signOrVerifyKeyHandle, PKCS11Constants.CKA_EC_PARAMS);
+          } catch (PKCS11Exception e) {
+            StaticLogger.debug("error getting CKA_EC_PARAMS for key {}", signOrVerifyKeyHandle);
+            return signatureValue;
+          }
+
           if (ecParams == null) {
-            try {
-              ecParams = getByteArrayAttrValue(signKeyHandle, PKCS11Constants.CKA_EC_PARAMS);
-            } catch (PKCS11Exception e) {
-              return signatureValue;
-            }
-
-            if (ecParams != null) {
-              handleEcParamsMap.put(signKeyHandle, ecParams);
-            }
+            StaticLogger.debug("found no CKA_EC_PARAMS for key {}", signOrVerifyKeyHandle);
+            return signatureValue;
           }
 
-          if (ecParams != null) {
-            byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, ecParams);
-            boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
-            if (b == null) {
-              module.setEcdsaSignatureFixNeeded(fixed);
-            }
-            return fixedSigValue;
+          byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, ecParams);
+          boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
+          if (b == null) {
+            StaticLogger.info("Set EcdsaSignatureFixNeeded to {}", b);
+            module.setEcdsaSignatureFixNeeded(fixed);
           }
+          return fixedSigValue;
         }
       } else if (signatureType == SIGN_TYPE_SM2) {
         Boolean b = module.getSm2SignatureFixNeeded();
+        if (b == null) {
+          StaticLogger.info("Sm2SignatureFixNeeded: null");
+        } else {
+          StaticLogger.debug("Sm2SignatureFixNeeded: {}", b);
+        }
+
         if (b == null || b) {
           byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, 32);
           boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
           if (b == null) {
+            StaticLogger.info("Set Sm2SignatureFixNeeded to {}", b);
             module.setSm2SignatureFixNeeded(fixed);
           }
           return fixedSigValue;
@@ -1155,10 +1252,13 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void signRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
-    debug("C_SignRecoverInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    final String method = "C_SignRecoverInit";
+    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
     try {
       pkcs11.C_SignRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1197,11 +1297,13 @@ public class Session {
    * @throws PKCS11Exception If signing the data failed.
    */
   public int signRecover(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
+    final String method = "C_SignRecover";
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
-    debug("C_SignRecover", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
     try {
-      return pkcs11.C_SignRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
+      return logOutLen(method, pkcs11.C_SignRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1227,11 +1329,14 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void verifyInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
+    final String method = "C_VerifyInit";
     try {
       initSignVerify(mechanism, keyHandle);
-      debug("C_VerifyInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+      debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
       pkcs11.C_VerifyInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1249,11 +1354,14 @@ public class Session {
    *                         forged.
    */
   public void verify(byte[] data, byte[] signature) throws PKCS11Exception {
+    final String method = "C_Verify";
     Functions.requireNonNull("signature", signature);
-    debug("C_Verify", "data.length={}, signature.length={}", len(data), len(signature));
+    debugIn(method, "data.length={}, signature.length={}", len(data), len(signature));
     try {
       pkcs11.C_Verify(sessionHandle, data, fixSignatureToVerify(signature));
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1286,12 +1394,15 @@ public class Session {
    * @throws PKCS11Exception If verifying (e.g. digesting) the data failed.
    */
   public void verifyUpdate(byte[] in, int inOfs, int inLen) throws PKCS11Exception {
+    final String method = "C_VerifyUpdate";
     checkInParams(in, inOfs, inLen);
-    debug("C_VerifyUpdate", "inOfs={}, inLen={}", inOfs, inLen);
+    debugIn(method, "inOfs={}, inLen={}", inOfs, inLen);
 
     try {
       pkcs11.C_VerifyUpdate(sessionHandle, 0, in, inOfs, inLen);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1309,11 +1420,14 @@ public class Session {
    *                         forged.
    */
   public void verifyFinal(byte[] signature) throws PKCS11Exception {
+    final String method = "C_VerifyFinal";
     Functions.requireNonNull("signature", signature);
-    debug("C_VerifyFinal", "signature.length={}", len(signature));
+    debugIn(method, "signature.length={}", len(signature));
     try {
       pkcs11.C_VerifyFinal(sessionHandle, fixSignatureToVerify(signature));
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1332,10 +1446,13 @@ public class Session {
    * @throws PKCS11Exception If initializing this operation failed.
    */
   public void verifyRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
-    debug("C_VerifyRecoverInit", "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    final String method = "C_VerifyRecoverInit";
+    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
     try {
       pkcs11.C_VerifyRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1385,10 +1502,12 @@ public class Session {
    */
   public int verifyRecover(byte[] in, int inOfs, int inLen, byte[] out, int outOfs, int outLen) throws PKCS11Exception {
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
-    debug("C_VerifyRecover", "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
+    final String method = "C_VerifyRecover";
+    debugIn(method, "inOfs={}, inLen={}, outOfs={}, outLen", inOfs, inLen, outOfs, outLen);
     try {
-      return pkcs11.C_VerifyRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen);
+      return logOutLen(method, pkcs11.C_VerifyRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1415,10 +1534,14 @@ public class Session {
    *              If generating a new secret key or domain parameters failed.
    */
   public long generateKey(Mechanism mechanism, AttributeVector template) throws PKCS11Exception {
-    debug("C_GenerateKey", "mechanism={}, template={}", mechanism, template);
+    final String method = "C_GenerateKey";
+    debugIn(method, "mechanism={}, template={}", mechanism, template);
     try {
-      return pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
+      long hKey = pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
+      debugOut(method, "hKey={}", hKey);
+      return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1438,16 +1561,20 @@ public class Session {
    *              If generating a new key-pair failed.
    */
   public PKCS11KeyPair generateKeyPair(Mechanism mechanism, KeyPairTemplate template) throws PKCS11Exception {
-    debug("C_GenerateKeyPair", "mechanism={}, template={}", mechanism, template);
+    final String method = "C_GenerateKeyPair";
+    debugIn(method, "mechanism={}, template={}", mechanism, template);
     long[] objectHandles;
     try {
       objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
           toOutCKAttributes(template.publicKey()), toOutCKAttributes(template.privateKey()));
+      PKCS11KeyPair rv = new PKCS11KeyPair(objectHandles[0], objectHandles[1]);
+      debugOut("C_GenerateKeyPair", "hPublicKey={}, hPrivateKey={}",
+          rv.getPublicKey(), rv.getPrivateKey());
+      return rv;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
-
-    return new PKCS11KeyPair(objectHandles[0], objectHandles[1]);
   }
 
   /**
@@ -1464,10 +1591,12 @@ public class Session {
    *              If wrapping the key failed.
    */
   public byte[] wrapKey(Mechanism mechanism, long wrappingKeyHandle, long keyHandle) throws PKCS11Exception {
-    debug("C_WrapKey", "mechanism={}, wrappingKeyHandle={}, keyHandle={}", mechanism, wrappingKeyHandle, keyHandle);
+    final String method = "C_WrapKey";
+    debugIn(method, "mechanism={}, wrappingKeyHandle={}, keyHandle={}", mechanism, wrappingKeyHandle, keyHandle);
     try {
-      return pkcs11.C_WrapKey(sessionHandle, toCkMechanism(mechanism), wrappingKeyHandle, keyHandle);
+      return toNonNull(method, pkcs11.C_WrapKey(sessionHandle, toCkMechanism(mechanism), wrappingKeyHandle, keyHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1492,13 +1621,17 @@ public class Session {
   public long unwrapKey(Mechanism mechanism, long unwrappingKeyHandle,
                         byte[] wrappedKey, AttributeVector keyTemplate) throws PKCS11Exception {
     Functions.requireNonNull("wrappedKey", wrappedKey);
-    debug("C_UnwrapKey", "mechanism={}, unwrappingKeyHandle={}, wrappedKey.length={}, template={}",
+    final String method = "C_UnwrapKey";
+    debugIn(method, "mechanism={}, unwrappingKeyHandle={}, wrappedKey.length={}, template={}",
         mechanism, unwrappingKeyHandle, len(wrappedKey), keyTemplate);
 
     try {
-      return pkcs11.C_UnwrapKey(sessionHandle, toCkMechanism(mechanism),
+      long hKey = pkcs11.C_UnwrapKey(sessionHandle, toCkMechanism(mechanism),
           unwrappingKeyHandle, wrappedKey, toOutCKAttributes(keyTemplate));
+      debugOut(method, "hKey={}", hKey);
+      return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1523,11 +1656,15 @@ public class Session {
    */
   public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws PKCS11Exception {
     CK_MECHANISM ckMechanism = toCkMechanism(mechanism);
-    debug("C_DeriveKey", "mechanism={}, baseKeyHandle={}, template={}", mechanism, baseKeyHandle, template);
+    final String method = "C_DeriveKey";
+    debugIn(method, "mechanism={}, baseKeyHandle={}, template={}", mechanism, baseKeyHandle, template);
 
     try {
-      return pkcs11.C_DeriveKey(sessionHandle, ckMechanism, baseKeyHandle, toOutCKAttributes(template));
+      long hKey = pkcs11.C_DeriveKey(sessionHandle, ckMechanism, baseKeyHandle, toOutCKAttributes(template));
+      debugOut(method, "hKey={}", hKey);
+      return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     }
   }
@@ -1558,14 +1695,16 @@ public class Session {
    *              If generating random bytes failed.
    */
   public byte[] generateRandom(int numberOfBytesToGenerate) throws PKCS11Exception {
-    debug("C_GenerateRandom", "numberOfBytesToGenerate={}", numberOfBytesToGenerate);
+    final String method = "C_GenerateRandom";
+    debugIn(method, "numberOfBytesToGenerate={}", numberOfBytesToGenerate);
     byte[] randomBytesBuffer = new byte[numberOfBytesToGenerate];
     try {
       pkcs11.C_GenerateRandom(sessionHandle, randomBytesBuffer);
+      return toNonNull("C_GenerateRandom", randomBytesBuffer);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
+      debugError(method, ex);
       throw new PKCS11Exception(ex.getErrorCode());
     } // fill the buffer with random bytes
-    return randomBytesBuffer;
   }
 
   /**
@@ -2055,15 +2194,39 @@ public class Session {
     }
   }
 
-  private void debug(String cMethod) {
+  private void debugIn(String cMethod) {
     if (StaticLogger.isDebugEnabled()) {
-      StaticLogger.debug(cMethod + ": session=" + sessionHandle);
+      StaticLogger.debug("IN  " + cMethod + ": hSession=" + sessionHandle);
     }
   }
 
-  private void debug(String cMethod, String format, Object... arguments) {
+  private void debugIn(String method, String format, Object... arguments) {
     if (StaticLogger.isDebugEnabled()) {
-      StaticLogger.debug(cMethod + ": session=" + sessionHandle + ", " + format, arguments);
+      StaticLogger.debug("IN  " + method + ": hSession=" + sessionHandle + ", " + format, arguments);
+    }
+  }
+
+  private void debugError(String method) {
+    if (StaticLogger.isDebugEnabled()) {
+      StaticLogger.debug(method + ": hSession=" + sessionHandle);
+    }
+  }
+
+  private void debugError(String method, sun.security.pkcs11.wrapper.PKCS11Exception e) {
+    if (StaticLogger.isDebugEnabled()) {
+      StaticLogger.debug(method + ": ERROR " + ckrCodeToName(e.getErrorCode()));
+    }
+  }
+
+  private void debugOut(String method) {
+    if (StaticLogger.isDebugEnabled()) {
+      StaticLogger.debug("OUT " + method + ": hSession=" + sessionHandle);
+    }
+  }
+
+  private void debugOut(String method, String format, Object... arguments) {
+    if (StaticLogger.isDebugEnabled()) {
+      StaticLogger.debug("OUT " + method + ": hSession=" + sessionHandle + ", " + format, arguments);
     }
   }
 
@@ -2071,93 +2234,23 @@ public class Session {
     return bytes == null ? 0 : bytes.length;
   }
 
-  private static byte[] toNonNull(byte[] bytes) {
-    return bytes == null ? new byte[0] : bytes;
+  private byte[] toNonNull(String method, byte[] bytes) {
+    if (bytes == null) {
+      debugOut(method, "rv=null");
+    } else {
+      debugOut(method, "rv.length={}", bytes.length);
+    }
+
+    return (bytes == null) ? new byte[0] : bytes;
   }
 
-  private static class LruCache<K, V> {
+  private int logOutLen(String method, int outLen) {
+    debugOut(method, "outLen={}", outLen);
+    return outLen;
+  }
 
-    private final LinkedHashMap<K, V> map;
-
-    /** Size of this cache in units. Not necessarily the number of elements. */
-    private int size;
-
-    private final int maxSize;
-
-    public LruCache(int maxSize) {
-      if (maxSize < 0) {
-        throw new IllegalArgumentException("maxSize is not positive: " + maxSize);
-      }
-      this.maxSize = maxSize;
-      this.map = new LinkedHashMap<>(0, 0.75f, true);
-    }
-
-    public final V get(K key) {
-      if (key == null) {
-        throw new NullPointerException("key == null");
-      }
-
-      V mapValue;
-      synchronized (this) {
-        mapValue = map.get(key);
-        if (mapValue != null) {
-          return mapValue;
-        }
-      }
-
-      return null;
-    }
-
-    public final V put(K key, V value) {
-      if (key == null || value == null) {
-        throw new NullPointerException("key == null || value == null");
-      }
-
-      V previous;
-      synchronized (this) {
-        size++;
-        previous = map.put(key, value);
-        if (previous != null) {
-          size--;
-        }
-      }
-
-      trimToSize(maxSize);
-      return previous;
-    }
-
-    /**
-     * Remove the eldest entries until the total of remaining entries is at or
-     * below the requested size.
-     *
-     * @param maxSize the maximum size of the cache before returning. Could be -1
-     *            to evict even 0-sized elements.
-     */
-    public void trimToSize(int maxSize) {
-      while (true) {
-        K key;
-        synchronized (this) {
-          if (size < 0 || (map.isEmpty() && size != 0)) {
-            throw new IllegalStateException(getClass().getName()
-                + ".sizeOf() is reporting inconsistent results!");
-          }
-
-          if (size <= maxSize || map.isEmpty()) {
-            break;
-          }
-
-          Map.Entry<K, V> toEvict = map.entrySet().iterator().next();
-          key = toEvict.getKey();
-          map.remove(key);
-          size--;
-        }
-      }
-    }
-
-    public final void evictAll() {
-      trimToSize(-1); // -1 will evict 0-sized elements
-    }
-
-  } // class LruCache
+  private byte[] toNonNull(byte[] bytes) {
+    return (bytes == null) ? new byte[0] : bytes;
+  }
 
 }
