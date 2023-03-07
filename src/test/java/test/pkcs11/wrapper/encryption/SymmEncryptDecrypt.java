@@ -3,12 +3,12 @@
 
 package test.pkcs11.wrapper.encryption;
 
-import test.pkcs11.wrapper.TestBase;
 import org.junit.Assert;
 import org.junit.Test;
 import org.xipki.pkcs11.wrapper.*;
 import org.xipki.pkcs11.wrapper.params.CCM_PARAMS;
 import org.xipki.pkcs11.wrapper.params.CkParams;
+import test.pkcs11.wrapper.TestBase;
 
 import java.util.Arrays;
 

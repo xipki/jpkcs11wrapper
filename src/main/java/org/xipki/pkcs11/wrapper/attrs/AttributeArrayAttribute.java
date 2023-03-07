@@ -8,7 +8,6 @@ package org.xipki.pkcs11.wrapper.attrs;
 
 import org.xipki.pkcs11.wrapper.AttributeVector;
 import org.xipki.pkcs11.wrapper.Functions;
-import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import org.xipki.pkcs11.wrapper.StaticLogger;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 
