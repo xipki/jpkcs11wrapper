@@ -1,7 +1,15 @@
+// Copyright (c) 2023 xipki. All rights reserved.
+// License Apache License 2.0
+
 package org.xipki.pkcs11.wrapper.params;
 
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
+/**
+ * CkParam with {@link CkParamsWithExtra} to provides extra information, e.g. the size of an EC curve's order.
+ *
+ * @author Lijun Liao (xipki)
+ */
 public class CkParamsWithExtra extends CkParams {
 
   private final CkParams ckParams;

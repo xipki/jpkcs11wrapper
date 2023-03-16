@@ -105,7 +105,8 @@ public class SessionInfo {
   public String toString() {
     String text = "State: " + PKCS11Constants.codeToName(PKCS11Constants.Category.CKS, state) + "\nSlot ID: " + slotID +
         "\nDevice Error: 0x" + Long.toHexString(deviceError) + "\n";
-    return text + Functions.toStringFlags(PKCS11Constants.Category.CKF_SESSION, "Flags: ", flags, PKCS11Constants.CKF_RW_SESSION, PKCS11Constants.CKF_SERIAL_SESSION);
+    return text + Functions.toStringFlags(PKCS11Constants.Category.CKF_SESSION,
+        "Flags: ", flags, PKCS11Constants.CKF_RW_SESSION, PKCS11Constants.CKF_SERIAL_SESSION);
   }
 
 }
