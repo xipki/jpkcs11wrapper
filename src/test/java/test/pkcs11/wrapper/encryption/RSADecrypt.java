@@ -21,42 +21,24 @@ public class RSADecrypt extends TestBase {
 
   @Test
   public void main() throws TokenException {
-    Token token = getNonNullToken();
-
-    Session session = openReadWriteSession(token);
-    try {
-      main0(token, session);
-    } finally {
-      session.closeSession();
-    }
-  }
-
-  private void main0(Token token, Session session) throws TokenException {
     // check, if this token can do RSA decryption
-    Mechanism encMech = getSupportedMechanism(token, CKM_RSA_PKCS);
-    if (!token.getMechanismInfo(encMech.getMechanismCode()).hasFlagBit(CKF_DECRYPT)) {
-      LOG.info("This token does not support RSA decryption according to PKCS!");
-      throw new TokenException("RSA decryption not supported!");
-    }
+    Mechanism encMech = getSupportedMechanism(CKM_RSA_PKCS, CKF_DECRYPT);
 
     final boolean inToken = false;
     final int keysize = 2048;
-    PKCS11KeyPair keypair = generateRSAKeypair(token, session, keysize, inToken);
+    PKCS11KeyPair keypair = generateRSAKeypair(keysize, inToken);
     long privKey = keypair.getPrivateKey();
     long pubKey = keypair.getPublicKey();
 
+    PKCS11Token token = getToken();
     byte[] sessionKey = new byte[16];
-    byte[] buffer = new byte[keysize / 8];
-    int len = session.encryptSingle(encMech, pubKey, sessionKey, 0, sessionKey.length,
-        buffer, 0, buffer.length);
-    byte[] encryptedSessionKey = Arrays.copyOf(buffer, len);
-    Arrays.fill(buffer, (byte) 0);
+    byte[] out = new byte[256];
+    int outLen = token.encrypt(encMech, pubKey, sessionKey, out);
+    byte[] encryptedSessionKey = Arrays.copyOf(out, outLen);
 
     // decrypt
-    len = session.decryptSingle(encMech, privKey, encryptedSessionKey, 0, encryptedSessionKey.length,
-        buffer, 0, buffer.length);
-    byte[] decryptedSessionKey = Arrays.copyOf(buffer, len);
-    Arrays.fill(buffer, (byte) 0);
+    outLen = token.decrypt(encMech, privKey, encryptedSessionKey, out);
+    byte[] decryptedSessionKey = Arrays.copyOf(out, outLen);
 
     Assert.assertArrayEquals(sessionKey, decryptedSessionKey);
     LOG.info("finished");

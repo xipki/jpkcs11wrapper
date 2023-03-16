@@ -10,6 +10,9 @@ import org.xipki.pkcs11.wrapper.params.CCM_PARAMS;
 import org.xipki.pkcs11.wrapper.params.CkParams;
 import test.pkcs11.wrapper.TestBase;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -18,71 +21,83 @@ import java.util.Arrays;
  */
 public abstract class SymmEncryptDecrypt extends TestBase {
 
-  protected abstract Mechanism getKeyGenMech(Token token) throws PKCS11Exception;
+  protected abstract Mechanism getKeyGenMech() throws PKCS11Exception;
 
   protected abstract AttributeVector getKeyTemplate();
 
-  protected abstract Mechanism getEncryptionMech(Token token) throws PKCS11Exception;
+  protected abstract Mechanism getEncryptionMech() throws PKCS11Exception;
 
   @Test
-  public void main() throws PKCS11Exception {
-    Token token = getNonNullToken();
-
-    Session session = openReadWriteSession(token);
-    try {
-      main0(token, session);
-    } finally {
-      session.closeSession();
-    }
-  }
-
-  private void main0(Token token, Session session) throws PKCS11Exception {
+  public void main() throws TokenException, IOException {
     LOG.info("##################################################");
     LOG.info("generate secret encryption/decryption key");
 
     Mechanism keyMechanism;
     try {
-      keyMechanism = getKeyGenMech(token);
+      keyMechanism = getKeyGenMech();
     } catch (PKCS11Exception e) {
       LOG.info("unsupported by the HSM, skipping test");
       System.out.println("unsupported by the HSM, skipping test");
       return;
     }
 
+    PKCS11Token token = getToken();
     AttributeVector keyTemplate = getKeyTemplate().token(false);
 
-    long encryptionKey = session.generateKey(keyMechanism, keyTemplate);
+    long encryptionKey = token.generateKey(keyMechanism, keyTemplate);
     LOG.info("##################################################");
     LOG.info("encrypting data");
 
-    byte[] rawData = randomBytes(1024);
+    int[] dataLens = {1057, 10570, 105700};
+    boolean[] asStreamModes = {false, true};
 
-    // be sure that your token can process the specified mechanism
-    Mechanism encryptionMechanism = getEncryptionMech(token);
-    CkParams params = encryptionMechanism.getParameters();
-    if (params instanceof CCM_PARAMS) {
-      ((CCM_PARAMS) params).setDataLen(rawData.length);
+    for (int dataLen : dataLens) {
+      for (boolean asStream : asStreamModes) {
+        System.out.println("dataLength=" + dataLen + ", asStream=" + asStream);
+        byte[] rawData = randomBytes(dataLen);
+
+        // be sure that your token can process the specified mechanism
+        Mechanism encryptionMechanism = getEncryptionMech();
+        CkParams params = encryptionMechanism.getParameters();
+        if (params instanceof CCM_PARAMS) {
+          ((CCM_PARAMS) params).setDataLen(rawData.length);
+        }
+
+        // initialize for encryption
+        byte[] encryptedData;
+        if (asStream) {
+          ByteArrayOutputStream bout = new ByteArrayOutputStream();
+          token.encrypt(bout, encryptionMechanism, encryptionKey, new ByteArrayInputStream(rawData));
+          encryptedData = bout.toByteArray();
+        } else {
+          byte[] buffer = new byte[dataLen + 16];
+          int outLen = token.encrypt(encryptionMechanism, encryptionKey, rawData, buffer);
+          encryptedData = outLen == buffer.length ? buffer : Arrays.copyOf(buffer, outLen);
+        }
+
+        LOG.info("##################################################");
+        LOG.info("trying to decrypt");
+
+        Mechanism decryptionMechanism = getEncryptionMech();
+        params = encryptionMechanism.getParameters();
+        if (params instanceof CCM_PARAMS) {
+          ((CCM_PARAMS) params).setDataLen(encryptedData.length - 16);
+        }
+
+        // initialize for decryption
+        byte[] decryptedData;
+        if (asStream) {
+          ByteArrayOutputStream bout = new ByteArrayOutputStream();
+          token.decrypt(bout, decryptionMechanism, encryptionKey, new ByteArrayInputStream(encryptedData));
+          decryptedData = bout.toByteArray();
+        } else {
+          byte[] buffer = new byte[dataLen + 1024];
+          int outLen = token.decrypt(decryptionMechanism, encryptionKey, encryptedData, buffer);
+          decryptedData = (outLen == buffer.length) ? buffer : Arrays.copyOf(buffer, outLen);
+        }
+        Assert.assertArrayEquals(rawData, decryptedData);
+      }
     }
-
-    byte[] buffer = new byte[rawData.length + 32];
-    int len = session.encryptSingle(encryptionMechanism, encryptionKey, rawData, 0, rawData.length,
-        buffer, 0, buffer.length);
-    byte[] encryptedData = Arrays.copyOf(buffer, len);
-
-    LOG.info("##################################################");
-    LOG.info("trying to decrypt");
-
-    Mechanism decryptionMechanism = getEncryptionMech(token);
-    params = encryptionMechanism.getParameters();
-    if (params instanceof CCM_PARAMS) {
-      ((CCM_PARAMS) params).setDataLen(encryptedData.length - 16);
-    }
-
-    len = session.decryptSingle(decryptionMechanism, encryptionKey, encryptedData, 0, encryptedData.length,
-        buffer, 0, buffer.length);
-    byte[] decryptedData = Arrays.copyOf(buffer, len);
-    Arrays.fill(buffer, (byte) 0);
-    Assert.assertArrayEquals(rawData, decryptedData);
   }
 
 }

@@ -3,9 +3,12 @@
 
 package test.pkcs11.wrapper.signatures;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.xipki.pkcs11.wrapper.*;
 import test.pkcs11.wrapper.util.Util;
+
+import java.io.ByteArrayInputStream;
 
 import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
 
@@ -16,50 +19,62 @@ public class EdDSASignRawData extends SignatureTestBase {
 
   @Test
   public void main() throws Exception {
-    Token token = getNonNullToken();
-    Session session = openReadOnlySession(token);
-    try {
-      main0(token, session);
-    } finally {
-      session.closeSession();
-    }
-  }
-
-  private void main0(Token token, Session session) throws Exception {
     LOG.info("##################################################");
     LOG.info("generate signature key pair");
 
     final long mechCode = CKM_EDDSA;
-    if (!Util.supports(token, mechCode)) {
+    PKCS11Token token = getToken();
+    if (!token.supportsMechanism(mechCode, CKF_SIGN)) {
       System.out.println("Unsupported mechanism " + ckmCodeToName(mechCode));
       return;
     }
     // be sure that your token can process the specified mechanism
-    Mechanism signatureMechanism = getSupportedMechanism(token, mechCode);
+    Mechanism signatureMechanism = getSupportedMechanism(mechCode, CKF_SIGN);
 
     final boolean inToken = false;
     // OID: 1.3.101.112 (Ed25519)
     byte[] ecParams = new byte[] {0x06, 0x03, 0x2b, 0x65, 0x70};
 
-    PKCS11KeyPair generatedKeyPair = generateEdDSAKeypair(token, session, ecParams, inToken);
+    PKCS11KeyPair generatedKeyPair = generateEdDSAKeypair(ecParams, inToken);
 
-    LOG.info("##################################################");
-    LOG.info("signing data");
-    byte[] dataToBeSigned = randomBytes(1057); // hash value
+    int[] dataLens = {1057, 10570, 105700};
+    boolean[] asStreamModes = {false, true};
 
-    // This signing operation is implemented in most of the drivers
-    byte[] signatureValue = session.signSingle(signatureMechanism, generatedKeyPair.getPrivateKey(), dataToBeSigned);
-    LOG.info("The signature value is: {}", Functions.toHex(signatureValue));
+    for (int dataLen : dataLens) {
+      for (boolean asStream : asStreamModes) {
+        LOG.info("##################################################");
+        LOG.info("signing data");
+        byte[] dataToBeSigned = randomBytes(dataLen); // hash value
 
-    // verify signature
-    long generatedPublicKey = generatedKeyPair.getPublicKey();
-    // error will be thrown if signature is invalid
-    session.verifySingle(signatureMechanism, generatedPublicKey, dataToBeSigned, signatureValue);
+        // This signing operation is implemented in most of the drivers
+        long generatedPrivateKey = generatedKeyPair.getPrivateKey();
+        byte[] signatureValue;
+        if (asStream) {
+          signatureValue = token.sign(signatureMechanism, generatedPrivateKey,
+              new ByteArrayInputStream(dataToBeSigned));
+        } else{
+          signatureValue = token.sign(signatureMechanism, generatedPrivateKey, dataToBeSigned);
+        }
+        LOG.info("The signature value is: {}", Functions.toHex(signatureValue));
 
-    // verify with JCE
-    jceVerifySignature("Ed25519", session, generatedPublicKey, CKK_EC_EDWARDS, dataToBeSigned, signatureValue);
+        // verify signature
+        long generatedPublicKey = generatedKeyPair.getPublicKey();
+        // error will be thrown if signature is invalid
+        boolean sigValid;
+        if (asStream) {
+          sigValid = token.verify(signatureMechanism, generatedPublicKey, new ByteArrayInputStream(dataToBeSigned),
+              signatureValue);
+        } else {
+          sigValid = token.verify(signatureMechanism, generatedPublicKey, dataToBeSigned, signatureValue);
+        }
+        Assert.assertTrue("signature verification result", sigValid);
 
-    LOG.info("##################################################");
+        // verify with JCE
+        jceVerifySignature("Ed25519", generatedPublicKey, CKK_EC_EDWARDS, dataToBeSigned, signatureValue);
+
+        LOG.info("##################################################");
+      }
+    }
   }
 
 }
