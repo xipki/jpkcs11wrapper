@@ -10,7 +10,7 @@
   </parent>
   <groupId>org.xipki</groupId>
   <artifactId>jpkcs11wrapper</artifactId>
-  <version>1.0.3-SNAPSHOT</version>
+  <version>1.0.3</version>
   <properties>
     <!--must match the version defined above-->
     <bundle.version>1.0.3</bundle.version>
@@ -114,7 +114,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.0.0</version>
+          <version>3.5.0</version>
           <configuration>
             <failOnError>false</failOnError>
             <failOnWarnings>false</failOnWarnings>
