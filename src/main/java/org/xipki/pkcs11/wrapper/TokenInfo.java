@@ -8,9 +8,11 @@ package org.xipki.pkcs11.wrapper;
 
 import sun.security.pkcs11.wrapper.CK_TOKEN_INFO;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
 
 /**
  * Objects of this class provide information about a token. Serial number,
@@ -56,7 +58,7 @@ public class TokenInfo {
    * The current time on the token. This value only makes sense, if the token
    * contains a clock.
    */
-  private final Date time;
+  private final Instant time;
 
   private final CK_TOKEN_INFO ckTokenInfo;
 
@@ -75,13 +77,17 @@ public class TokenInfo {
     serialNumber = new String(ckTokenInfo.serialNumber).trim();
     hardwareVersion = new Version(ckTokenInfo.hardwareVersion);
     firmwareVersion = new Version(ckTokenInfo.firmwareVersion);
-    this.ckTokenInfo = ckTokenInfo;
 
-    Date time = null;
+    this.ckTokenInfo = ckTokenInfo;
+    Instant time = null;
     try {
-      SimpleDateFormat utc = new SimpleDateFormat("yyyyMMddhhmmss");
-      utc.setTimeZone(TimeZone.getTimeZone("UTC"));
-      time = utc.parse(new String(ckTokenInfo.utcTime, 0, ckTokenInfo.utcTime.length - 2));
+      int year   = Integer.parseInt(new String(ckTokenInfo.utcTime,  0, 4));
+      int month  = Integer.parseInt(new String(ckTokenInfo.utcTime,  4, 2));
+      int day    = Integer.parseInt(new String(ckTokenInfo.utcTime,  6, 2));
+      int hour   = Integer.parseInt(new String(ckTokenInfo.utcTime,  8, 2));
+      int minute = Integer.parseInt(new String(ckTokenInfo.utcTime, 10, 2));
+      int second = Integer.parseInt(new String(ckTokenInfo.utcTime, 12, 2));
+      time = ZonedDateTime.of(year, month, day, hour, minute, second, 0, ZoneOffset.UTC).toInstant();
     } catch (Exception ex) {
     }
     this.time = time;
@@ -239,7 +245,7 @@ public class TokenInfo {
    *
    * @return The current time on the token's clock.
    */
-  public Date getTime() {
+  public Instant getTime() {
     return time;
   }
 
@@ -256,15 +262,15 @@ public class TokenInfo {
   }
 
   public boolean isProtectedAuthenticationPath() {
-    return hasFlagBit(PKCS11Constants.CKF_PROTECTED_AUTHENTICATION_PATH);
+    return hasFlagBit(CKF_PROTECTED_AUTHENTICATION_PATH);
   }
 
   public boolean isLoginRequired() {
-    return hasFlagBit(PKCS11Constants.CKF_LOGIN_REQUIRED);
+    return hasFlagBit(CKF_LOGIN_REQUIRED);
   }
 
   public boolean isTokenInitialized() {
-    return hasFlagBit(PKCS11Constants.CKF_TOKEN_INITIALIZED);
+    return hasFlagBit(CKF_TOKEN_INITIALIZED);
   }
 
   /**
@@ -295,26 +301,22 @@ public class TokenInfo {
         ni + "Firmware Version:     " + firmwareVersion +
         ni + "Time:                 " + time;
 
-    return text + "\n" + Functions.toStringFlags(PKCS11Constants.Category.CKF_TOKEN,
-        indent + "Flags: ", ckTokenInfo.flags,
-        PKCS11Constants.CKF_RNG,                      PKCS11Constants.CKF_WRITE_PROTECTED,
-        PKCS11Constants.CKF_LOGIN_REQUIRED,           PKCS11Constants.CKF_RESTORE_KEY_NOT_NEEDED,
-        PKCS11Constants.CKF_CLOCK_ON_TOKEN,           PKCS11Constants.CKF_PROTECTED_AUTHENTICATION_PATH,
-        PKCS11Constants.CKF_DUAL_CRYPTO_OPERATIONS,   PKCS11Constants.CKF_TOKEN_INITIALIZED,
-        PKCS11Constants.CKF_SECONDARY_AUTHENTICATION, PKCS11Constants.CKF_USER_PIN_INITIALIZED,
-        PKCS11Constants.CKF_USER_PIN_COUNT_LOW,       PKCS11Constants.CKF_USER_PIN_FINAL_TRY,
-        PKCS11Constants.CKF_USER_PIN_LOCKED,          PKCS11Constants.CKF_USER_PIN_TO_BE_CHANGED,
-        PKCS11Constants.CKF_SO_PIN_COUNT_LOW,         PKCS11Constants.CKF_SO_PIN_FINAL_TRY,
-        PKCS11Constants.CKF_SO_PIN_LOCKED,            PKCS11Constants.CKF_SO_PIN_TO_BE_CHANGED);
+    return text + "\n" + Functions.toStringFlags(Category.CKF_TOKEN, indent + "Flags: ", ckTokenInfo.flags,
+        CKF_RNG,                    CKF_WRITE_PROTECTED,        CKF_LOGIN_REQUIRED,
+        CKF_RESTORE_KEY_NOT_NEEDED, CKF_CLOCK_ON_TOKEN,         CKF_PROTECTED_AUTHENTICATION_PATH,
+        CKF_DUAL_CRYPTO_OPERATIONS, CKF_TOKEN_INITIALIZED,      CKF_SECONDARY_AUTHENTICATION,
+        CKF_USER_PIN_INITIALIZED,   CKF_USER_PIN_COUNT_LOW,     CKF_USER_PIN_FINAL_TRY,
+        CKF_USER_PIN_LOCKED,        CKF_USER_PIN_TO_BE_CHANGED, CKF_SO_PIN_COUNT_LOW,
+        CKF_SO_PIN_FINAL_TRY,       CKF_SO_PIN_LOCKED,          CKF_SO_PIN_TO_BE_CHANGED);
   }
 
   private static String mct(long count) {
-    return PKCS11Constants.isUnavailableInformation(count) ? "N/A"
-        : (count == PKCS11Constants.CK_EFFECTIVELY_INFINITE) ? "unlimited" : Long.toString(count);
+    return isUnavailableInformation(count) ? "N/A"
+        : (count == CK_EFFECTIVELY_INFINITE) ? "unlimited" : Long.toString(count);
   }
 
   private static String ct(long count) {
-    return PKCS11Constants.isUnavailableInformation(count) ? "N/A" : Long.toString(count);
+    return isUnavailableInformation(count) ? "N/A" : Long.toString(count);
   }
 
 }

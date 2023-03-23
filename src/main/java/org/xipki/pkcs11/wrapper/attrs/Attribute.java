@@ -12,6 +12,7 @@ import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.*;
 
 /**
@@ -68,7 +69,7 @@ public abstract class Attribute {
     String propFile = "org/xipki/pkcs11/wrapper/type-CKA.properties";
     Properties props = new Properties();
     try {
-      props.load(AttributeVector.class.getClassLoader().getResourceAsStream(propFile));
+      props.load(Attribute.class.getClassLoader().getResourceAsStream(propFile));
       for (String name : props.stringPropertyNames()) {
         name = name.trim();
         String type = props.getProperty(name).trim();
@@ -145,7 +146,7 @@ public abstract class Attribute {
           ? new CharArrayAttribute(type).charArrayValue((char[]) value)
           : new CharArrayAttribute(type).stringValue((String) value);
     } else if (attrType == AttrType.DATE) {
-      return new DateAttribute(type).dateValue((Date) value);
+      return new DateAttribute(type).dateValue((Instant) value);
     } else if (attrType == AttrType.LONG || attrType == AttrType.MECHANISM) {
       LongAttribute attr = (attrType == AttrType.LONG) ? new LongAttribute(type) : new MechanismAttribute(type);
       return (value == null || value instanceof Long)
