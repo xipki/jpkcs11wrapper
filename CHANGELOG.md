@@ -2,9 +2,15 @@
 
 See also <https://github.com/xipki/jpkcs11wrapper/releases>
 
-## 1.0.4
+
+## 1.0.5
 - Release date: 2023/xx/xx
 - N/A
+
+## 1.0.4
+- Release date: 2023/03/26
+- Replace Date and Calendar with java.time.*.
+- Log created object, if TRACE is enabled.
 
 ## 1.0.3
 - Release date: 2023/03/18
