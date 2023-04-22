@@ -107,7 +107,7 @@ public class Slot {
     try {
       return new SlotInfo(module.getPKCS11().C_GetSlotInfo(slotID));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 

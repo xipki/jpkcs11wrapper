@@ -4,6 +4,7 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
+import org.xipki.pkcs11.wrapper.PKCS11Module;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 import java.lang.reflect.Constructor;
@@ -15,6 +16,18 @@ import java.util.Arrays;
  * @author Lijun Liao (xipki)
  */
 public abstract class CkParams {
+
+  protected PKCS11Module module;
+
+  public void setModule(PKCS11Module module) {
+    this.module = module;
+  }
+
+  protected final void assertModuleSet() {
+    if (module == null) {
+      throw new IllegalStateException("module is not set");
+    }
+  }
 
   public abstract CK_MECHANISM toCkMechanism(long mechanism);
 
@@ -39,9 +52,10 @@ public abstract class CkParams {
     return Functions.requireNonNull(paramName, param);
   }
 
-  protected CK_MECHANISM buildCkMechanism(Constructor<?> constructor, long mechanismCode) {
+  protected static final CK_MECHANISM buildCkMechanism(
+      Constructor<?> constructor, long mechanismCode, Object ckParams) {
     try {
-      return (CK_MECHANISM) constructor.newInstance(mechanismCode, getParams());
+      return (CK_MECHANISM) constructor.newInstance(mechanismCode, ckParams);
     } catch (Exception ex) {
       throw new IllegalArgumentException("could not construct CK_MECHANISM", ex);
     }

@@ -93,7 +93,7 @@ public class PKCS11Module {
    */
   private PKCS11 pkcs11;
 
-  private final String pkcs11ModulePath;
+  private final String modulePath;
 
   private Boolean ecPointFixNeeded;
 
@@ -101,15 +101,9 @@ public class PKCS11Module {
 
   private Boolean sm2SignatureFixNeeded;
 
-  private boolean withVendorCodeMap;
+  private Map<PKCS11Constants.Category, VendorMap> vendorMaps;
 
-  private final Map<Long, Long> ckkGenericToVendorMap = new HashMap<>();
-
-  private final Map<Long, Long> ckkVendorToGenericMap = new HashMap<>();
-
-  private final Map<Long, Long> ckmGenericToVendorMap = new HashMap<>();
-
-  private final Map<Long, Long> ckmVendorToGenericMap = new HashMap<>();
+  private Map<Long, String> ckrCodeNameMap;
 
   private final Set<Integer> vendorBehaviours = new HashSet<>();
 
@@ -119,11 +113,11 @@ public class PKCS11Module {
    * Create a new module that uses the given PKCS11 interface to interact with
    * the token.
    *
-   * @param pkcs11ModulePath
+   * @param modulePath
    *          The interface to interact with the token.
    */
-  protected PKCS11Module(String pkcs11ModulePath) {
-    this.pkcs11ModulePath = Functions.requireNonNull("pkcs11ModulePath", pkcs11ModulePath);
+  protected PKCS11Module(String modulePath) {
+    this.modulePath = Functions.requireNonNull("modulePath", modulePath);
   }
 
   /**
@@ -202,7 +196,7 @@ public class PKCS11Module {
     try {
       return new ModuleInfo(pkcs11.C_GetInfo());
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw convertException(ex);
     }
   }
 
@@ -219,14 +213,14 @@ public class PKCS11Module {
 
     final String functionList = "C_GetFunctionList";
     final boolean omitInitialize = false;
-    StaticLogger.info("C_Initialize: pkcs11ModulePath={}, flags=0x{}", pkcs11ModulePath,
+    StaticLogger.info("C_Initialize: modulePath={}, flags=0x{}", modulePath,
         Functions.toFullHex(wrapperInitArgs.flags));
     try {
-      pkcs11 = PKCS11.getInstance(pkcs11ModulePath, functionList, wrapperInitArgs, omitInitialize);
+      pkcs11 = PKCS11.getInstance(modulePath, functionList, wrapperInitArgs, omitInitialize);
     } catch (IOException ex) {
       throw new TokenException(ex.getMessage(), ex);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw convertException(ex);
     } catch (NoSuchMethodError ex) {
       // In some JDKs like red hat, the getInstance is extended by fipsKeyImporter as follows:
       // getInstance(String pkcs11ModulePath, String functionList, CK_C_INITIALIZE_ARGS pInitArgs,
@@ -234,7 +228,7 @@ public class PKCS11Module {
       try {
         Method getInstanceMethod = PKCS11.class.getMethod("getInstance",
             String.class, String.class, CK_C_INITIALIZE_ARGS.class, boolean.class, MethodHandle.class);
-        pkcs11 = (PKCS11) getInstanceMethod.invoke(null, pkcs11ModulePath, functionList,
+        pkcs11 = (PKCS11) getInstanceMethod.invoke(null, modulePath, functionList,
             wrapperInitArgs, omitInitialize, null);
       } catch (Exception ex1) {
         throw new TokenException(ex1.getMessage(), ex1);
@@ -262,7 +256,7 @@ public class PKCS11Module {
     try {
       slotIDs = pkcs11.C_GetSlotList(tokenPresent);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw convertException(ex);
     }
     Slot[] slots = new Slot[slotIDs.length];
     for (int i = 0; i < slots.length; i++) {
@@ -305,20 +299,45 @@ public class PKCS11Module {
     return vendorBehaviours.contains(vendorBehavior);
   }
 
-  long ckkGenericToVendor(long genericCode) {
-    return withVendorCodeMap ? ckkGenericToVendorMap.getOrDefault(genericCode, genericCode) : genericCode;
+  public long genericToVendor(PKCS11Constants.Category category, long genericCode) {
+    if (vendorMaps != null) {
+      VendorMap map = vendorMaps.get(category);
+      return map != null ? map.genericToVendor(genericCode) : genericCode;
+    } else {
+      return genericCode;
+    }
   }
 
-  long ckkVendorToGeneric(long vendorCode) {
-    return withVendorCodeMap ? ckkVendorToGenericMap.getOrDefault(vendorCode, vendorCode) : vendorCode;
+  public long vendorToGeneric(PKCS11Constants.Category category, long vendorCode) {
+    if (vendorMaps != null) {
+      VendorMap map = vendorMaps.get(category);
+      return map != null ? map.vendorToGeneric(vendorCode) : vendorCode;
+    } else {
+      return vendorCode;
+    }
   }
 
-  long ckmGenericToVendor(long genericCode) {
-    return withVendorCodeMap ? ckmGenericToVendorMap.getOrDefault(genericCode, genericCode) : genericCode;
+  public String codeToName(PKCS11Constants.Category category, long code) {
+    if (vendorMaps != null) {
+      VendorMap map = vendorMaps.get(category);
+      return map != null ? map.codeToName(code) : PKCS11Constants.codeToName(category, code);
+    } else {
+      return PKCS11Constants.codeToName(category, code);
+    }
   }
 
-  long ckmVendorToGeneric(long vendorCode) {
-    return withVendorCodeMap ? ckmVendorToGenericMap.getOrDefault(vendorCode, vendorCode) : vendorCode;
+  public Long nameToCode(PKCS11Constants.Category category, String name) {
+    if (vendorMaps != null) {
+      VendorMap map = vendorMaps.get(category);
+      return map != null ? map.nameToCode(name) : PKCS11Constants.nameToCode(category, name);
+    } else {
+      return PKCS11Constants.nameToCode(category, name);
+    }
+  }
+
+  String ckrCodeToName(long code) {
+    String name = ckrCodeNameMap != null ? ckrCodeNameMap.get(code) : null;
+    return name != null ? name : PKCS11Constants.ckrCodeToName(code);
   }
 
   /**
@@ -329,6 +348,11 @@ public class PKCS11Module {
   @Override
   public String toString() {
     return (pkcs11 != null) ? pkcs11.toString() : "null";
+  }
+
+  public PKCS11Exception convertException(sun.security.pkcs11.wrapper.PKCS11Exception e) {
+    String name = ckrCodeToName(e.getErrorCode());
+    return new PKCS11Exception(e.getErrorCode(), name);
   }
 
   /**
@@ -354,7 +378,7 @@ public class PKCS11Module {
     try {
       pkcs11.C_Finalize(args);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw convertException(ex);
     }
   }
 
@@ -374,21 +398,19 @@ public class PKCS11Module {
       String confPath = System.getProperty("org.xipki.pkcs11.vendor.conf");
       InputStream in = (confPath != null) ? Files.newInputStream(Paths.get(pkcs11ModulePath))
           : PKCS11Module.class.getClassLoader().getResourceAsStream("org/xipki/pkcs11/wrapper/vendor.conf");
+
       try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
         while (true) {
-          VendorBlock block = readVendorBlock(br);
+          VendorConfBlock block = readVendorBlock(br);
           if (block == null) {
             break;
           }
 
-          // For better performance, this line should be in the if-block. But we put
-          // it here explicitly to make sure that all vendor blocks ar configured correctly.
-          if (!block.matches(pkcs11ModulePath, manufacturerID, libraryDescription, libraryVersion)) {
+          if (!block.matches(modulePath, manufacturerID, libraryDescription, libraryVersion)) {
             continue;
           }
 
           StaticLogger.info("found <vendor> configuration: {}", block);
-
           // vendor behaviours
           if (block.vendorBehaviours != null) {
             StringTokenizer tokenizer = new StringTokenizer(block.vendorBehaviours, ":, \t");
@@ -408,51 +430,52 @@ public class PKCS11Module {
             }
           }
 
+          VendorMap ckdMap = new VendorMap(PKCS11Constants.Category.CKD);
+          VendorMap ckgMap = new VendorMap(PKCS11Constants.Category.CKG_MGF);
+          VendorMap ckkMap = new VendorMap(PKCS11Constants.Category.CKK);
+          VendorMap ckmMap = new VendorMap(PKCS11Constants.Category.CKM);
+
           for (Map.Entry<String, String> entry : block.nameToCodeMap.entrySet()) {
             String name = entry.getKey().toUpperCase(Locale.ROOT);
-            String valueStr = entry.getValue().toUpperCase(Locale.ROOT);
-            boolean hex = valueStr.startsWith("0X");
-            long vendorCode = hex ? Long.parseLong(valueStr.substring(2), 16) : Long.parseLong(valueStr);
-
-            if (name.startsWith("CKK_VENDOR_")) {
-              Long genericCode = PKCS11Constants.ckkNameToCode(name);
-              if (genericCode == null) {
-                throw new IllegalStateException("unknown name in vendor block: " + name);
+            String code = entry.getValue().toUpperCase(Locale.ROOT);
+            if (name.startsWith("CKD_")) {
+              ckdMap.addNameCode(name, code);
+            } else if (name.startsWith("CKG_")) {
+              ckgMap.addNameCode(name, code);
+            } else if (name.startsWith("CKK_")) {
+              ckkMap.addNameCode(name, code);
+            } else if (name.startsWith("CKM_")) {
+              ckmMap.addNameCode(name, code);
+            } else if (name.startsWith("CKR_")) {
+              if (ckrCodeNameMap == null) {
+                ckrCodeNameMap = new HashMap<>();
               }
-
-              ckkGenericToVendorMap.put(genericCode, vendorCode);
-            } else if (name.startsWith("CKM_VENDOR_")) {
-              Long genericCode = PKCS11Constants.ckmNameToCode(name);
-              if (genericCode == null) {
-                throw new IllegalStateException("unknown name in vendor block: " + name);
-              }
-
-              ckmGenericToVendorMap.put(genericCode, vendorCode);
+              ckrCodeNameMap.put(parseCode(code), name);
             } else {
               throw new IllegalStateException("Unknown name in vendor block: " + name);
             }
-
-            for (Map.Entry<Long, Long> m : ckkGenericToVendorMap.entrySet()) {
-              ckkVendorToGenericMap.put(m.getValue(), m.getKey());
-            }
-
-            for (Map.Entry<Long, Long> m : ckmGenericToVendorMap.entrySet()) {
-              ckmVendorToGenericMap.put(m.getValue(), m.getKey());
-            }
           } // end for
+
+          VendorMap[] maps = {ckdMap, ckgMap, ckkMap, ckmMap};
+          for (VendorMap map : maps) {
+            if (vendorMaps == null) {
+              vendorMaps = new HashMap<>();
+            }
+            vendorMaps.put(map.category, map);
+          }
+
+          break;
         } // end while
       }
     } catch (Exception e) {
       StaticLogger.warn("error reading VENDOR code mapping, ignore it.");
     }
-
-    withVendorCodeMap = !ckmGenericToVendorMap.isEmpty() || !ckkGenericToVendorMap.isEmpty();
   }
 
-  private static VendorBlock readVendorBlock(BufferedReader reader) throws IOException {
+  private static VendorConfBlock readVendorBlock(BufferedReader reader) throws IOException {
     boolean inBlock = false;
     String line;
-    VendorBlock block = null;
+    VendorConfBlock block = null;
     while ((line = reader.readLine()) != null) {
       line = line.trim();
       if (line.isEmpty() || line.charAt(0) == '#') {
@@ -460,7 +483,7 @@ public class PKCS11Module {
       }
 
       if (line.startsWith("<vendor>")) {
-        block = new VendorBlock();
+        block = new VendorConfBlock();
         inBlock = true;
       } else if (line.startsWith("</vendor>")) {
         block.validate();
@@ -488,7 +511,8 @@ public class PKCS11Module {
           } else if (name.equalsIgnoreCase("module.version")) {
             block.versions = textList;
           }
-        } else if (line.startsWith("CKK_") || line.startsWith("CKM_")) {
+        } else if (line.startsWith("CKD_") || line.startsWith("CKG_") ||
+            line.startsWith("CKK_") || line.startsWith("CKM_") || line.startsWith("CKR_")) {
           int idx = line.indexOf(' ');
           if (idx != -1) {
             block.nameToCodeMap.put(line.substring(0, idx).trim(), line.substring(idx + 1).trim());
@@ -506,7 +530,62 @@ public class PKCS11Module {
     return block;
   }
 
-  private static final class VendorBlock {
+  private static long parseCode(String str) {
+    boolean hex = str.startsWith("0X");
+    return hex ? Long.parseLong(str.substring(2), 16) : Long.parseLong(str);
+  }
+
+  private static final class VendorMap {
+
+    private final Map<Long, Long> genericToVendorMap = new HashMap<>();
+
+    private final Map<Long, Long> vendorToGenericMap = new HashMap<>();
+
+    private final Map<Long, String> codeNameMap      = new HashMap<>();
+
+    private final Map<String, Long> nameCodeMap      = new HashMap<>();
+
+    private PKCS11Constants.Category category;
+
+    VendorMap(PKCS11Constants.Category category) {
+      this.category = category;
+    }
+
+    void addNameCode(String name, String code) {
+      long lCode = parseCode(code);
+      Long genericCode = PKCS11Constants.nameToCode(category, name);
+      if (genericCode == null) {
+        codeNameMap.put(lCode, name);
+        nameCodeMap.put(name, lCode);
+      } else {
+        genericToVendorMap.put(genericCode, lCode);
+        vendorToGenericMap.put(lCode, genericCode);
+      }
+    }
+
+    boolean isEmpty() {
+      return genericToVendorMap.isEmpty() && codeNameMap.isEmpty();
+    }
+
+    long genericToVendor(long genericCode) {
+      return genericToVendorMap.getOrDefault(genericCode, genericCode);
+    }
+
+    long vendorToGeneric(long vendorCode) {
+      return vendorToGenericMap.getOrDefault(vendorCode, vendorCode);
+    }
+
+    public String codeToName(long code) {
+      return codeNameMap.get(code);
+    }
+
+    public Long nameToCode(String name) {
+      return nameCodeMap.get(name);
+    }
+
+  }
+
+  private static final class VendorConfBlock {
     private List<String> modulePaths;
     private List<String> manufacturerIDs;
     private List<String> descriptions;

@@ -7,6 +7,7 @@
 package org.xipki.pkcs11.wrapper;
 
 import org.xipki.pkcs11.wrapper.params.CkParams;
+import org.xipki.pkcs11.wrapper.params.ECDH1_DERIVE_PARAMS;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
@@ -17,6 +18,8 @@ import sun.security.pkcs11.wrapper.CK_MECHANISM;
  * @author Lijun Liao (xipki)
  */
 public class Mechanism {
+
+  private PKCS11Module module;
 
   /**
    * The code of the mechanism as defined in PKCS11Constants (or pkcs11t.h
@@ -50,6 +53,13 @@ public class Mechanism {
     this.parameters = parameters;
   }
 
+  public void setModule(PKCS11Module module) {
+    this.module = module;
+    if (parameters != null) {
+      parameters.setModule(module);
+    }
+  }
+
   /**
    * Get the parameters object of this mechanism.
    *
@@ -75,11 +85,21 @@ public class Mechanism {
    * @return The name of this mechanism.
    */
   public String getName() {
-    return PKCS11Constants.ckmCodeToName(mechanismCode);
+    return module == null ? PKCS11Constants.ckmCodeToName(mechanismCode)
+        : module.codeToName(PKCS11Constants.Category.CKM, mechanismCode);
   }
 
   public CK_MECHANISM toCkMechanism() {
-    return (parameters == null) ? new CK_MECHANISM(mechanismCode) : parameters.toCkMechanism(mechanismCode);
+    if (module == null) {
+      throw new IllegalStateException("module is not set");
+    }
+
+    long realCode = module.genericToVendor(PKCS11Constants.Category.CKM, mechanismCode);
+    if (parameters == null) {
+      return new CK_MECHANISM(realCode);
+    } else {
+      return parameters.toCkMechanism(realCode);
+    }
   }
 
   /**

@@ -1240,7 +1240,7 @@ public class PKCS11Token {
         }
         return Arrays.equals(signature, sig2);
       } else {
-        throw new PKCS11Exception(CKR_MECHANISM_INVALID);
+        throw new PKCS11Exception(CKR_MECHANISM_INVALID, "CKR_MECHANISM_INVALID");
       }
     } finally {
       sessions.requite(session0);
@@ -1324,7 +1324,7 @@ public class PKCS11Token {
         }
         return Arrays.equals(signature, sig2);
       } else {
-        throw new PKCS11Exception(CKR_MECHANISM_INVALID);
+        throw new PKCS11Exception(CKR_MECHANISM_INVALID, "CKR_MECHANISM_INVALID");
       }
     } catch (PKCS11Exception e) {
       long ckr = e.getErrorCode();

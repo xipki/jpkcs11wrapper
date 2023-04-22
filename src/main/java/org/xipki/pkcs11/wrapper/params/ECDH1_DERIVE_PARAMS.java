@@ -4,9 +4,13 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
-import org.xipki.pkcs11.wrapper.PKCS11Constants;
+import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
+
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.codeToName;
+
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
 
 /**
  * Represents the CK_ECDH1_DERIVE_PARAMS.
@@ -31,19 +35,21 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
    */
   public ECDH1_DERIVE_PARAMS(long kdf, byte[] sharedData, byte[] publicData) {
     requireNonNull("publicData", publicData);
-    Functions.requireAmong("kdf", kdf, PKCS11Constants.CKD_NULL, PKCS11Constants.CKD_SHA1_KDF,
-        PKCS11Constants.CKD_SHA1_KDF_ASN1, PKCS11Constants.CKD_SHA1_KDF_CONCATENATE);
+    Functions.requireAmong("kdf", kdf, CKD_NULL, CKD_SHA1_KDF,
+        CKD_SHA1_KDF_ASN1, CKD_SHA1_KDF_CONCATENATE);
     params = new CK_ECDH1_DERIVE_PARAMS(kdf, sharedData, publicData);
   }
 
   @Override
   public CK_ECDH1_DERIVE_PARAMS getParams() {
-    return params;
+    assertModuleSet();
+    long realKdf = module.genericToVendor(Category.CKD, params.kdf);
+    return new CK_ECDH1_DERIVE_PARAMS(realKdf, params.pSharedData, params.pPublicData);
   }
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return new CK_MECHANISM(mechanism, params);
+    return new CK_MECHANISM(mechanism, getParams());
   }
 
   @Override
@@ -54,7 +60,8 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
   @Override
   public String toString(String indent) {
     return indent + "CK_ECDH1_DERIVE_PARAMS:" +
-        val2Str(indent, "kdf", PKCS11Constants.codeToName(PKCS11Constants.Category.CKD, params.kdf)) +
+        val2Str(indent, "kdf", (module == null)
+            ? codeToName(Category.CKD, params.kdf) : module.codeToName(Category.CKD, params.kdf)) +
         ptr2str(indent, "pPublicData", params.pPublicData) +
         ptr2str(indent, "pSharedData", params.pSharedData);
   }

@@ -55,7 +55,7 @@ public class GCM_PARAMS extends CkParams {
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
+    return buildCkMechanism(constructor_CK_MECHANISM, mechanism, getParams());
   }
 
   @Override

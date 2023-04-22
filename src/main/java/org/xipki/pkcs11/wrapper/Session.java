@@ -10,7 +10,6 @@ import org.xipki.pkcs11.wrapper.attrs.*;
 import org.xipki.pkcs11.wrapper.params.CkParamsWithExtra;
 import org.xipki.pkcs11.wrapper.params.ExtraParams;
 import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
-import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.PKCS11;
 
 import java.lang.reflect.InvocationTargetException;
@@ -143,7 +142,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -166,7 +165,7 @@ public class Session {
     try {
       return new SessionInfo(pkcs11.C_GetSessionInfo(sessionHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -199,7 +198,7 @@ public class Session {
     try {
       return pkcs11.C_GetOperationState(sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -223,7 +222,7 @@ public class Session {
     try {
       pkcs11.C_SetOperationState(sessionHandle, operationState, encryptionKeyHandle, authenticationKeyHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -250,7 +249,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -267,7 +266,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -321,7 +320,7 @@ public class Session {
       return hObject;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -397,7 +396,7 @@ public class Session {
       return hObject;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -424,7 +423,7 @@ public class Session {
       traceObject("object (after settingAttributeValues)", objectToUpdateHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -444,7 +443,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -466,7 +465,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -522,7 +521,7 @@ public class Session {
       return hObjects;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -540,7 +539,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -572,13 +571,14 @@ public class Session {
    */
   public void encryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_EncryptInit";
+    mechanism.setModule(module);
     debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
-      pkcs11.C_EncryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_EncryptInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -636,8 +636,7 @@ public class Session {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
         debugError(method, (sun.security.pkcs11.wrapper.PKCS11Exception) cause);
-        long ckr = ((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode();
-        throw new PKCS11Exception(ckr);
+        throw module.convertException((sun.security.pkcs11.wrapper.PKCS11Exception) cause);
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
@@ -691,7 +690,7 @@ public class Session {
           pkcs11.C_EncryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -714,7 +713,7 @@ public class Session {
       return logOutLen(method, pkcs11.C_EncryptFinal(sessionHandle, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -733,13 +732,14 @@ public class Session {
    */
   public void decryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_DecryptInit";
+    mechanism.setModule(module);
     debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
-      pkcs11.C_DecryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_DecryptInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -798,7 +798,7 @@ public class Session {
       Throwable cause = ex.getCause();
       if (cause instanceof sun.security.pkcs11.wrapper.PKCS11Exception) {
         debugError(method, (sun.security.pkcs11.wrapper.PKCS11Exception) cause);
-        throw new PKCS11Exception(((sun.security.pkcs11.wrapper.PKCS11Exception) cause).getErrorCode());
+        throw module.convertException((sun.security.pkcs11.wrapper.PKCS11Exception) cause);
       } else {
         throw new IllegalStateException(ex.getMessage(), ex);
       }
@@ -852,7 +852,7 @@ public class Session {
           pkcs11.C_DecryptUpdate(sessionHandle, 0, in, inOfs, inLen, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -875,7 +875,7 @@ public class Session {
       return logOutLen(method, pkcs11.C_DecryptFinal(sessionHandle, 0, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -892,13 +892,14 @@ public class Session {
    */
   public void digestInit(Mechanism mechanism) throws PKCS11Exception {
     final String method = "C_DigestInit";
+    mechanism.setModule(module);
     debugIn(method, "mechanism={}", mechanism);
     try {
-      pkcs11.C_DigestInit(sessionHandle, toCkMechanism(mechanism));
+      pkcs11.C_DigestInit(sessionHandle, mechanism.toCkMechanism());
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -980,15 +981,16 @@ public class Session {
       throws PKCS11Exception {
     final String method = "C_DigestSingle";
     checkParams(in, inOfs, inLen, out, outOfs, outLen);
+    mechanism.setModule(module);
     debugIn(method, "mechanism={}, inOfs={}, inLen={}, outOfs={}, outLen",
         mechanism, inOfs, inLen, outOfs, outLen);
 
     try {
       return logOutLen(method,
-          pkcs11.C_DigestSingle(sessionHandle, toCkMechanism(mechanism), in, inOfs, inLen, out, outOfs, outLen));
+          pkcs11.C_DigestSingle(sessionHandle, mechanism.toCkMechanism(), in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1026,7 +1028,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1045,7 +1047,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1069,7 +1071,7 @@ public class Session {
       return logOutLen(method, pkcs11.C_DigestFinal(sessionHandle, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1111,14 +1113,15 @@ public class Session {
    */
   public void signInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_SignInit";
+    mechanism.setModule(module);
     try {
       initSignVerify(mechanism, keyHandle);
       debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
-      pkcs11.C_SignInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_SignInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1141,7 +1144,7 @@ public class Session {
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1184,7 +1187,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1206,7 +1209,7 @@ public class Session {
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1306,13 +1309,14 @@ public class Session {
    */
   public void signRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_SignRecoverInit";
+    mechanism.setModule(module);
     debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
-      pkcs11.C_SignRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_SignRecoverInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1357,7 +1361,7 @@ public class Session {
       return logOutLen(method, pkcs11.C_SignRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1383,14 +1387,15 @@ public class Session {
    */
   public void verifyInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_VerifyInit";
+    mechanism.setModule(module);
     try {
       initSignVerify(mechanism, keyHandle);
       debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
-      pkcs11.C_VerifyInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_VerifyInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1415,7 +1420,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1456,7 +1461,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1481,7 +1486,7 @@ public class Session {
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1500,13 +1505,14 @@ public class Session {
    */
   public void verifyRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_VerifyRecoverInit";
+    mechanism.setModule(module);
     debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
-      pkcs11.C_VerifyRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
+      pkcs11.C_VerifyRecoverInit(sessionHandle, mechanism.toCkMechanism(), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1561,7 +1567,7 @@ public class Session {
       return logOutLen(method, pkcs11.C_VerifyRecover(sessionHandle, in, inOfs, inLen, out, outOfs, outLen));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1588,15 +1594,16 @@ public class Session {
    */
   public long generateKey(Mechanism mechanism, AttributeVector template) throws PKCS11Exception {
     final String method = "C_GenerateKey";
+    mechanism.setModule(module);
     debugIn(method, "mechanism={}, template={}", mechanism, template);
     try {
-      long hKey = pkcs11.C_GenerateKey(sessionHandle, toCkMechanism(mechanism), toOutCKAttributes(template));
+      long hKey = pkcs11.C_GenerateKey(sessionHandle, mechanism.toCkMechanism(), toOutCKAttributes(template));
       debugOut(method, "hKey={}", hKey);
       traceObject("generated key", hKey);
       return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1616,10 +1623,11 @@ public class Session {
    */
   public PKCS11KeyPair generateKeyPair(Mechanism mechanism, KeyPairTemplate template) throws PKCS11Exception {
     final String method = "C_GenerateKeyPair";
+    mechanism.setModule(module);
     debugIn(method, "mechanism={}, template={}", mechanism, template);
     long[] objectHandles;
     try {
-      objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, toCkMechanism(mechanism),
+      objectHandles = pkcs11.C_GenerateKeyPair(sessionHandle, mechanism.toCkMechanism(),
           toOutCKAttributes(template.publicKey()), toOutCKAttributes(template.privateKey()));
       PKCS11KeyPair rv = new PKCS11KeyPair(objectHandles[0], objectHandles[1]);
       debugOut("C_GenerateKeyPair", "hPublicKey={}, hPrivateKey={}",
@@ -1629,7 +1637,7 @@ public class Session {
       return rv;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1648,12 +1656,14 @@ public class Session {
    */
   public byte[] wrapKey(Mechanism mechanism, long wrappingKeyHandle, long keyHandle) throws PKCS11Exception {
     final String method = "C_WrapKey";
+    mechanism.setModule(module);
     debugIn(method, "wrappingKeyHandle={}, keyHandle={}, mechanism={}", wrappingKeyHandle, keyHandle, mechanism);
     try {
-      return toNonNull(method, pkcs11.C_WrapKey(sessionHandle, toCkMechanism(mechanism), wrappingKeyHandle, keyHandle));
+      return toNonNull(method,
+              pkcs11.C_WrapKey(sessionHandle, mechanism.toCkMechanism(), wrappingKeyHandle, keyHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1678,18 +1688,19 @@ public class Session {
                         byte[] wrappedKey, AttributeVector keyTemplate) throws PKCS11Exception {
     Functions.requireNonNull("wrappedKey", wrappedKey);
     final String method = "C_UnwrapKey";
+    mechanism.setModule(module);
     debugIn(method, "unwrappingKeyHandle={}, wrappedKey.length={}, mechanism={}, template={}",
         unwrappingKeyHandle, len(wrappedKey), mechanism, keyTemplate);
 
     try {
-      long hKey = pkcs11.C_UnwrapKey(sessionHandle, toCkMechanism(mechanism),
+      long hKey = pkcs11.C_UnwrapKey(sessionHandle, mechanism.toCkMechanism(),
           unwrappingKeyHandle, wrappedKey, toOutCKAttributes(keyTemplate));
       debugOut(method, "hKey={}", hKey);
       traceObject("unwrapped key", hKey);
       return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1712,18 +1723,19 @@ public class Session {
    *              If deriving the key or creating a new key object failed.
    */
   public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws PKCS11Exception {
-    CK_MECHANISM ckMechanism = toCkMechanism(mechanism);
     final String method = "C_DeriveKey";
+    mechanism.setModule(module);
     debugIn(method, "baseKeyHandle={}, mechanism={},template={}", baseKeyHandle, mechanism, template);
 
     try {
-      long hKey = pkcs11.C_DeriveKey(sessionHandle, ckMechanism, baseKeyHandle, toOutCKAttributes(template));
+      long hKey = pkcs11.C_DeriveKey(sessionHandle, mechanism.toCkMechanism(), baseKeyHandle,
+                    toOutCKAttributes(template));
       debugOut(method, "hKey={}", hKey);
       traceObject("derived key", hKey);
       return hKey;
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1739,7 +1751,7 @@ public class Session {
     try {
       pkcs11.C_SeedRandom(sessionHandle, seed);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     }
   }
 
@@ -1761,7 +1773,7 @@ public class Session {
       return toNonNull("C_GenerateRandom", randomBytesBuffer);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw module.convertException(ex);
     } // fill the buffer with random bytes
   }
 
@@ -1773,15 +1785,6 @@ public class Session {
   @Override
   public String toString() {
     return "Session Handle: 0x" + Long.toHexString(sessionHandle) +  "\nToken: " + token;
-  }
-
-  private CK_MECHANISM toCkMechanism(Mechanism mechanism) {
-    CK_MECHANISM ckMechanism = mechanism.toCkMechanism();
-    long code = mechanism.getMechanismCode();
-    if ((code & PKCS11Constants.CKM_VENDOR_DEFINED) != 0) {
-      ckMechanism.mechanism = module.ckmGenericToVendor(code);
-    }
-    return ckMechanism;
   }
 
   public String getStringAttrValue(long objectHandle, long attributeType) throws PKCS11Exception {
@@ -1978,7 +1981,7 @@ public class Session {
     try {
       pkcs11.C_GetAttributeValue(sessionHandle, objectHandle, attributeTemplateList);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      delayedEx = new PKCS11Exception(ex.getErrorCode());
+      delayedEx = module.convertException(ex);
     }
 
     for (int i = 0; i < attributes.length; i++) {
@@ -2078,7 +2081,7 @@ public class Session {
         attribute.present(false).sensitive(false).getCkAttribute().pValue = null;
       } else {
         // there was a different error that we should propagate
-        throw new PKCS11Exception(ec);
+        throw module.convertException(ex);
       }
     }
 
@@ -2113,9 +2116,7 @@ public class Session {
 
       if (ckAttr.type == PKCS11Constants.CKA_KEY_TYPE) {
         long value = (long) ckAttr.pValue;
-        if ((value & PKCS11Constants.CKK_VENDOR_DEFINED) != 0L) {
-          ckAttr.pValue = module.ckkGenericToVendor(value);
-        }
+        ckAttr.pValue = module.genericToVendor(Category.CKK, value);
       } else if (ckAttr.type == PKCS11Constants.CKA_EC_POINT) {
         ckAttr.pValue = Functions.toOctetString((byte[]) ckAttr.pValue);
       }
@@ -2167,20 +2168,18 @@ public class Session {
 
     if (type == PKCS11Constants.CKA_KEY_TYPE) {
       long value = (long) ckAttr.pValue;
-      if ((value & PKCS11Constants.CKK_VENDOR_DEFINED) != 0L && !PKCS11Constants.isUnavailableInformation(value)) {
-        ckAttr.pValue = module.ckkVendorToGeneric(value);
+      if (!PKCS11Constants.isUnavailableInformation(value)) {
+        ckAttr.pValue = module.vendorToGeneric(Category.CKK, value);
       }
     } else if (type == PKCS11Constants.CKA_KEY_GEN_MECHANISM) {
       long value = (long) ckAttr.pValue;
-      if ((value & PKCS11Constants.CKM_VENDOR_DEFINED) != 0L && !PKCS11Constants.isUnavailableInformation(value)) {
-        ckAttr.pValue = module.ckmVendorToGeneric(value);
+      if (!PKCS11Constants.isUnavailableInformation(value)) {
+        ckAttr.pValue = module.vendorToGeneric(Category.CKM, value);
       }
     } else if (type == PKCS11Constants.CKA_ALLOWED_MECHANISMS) {
       long[] mechs = ((MechanismArrayAttribute) attr).getValue();
       for (long mech : mechs) {
-        if ((mech & PKCS11Constants.CKM_VENDOR_DEFINED) != 0L) {
-          ckAttr.pValue = module.ckmVendorToGeneric(mech);
-        }
+        ckAttr.pValue = module.vendorToGeneric(Category.CKM, mech);
       }
     } else if (type == PKCS11Constants.CKA_EC_POINT) {
       Boolean b = module.getEcPointFixNeeded();
@@ -2266,7 +2265,7 @@ public class Session {
 
   private void debugError(String method, sun.security.pkcs11.wrapper.PKCS11Exception e) {
     if (StaticLogger.isDebugEnabled()) {
-      StaticLogger.debug("ERR " + method + ": " + ckrCodeToName(e.getErrorCode()));
+      StaticLogger.debug("ERR " + method + ": " + module.ckrCodeToName(e.getErrorCode()));
     }
   }
 

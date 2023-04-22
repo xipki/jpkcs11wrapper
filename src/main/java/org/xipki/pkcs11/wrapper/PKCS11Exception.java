@@ -1,6 +1,3 @@
-// Copyright (c) 2002 Graz University of Technology. All rights reserved.
-// License IAIK PKCS#11 Wrapper License.
-//
 // Copyright (c) 2022 xipki. All rights reserved.
 // License Apache License 2.0
 
@@ -15,7 +12,6 @@ package org.xipki.pkcs11.wrapper;
  * PKCS#11 defines the meaning of an error-code, which may depend on the
  * context in which the error occurs.
  *
- * @author Karl Scheibelhofer (SIC)
  * @author Lijun Liao (xipki)
  */
 public class PKCS11Exception extends TokenException {
@@ -25,15 +21,23 @@ public class PKCS11Exception extends TokenException {
    */
   private final long errorCode;
 
+  private final String errorName;
+
   /**
    * Constructor taking the error code as defined for the CKR_* constants
    * in PKCS#11.
    *
    * @param errorCode
    *          The PKCS#11 error code (return value).
+   * @param name
+   *          The error name.
    */
-  public PKCS11Exception(long errorCode) {
-    super(PKCS11Constants.ckrCodeToName(errorCode));
+  public PKCS11Exception(long errorCode, String name) {
+    super(name);
+    if (name == null || name.isEmpty()) {
+      throw new IllegalArgumentException("name must not be null or blank.");
+    }
+    this.errorName = name;
     this.errorCode = errorCode;
   }
 
@@ -44,6 +48,10 @@ public class PKCS11Exception extends TokenException {
    */
   public long getErrorCode() {
     return errorCode;
+  }
+
+  public String getErrorName() {
+    return errorName;
   }
 
 }

@@ -105,7 +105,7 @@ public class Token {
     try {
       return new TokenInfo(slot.getPKCS11().C_GetTokenInfo(slot.getSlotID()));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw slot.getModule().convertException(ex);
     }
   }
 
@@ -124,13 +124,13 @@ public class Token {
     try {
       mechanisms = slot.getPKCS11().C_GetMechanismList(slot.getSlotID());
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw slot.getModule().convertException(ex);
     }
 
     for (int i = 0; i < mechanisms.length; i++) {
       long code = mechanisms[i];
       if ((code & PKCS11Constants.CKM_VENDOR_DEFINED) != 0L) {
-        mechanisms[i] = slot.getModule().ckmVendorToGeneric(code);
+        mechanisms[i] = slot.getModule().vendorToGeneric(PKCS11Constants.Category.CKM, code);
       }
     }
 
@@ -150,13 +150,13 @@ public class Token {
    */
   public MechanismInfo getMechanismInfo(long mechanism) throws PKCS11Exception {
     if ((mechanism & PKCS11Constants.CKM_VENDOR_DEFINED) != 0L) {
-      mechanism = slot.getModule().ckmGenericToVendor(mechanism);
+      mechanism = slot.getModule().genericToVendor(PKCS11Constants.Category.CKM, mechanism);
     }
 
     try {
       return new MechanismInfo(slot.getPKCS11().C_GetMechanismInfo(slot.getSlotID(), mechanism));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw slot.getModule().convertException(ex);
     }
   }
 
@@ -203,7 +203,7 @@ public class Token {
       StaticLogger.info("C_OpenSession: slotID={}, flags=0x{}, sessionHandle={}",
           slot.getSlotID(), Functions.toFullHex(flags), sessionHandle);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw new PKCS11Exception(ex.getErrorCode());
+      throw slot.getModule().convertException(ex);
     }
     return new Session(this, sessionHandle);
   }

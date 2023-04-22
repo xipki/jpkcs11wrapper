@@ -4,6 +4,7 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
+import org.xipki.pkcs11.wrapper.PKCS11Module;
 import sun.security.pkcs11.wrapper.CK_AES_CTR_PARAMS;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
@@ -39,7 +40,7 @@ public class AES_CTR_PARAMS extends CkParams {
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return new CK_MECHANISM(mechanism, params);
+    return new CK_MECHANISM(mechanism, getParams());
   }
 
   @Override

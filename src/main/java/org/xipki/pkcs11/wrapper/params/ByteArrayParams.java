@@ -4,6 +4,7 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
+import org.xipki.pkcs11.wrapper.PKCS11Module;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
@@ -26,7 +27,7 @@ public class ByteArrayParams extends CkParams {
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return new CK_MECHANISM(mechanism, bytes);
+    return new CK_MECHANISM(mechanism, getParams());
   }
 
   @Override

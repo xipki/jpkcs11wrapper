@@ -69,7 +69,7 @@ public class SALSA20_CHACHA20_POLY1305_PARAMS extends CkParams {
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
+    return buildCkMechanism(constructor_CK_MECHANISM, mechanism, getParams());
   }
 
   @Override

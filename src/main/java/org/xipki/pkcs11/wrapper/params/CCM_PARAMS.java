@@ -4,6 +4,7 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
+import org.xipki.pkcs11.wrapper.PKCS11Module;
 import org.xipki.pkcs11.wrapper.Util;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
@@ -58,7 +59,7 @@ public class CCM_PARAMS extends CkParams {
 
   @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
-    return buildCkMechanism(constructor_CK_MECHANISM, mechanism);
+    return buildCkMechanism(constructor_CK_MECHANISM, mechanism, getParams());
   }
 
   @Override

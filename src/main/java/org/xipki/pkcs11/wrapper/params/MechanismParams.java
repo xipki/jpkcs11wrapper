@@ -3,6 +3,7 @@
 
 package org.xipki.pkcs11.wrapper.params;
 
+import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import org.xipki.pkcs11.wrapper.PKCS11Module;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
@@ -11,7 +12,7 @@ import sun.security.pkcs11.wrapper.CK_MECHANISM;
  *
  * @author Lijun Liao (xipki)
  */
-public class LongParams extends CkParams {
+public class MechanismParams extends CkParams {
 
   /**
    * The PKCS#11 object.
@@ -24,13 +25,14 @@ public class LongParams extends CkParams {
    * @param params
    *          The params.
    */
-  public LongParams(long params) {
+  public MechanismParams(long params) {
     this.params = params;
   }
 
   @Override
   public Long getParams() {
-    return params;
+    assertModuleSet();
+    return module.genericToVendor(PKCS11Constants.Category.CKM, params);
   }
 
   @Override
@@ -45,7 +47,8 @@ public class LongParams extends CkParams {
 
   @Override
   public String toString(String indent) {
-    return indent + "Long Params: " + params;
+    return indent + "MechanismParams Params: " + (module == null ? PKCS11Constants.ckmCodeToName(params) :
+        module.codeToName(PKCS11Constants.Category.CKM, params));
   }
 
 }

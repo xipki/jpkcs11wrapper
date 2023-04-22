@@ -7,7 +7,7 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
-import org.xipki.pkcs11.wrapper.PKCS11Constants;
+import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import org.xipki.pkcs11.wrapper.Util;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
@@ -18,6 +18,8 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
 
 /**
  * Represents the CK_RSA_PKCS_PSS_PARAMS.
@@ -44,8 +46,6 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
 
   private static final Map<Long, Long> mgf2HashAlgMap;
 
-  private final Object params;
-
   /**
    * The message digest algorithm used to calculate the digest of the encoding
    * parameter.
@@ -64,15 +64,15 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
 
   static {
     Map<Long, Long> map = new HashMap<>();
-    map.put(PKCS11Constants.CKG_MGF1_SHA1,     PKCS11Constants.CKM_SHA_1);
-    map.put(PKCS11Constants.CKG_MGF1_SHA224,   PKCS11Constants.CKM_SHA224);
-    map.put(PKCS11Constants.CKG_MGF1_SHA256,   PKCS11Constants.CKM_SHA256);
-    map.put(PKCS11Constants.CKG_MGF1_SHA384,   PKCS11Constants.CKM_SHA384);
-    map.put(PKCS11Constants.CKG_MGF1_SHA512,   PKCS11Constants.CKM_SHA512);
-    map.put(PKCS11Constants.CKG_MGF1_SHA3_224, PKCS11Constants.CKM_SHA3_224);
-    map.put(PKCS11Constants.CKG_MGF1_SHA3_256, PKCS11Constants.CKM_SHA3_256);
-    map.put(PKCS11Constants.CKG_MGF1_SHA3_384, PKCS11Constants.CKM_SHA3_384);
-    map.put(PKCS11Constants.CKG_MGF1_SHA3_512, PKCS11Constants.CKM_SHA3_512);
+    map.put(CKG_MGF1_SHA1,     CKM_SHA_1);
+    map.put(CKG_MGF1_SHA224,   CKM_SHA224);
+    map.put(CKG_MGF1_SHA256,   CKM_SHA256);
+    map.put(CKG_MGF1_SHA384,   CKM_SHA384);
+    map.put(CKG_MGF1_SHA512,   CKM_SHA512);
+    map.put(CKG_MGF1_SHA3_224, CKM_SHA3_224);
+    map.put(CKG_MGF1_SHA3_256, CKM_SHA3_256);
+    map.put(CKG_MGF1_SHA3_384, CKM_SHA3_384);
+    map.put(CKG_MGF1_SHA3_512, CKM_SHA3_512);
     mgf2HashAlgMap = Collections.unmodifiableMap(map);
 
     Class<?> clazz = Util.getClass(CLASS_CK_PARAMS);
@@ -120,14 +120,20 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
     this.hashAlg = hashAlg;
     this.mgf = mgf;
     this.sLen = sLen;
+  }
 
+  @Override
+  public Object getParams() {
     if (constructorNoArgs != null) {
+      long realHashAlg = module.genericToVendor(Category.CKM, hashAlg);
+      long realMgf = module.genericToVendor(Category.CKG_MGF, mgf);
+
       try {
         Object ret = constructorNoArgs.newInstance();
-        hashAlgField.set(ret, hashAlg);
-        mgfField.set(ret, mgf);
+        hashAlgField.set(ret, realHashAlg);
+        mgfField.set(ret, realMgf);
         sLenField.set(ret, sLen);
-        this.params = ret;
+        return ret;
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
@@ -135,7 +141,7 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
       String hashAlgName = Functions.getHashAlgName(hashAlg);
       String mgfHashAlgName = Functions.getHashAlgName(mgf2HashAlgMap.get(mgf));
       try {
-        this.params = constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, sLen);
+        return constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, sLen);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
@@ -143,13 +149,9 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   }
 
   @Override
-  public Object getParams() {
-    return params;
-  }
-
-  @Override
   public CK_MECHANISM toCkMechanism(long mechanism) {
     CK_MECHANISM mech = new CK_MECHANISM(mechanism);
+    Object params = getParams();
     try {
       if (CK_MECHANISM_field_pParameter != null) {
         CK_MECHANISM_field_pParameter.set(mech, params);
@@ -172,8 +174,10 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   @Override
   public String toString(String indent) {
     return indent + "CK_RSA_PKCS_PSS_PARAMS:" +
-        val2Str(indent, "hashAlg", PKCS11Constants.ckmCodeToName(hashAlg)) +
-        val2Str(indent, "mgf", PKCS11Constants.codeToName(PKCS11Constants.Category.CKG_MGF, mgf)) +
+        val2Str(indent, "hashAlg", (module == null
+            ? ckmCodeToName(hashAlg) : module.codeToName(Category.CKM, hashAlg))) +
+        val2Str(indent, "mgf", (module == null
+            ? codeToName(Category.CKG_MGF, mgf) : module.codeToName(Category.CKG_MGF, mgf))) +
         val2Str(indent, "sLen", sLen);
   }
 
