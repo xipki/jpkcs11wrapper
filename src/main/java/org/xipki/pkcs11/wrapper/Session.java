@@ -572,7 +572,7 @@ public class Session {
    */
   public void encryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_EncryptInit";
-    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
       pkcs11.C_EncryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
@@ -733,7 +733,7 @@ public class Session {
    */
   public void decryptInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_DecryptInit";
-    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
       pkcs11.C_DecryptInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
@@ -1113,7 +1113,7 @@ public class Session {
     final String method = "C_SignInit";
     try {
       initSignVerify(mechanism, keyHandle);
-      debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+      debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
       pkcs11.C_SignInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1137,7 +1137,7 @@ public class Session {
     debugIn(method, "data.length={}", len(data));
     try {
       byte[] sigValue = pkcs11.C_Sign(sessionHandle, data);
-      debugOut("C_Sign", "rv.length={]", len(sigValue));
+      debugOut("C_Sign", "rv.length={}", len(sigValue));
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
@@ -1202,7 +1202,7 @@ public class Session {
     debugIn(method);
     try {
       byte[] sigValue = pkcs11.C_SignFinal(sessionHandle, 0);
-      debugOut(method, "rv.length={]", len(sigValue));
+      debugOut(method, "rv.length={}", len(sigValue));
       return fixSignOutput(sigValue);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       debugError(method, ex);
@@ -1306,7 +1306,7 @@ public class Session {
    */
   public void signRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_SignRecoverInit";
-    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
       pkcs11.C_SignRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
@@ -1385,7 +1385,7 @@ public class Session {
     final String method = "C_VerifyInit";
     try {
       initSignVerify(mechanism, keyHandle);
-      debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+      debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
       pkcs11.C_VerifyInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1500,7 +1500,7 @@ public class Session {
    */
   public void verifyRecoverInit(Mechanism mechanism, long keyHandle) throws PKCS11Exception {
     final String method = "C_VerifyRecoverInit";
-    debugIn(method, "mechanism={}, keyHandle={}", mechanism, keyHandle);
+    debugIn(method, "keyHandle={}, mechanism={}", keyHandle, mechanism);
     try {
       pkcs11.C_VerifyRecoverInit(sessionHandle, toCkMechanism(mechanism), keyHandle);
       debugOut(method);
@@ -1648,7 +1648,7 @@ public class Session {
    */
   public byte[] wrapKey(Mechanism mechanism, long wrappingKeyHandle, long keyHandle) throws PKCS11Exception {
     final String method = "C_WrapKey";
-    debugIn(method, "mechanism={}, wrappingKeyHandle={}, keyHandle={}", mechanism, wrappingKeyHandle, keyHandle);
+    debugIn(method, "wrappingKeyHandle={}, keyHandle={}, mechanism={}", wrappingKeyHandle, keyHandle, mechanism);
     try {
       return toNonNull(method, pkcs11.C_WrapKey(sessionHandle, toCkMechanism(mechanism), wrappingKeyHandle, keyHandle));
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
@@ -1678,8 +1678,8 @@ public class Session {
                         byte[] wrappedKey, AttributeVector keyTemplate) throws PKCS11Exception {
     Functions.requireNonNull("wrappedKey", wrappedKey);
     final String method = "C_UnwrapKey";
-    debugIn(method, "mechanism={}, unwrappingKeyHandle={}, wrappedKey.length={}, template={}",
-        mechanism, unwrappingKeyHandle, len(wrappedKey), keyTemplate);
+    debugIn(method, "unwrappingKeyHandle={}, wrappedKey.length={}, mechanism={}, template={}",
+        unwrappingKeyHandle, len(wrappedKey), mechanism, keyTemplate);
 
     try {
       long hKey = pkcs11.C_UnwrapKey(sessionHandle, toCkMechanism(mechanism),
@@ -1714,7 +1714,7 @@ public class Session {
   public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws PKCS11Exception {
     CK_MECHANISM ckMechanism = toCkMechanism(mechanism);
     final String method = "C_DeriveKey";
-    debugIn(method, "mechanism={}, baseKeyHandle={}, template={}", mechanism, baseKeyHandle, template);
+    debugIn(method, "baseKeyHandle={}, mechanism={},template={}", baseKeyHandle, mechanism, template);
 
     try {
       long hKey = pkcs11.C_DeriveKey(sessionHandle, ckMechanism, baseKeyHandle, toOutCKAttributes(template));
