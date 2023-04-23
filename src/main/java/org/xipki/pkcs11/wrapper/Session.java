@@ -363,9 +363,9 @@ public class Session {
       return false;
     }
 
-    if (PKCS11Constants.CKK_EC == keyType) {
+    if (CKK_EC == keyType) {
       return module.hasVendorBehaviour(PKCS11Module.BEHAVIOUR_EC_PRIVATEKEY_ECPOINT);
-    } else if (PKCS11Constants.CKK_VENDOR_SM2 == keyType) {
+    } else if (CKK_VENDOR_SM2 == keyType) {
       return module.hasVendorBehaviour(PKCS11Module.BEHAVIOUR_SM2_PRIVATEKEY_ECPOINT);
     } else {
       return false;
@@ -1078,13 +1078,13 @@ public class Session {
   private void initSignVerify(Mechanism mechanism, long keyHandle) {
     this.signOrVerifyKeyHandle = keyHandle;
     long code = mechanism.getMechanismCode();
-    if (code == PKCS11Constants.CKM_ECDSA             || code == PKCS11Constants.CKM_ECDSA_SHA1
-        || code == PKCS11Constants.CKM_ECDSA_SHA224   || code == PKCS11Constants.CKM_ECDSA_SHA256
-        || code == PKCS11Constants.CKM_ECDSA_SHA384   || code == PKCS11Constants.CKM_ECDSA_SHA512
-        || code == PKCS11Constants.CKM_ECDSA_SHA3_224 || code == PKCS11Constants.CKM_ECDSA_SHA3_256
-        || code == PKCS11Constants.CKM_ECDSA_SHA3_384 || code == PKCS11Constants.CKM_ECDSA_SHA3_512) {
+    if (code == CKM_ECDSA             || code == CKM_ECDSA_SHA1
+        || code == CKM_ECDSA_SHA224   || code == CKM_ECDSA_SHA256
+        || code == CKM_ECDSA_SHA384   || code == CKM_ECDSA_SHA512
+        || code == CKM_ECDSA_SHA3_224 || code == CKM_ECDSA_SHA3_256
+        || code == CKM_ECDSA_SHA3_384 || code == CKM_ECDSA_SHA3_512) {
       signatureType = SIGN_TYPE_ECDSA;
-    } else if (code == PKCS11Constants.CKM_VENDOR_SM2 || code == PKCS11Constants.CKM_VENDOR_SM2_SM3) {
+    } else if (code == CKM_VENDOR_SM2 || code == CKM_VENDOR_SM2_SM3) {
       signatureType = SIGN_TYPE_SM2;
     } else {
       signatureType = 0;
@@ -1236,7 +1236,7 @@ public class Session {
             // get the ecParams
             byte[] ecParams;
             try {
-              ecParams = getAttrValues(signOrVerifyKeyHandle, PKCS11Constants.CKA_EC_PARAMS).ecParams();
+              ecParams = getAttrValues(signOrVerifyKeyHandle, CKA_EC_PARAMS).ecParams();
             } catch (PKCS11Exception e) {
               StaticLogger.debug("error getting CKA_EC_PARAMS for key {}", signOrVerifyKeyHandle);
               return signatureValue;
@@ -1808,12 +1808,12 @@ public class Session {
   }
 
   public AttributeVector getAttrValues(long objectHandle, List<Long> attributeTypes) throws PKCS11Exception {
-    if (attributeTypes.contains(PKCS11Constants.CKA_EC_POINT)
-        && !attributeTypes.contains(PKCS11Constants.CKA_EC_PARAMS)) {
+    if (attributeTypes.contains(CKA_EC_POINT)
+        && !attributeTypes.contains(CKA_EC_PARAMS)) {
       synchronized (module) {
         Boolean b = module.getEcPointFixNeeded();
         if (b == null || b) {
-          attributeTypes.add(PKCS11Constants.CKA_EC_PARAMS);
+          attributeTypes.add(CKA_EC_PARAMS);
         }
       }
     }
@@ -1823,8 +1823,7 @@ public class Session {
 
     // we need to fix attributes EC_PARAMS and EC_POINT. Where EC_POINT needs EC_PARAMS,
     // and EC_PARAMS needs KEY_TYPE.
-    long[] firstTypes = {PKCS11Constants.CKA_CLASS, PKCS11Constants.CKA_KEY_TYPE,
-                          PKCS11Constants.CKA_EC_PARAMS, PKCS11Constants.CKA_EC_POINT};
+    long[] firstTypes = {CKA_CLASS, CKA_KEY_TYPE, CKA_EC_PARAMS, CKA_EC_POINT};
 
     for (long type : firstTypes) {
       if (attributeTypes.remove(type)) {
@@ -2043,8 +2042,8 @@ public class Session {
    */
   private void doGetAttrValue(long objectHandle, Attribute attribute)
       throws PKCS11Exception {
-    if (attribute.getType() == PKCS11Constants.CKA_EC_POINT) {
-      doGetAttrValues(objectHandle, new ByteArrayAttribute(PKCS11Constants.CKA_EC_PARAMS), attribute);
+    if (attribute.getType() == CKA_EC_POINT) {
+      doGetAttrValues(objectHandle, new ByteArrayAttribute(CKA_EC_PARAMS), attribute);
     } else {
       doGetAttrValue0(objectHandle, attribute, true);
     }
@@ -2063,21 +2062,20 @@ public class Session {
       attribute.ckAttribute(attributeTemplateList[0]).present(true).sensitive(false);
     } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
       long ec = ex.getErrorCode();
-      if (ec == PKCS11Constants.CKR_ATTRIBUTE_TYPE_INVALID) {
-        if (attribute.getType() == PKCS11Constants.CKA_EC_PARAMS) {
+      if (ec == CKR_ATTRIBUTE_TYPE_INVALID) {
+        if (attribute.getType() == CKA_EC_PARAMS) {
           // this means, that some requested attributes are missing, but
           // we can ignore this and proceed; e.g. a v2.01 module won't
           // have the object ID attribute
           attribute.present(false).getCkAttribute().pValue = null;
         }
-      } else if (ec == PKCS11Constants.CKR_ATTRIBUTE_SENSITIVE) {
+      } else if (ec == CKR_ATTRIBUTE_SENSITIVE) {
         // this means, that some requested attributes are missing, but
         // we can ignore this and proceed; e.g. a v2.01 module won't
         // have the object ID attribute
         attribute.getCkAttribute().pValue = null;
         attribute.present(true).sensitive(true).getCkAttribute().pValue = null;
-      } else if (ec == PKCS11Constants.CKR_ARGUMENTS_BAD || ec == PKCS11Constants.CKR_FUNCTION_FAILED
-          || ec == PKCS11Constants.CKR_FUNCTION_REJECTED) {
+      } else if (ec == CKR_ARGUMENTS_BAD || ec == CKR_FUNCTION_FAILED || ec == CKR_FUNCTION_REJECTED) {
         attribute.present(false).sensitive(false).getCkAttribute().pValue = null;
       } else {
         // there was a different error that we should propagate
@@ -2114,10 +2112,10 @@ public class Session {
         }
       }
 
-      if (ckAttr.type == PKCS11Constants.CKA_KEY_TYPE) {
+      if (ckAttr.type == CKA_KEY_TYPE) {
         long value = (long) ckAttr.pValue;
         ckAttr.pValue = module.genericToVendorCode(Category.CKK, value);
-      } else if (ckAttr.type == PKCS11Constants.CKA_EC_POINT) {
+      } else if (ckAttr.type == CKA_EC_POINT) {
         ckAttr.pValue = Functions.toOctetString((byte[]) ckAttr.pValue);
       } else if (ckAttr.type == CKA_EC_PARAMS) {
         ckAttr.pValue = module.genericToVendorCurve((byte[]) ckAttr.pValue);
@@ -2132,13 +2130,13 @@ public class Session {
     long type = attr.getType();
     CK_ATTRIBUTE ckAttr = attr.getCkAttribute();
 
-    if (type == PKCS11Constants.CKA_EC_PARAMS) {
+    if (type == CKA_EC_PARAMS) {
       if (ckAttr.pValue == null) {
         // Some HSMs do not return EC_PARAMS
         Long keyType = null;
         if (otherAttrs != null) {
           for (Attribute otherAttr : otherAttrs) {
-            if (otherAttr.type() == PKCS11Constants.CKA_KEY_TYPE) {
+            if (otherAttr.type() == CKA_KEY_TYPE) {
               keyType = ((LongAttribute) otherAttr).getValue();
             }
           }
@@ -2151,7 +2149,7 @@ public class Session {
           }
         }
 
-        if (keyType != null && keyType == PKCS11Constants.CKK_VENDOR_SM2) {
+        if (keyType != null && keyType == CKK_VENDOR_SM2) {
           attr.present(false).getCkAttribute().pValue = Functions.decodeHex("06082a811ccf5501822d");
         }
       } else {
@@ -2170,22 +2168,22 @@ public class Session {
       return;
     }
 
-    if (type == PKCS11Constants.CKA_KEY_TYPE) {
+    if (type == CKA_KEY_TYPE) {
       long value = (long) ckAttr.pValue;
-      if (!PKCS11Constants.isUnavailableInformation(value)) {
+      if (!isUnavailableInformation(value)) {
         ckAttr.pValue = module.vendorToGenericCode(Category.CKK, value);
       }
-    } else if (type == PKCS11Constants.CKA_KEY_GEN_MECHANISM) {
+    } else if (type == CKA_KEY_GEN_MECHANISM) {
       long value = (long) ckAttr.pValue;
-      if (!PKCS11Constants.isUnavailableInformation(value)) {
+      if (!isUnavailableInformation(value)) {
         ckAttr.pValue = module.vendorToGenericCode(Category.CKM, value);
       }
-    } else if (type == PKCS11Constants.CKA_ALLOWED_MECHANISMS) {
+    } else if (type == CKA_ALLOWED_MECHANISMS) {
       long[] mechs = ((MechanismArrayAttribute) attr).getValue();
       for (long mech : mechs) {
         ckAttr.pValue = module.vendorToGenericCode(Category.CKM, mech);
       }
-    } else if (type == PKCS11Constants.CKA_EC_POINT) {
+    } else if (type == CKA_EC_POINT) {
       Boolean b = module.getEcPointFixNeeded();
       byte[] pValue = (byte[]) ckAttr.pValue;
 
@@ -2193,7 +2191,7 @@ public class Session {
         byte[] ecParams = null;
         if (otherAttrs != null) {
           for (Attribute otherAttr : otherAttrs) {
-            if (otherAttr.getType() == PKCS11Constants.CKA_EC_PARAMS) {
+            if (otherAttr.getType() == CKA_EC_PARAMS) {
               ecParams = ((ByteArrayAttribute) otherAttr).getValue();
               break;
             }
