@@ -7,7 +7,6 @@
 package org.xipki.pkcs11.wrapper;
 
 import org.xipki.pkcs11.wrapper.params.CkParams;
-import org.xipki.pkcs11.wrapper.params.ECDH1_DERIVE_PARAMS;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
@@ -94,7 +93,7 @@ public class Mechanism {
       throw new IllegalStateException("module is not set");
     }
 
-    long realCode = module.genericToVendor(PKCS11Constants.Category.CKM, mechanismCode);
+    long realCode = module.genericToVendorCode(PKCS11Constants.Category.CKM, mechanismCode);
     if (parameters == null) {
       return new CK_MECHANISM(realCode);
     } else {

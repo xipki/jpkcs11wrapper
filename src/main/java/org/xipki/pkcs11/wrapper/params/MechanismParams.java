@@ -4,7 +4,6 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.PKCS11Constants;
-import org.xipki.pkcs11.wrapper.PKCS11Module;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
 /**
@@ -32,7 +31,7 @@ public class MechanismParams extends CkParams {
   @Override
   public Long getParams() {
     assertModuleSet();
-    return module.genericToVendor(PKCS11Constants.Category.CKM, params);
+    return module.genericToVendorCode(PKCS11Constants.Category.CKM, params);
   }
 
   @Override

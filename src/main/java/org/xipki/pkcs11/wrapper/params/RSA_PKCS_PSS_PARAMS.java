@@ -125,8 +125,8 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   @Override
   public Object getParams() {
     if (constructorNoArgs != null) {
-      long realHashAlg = module.genericToVendor(Category.CKM, hashAlg);
-      long realMgf = module.genericToVendor(Category.CKG_MGF, mgf);
+      long realHashAlg = module.genericToVendorCode(Category.CKM, hashAlg);
+      long realMgf = module.genericToVendorCode(Category.CKG_MGF, mgf);
 
       try {
         Object ret = constructorNoArgs.newInstance();
