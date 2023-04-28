@@ -62,6 +62,8 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
    */
   private final int sLen;
 
+  private final Object params;
+
   static {
     Map<Long, Long> map = new HashMap<>();
     map.put(CKG_MGF1_SHA1,     CKM_SHA_1);
@@ -120,20 +122,18 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
     this.hashAlg = hashAlg;
     this.mgf = mgf;
     this.sLen = sLen;
-  }
 
-  @Override
-  public Object getParams() {
     if (constructorNoArgs != null) {
-      long realHashAlg = module.genericToVendorCode(Category.CKM, hashAlg);
-      long realMgf = module.genericToVendorCode(Category.CKG_MGF, mgf);
+      long realHashAlg = (module == null || (hashAlg & CKM_VENDOR_DEFINED) == 0)
+          ? hashAlg : module.genericToVendorCode(Category.CKM, hashAlg);
+      long realMgf     = (module == null || (mgf     & CKM_VENDOR_DEFINED) == 0)
+          ? mgf : module.genericToVendorCode(Category.CKG_MGF, mgf);
 
       try {
-        Object ret = constructorNoArgs.newInstance();
-        hashAlgField.set(ret, realHashAlg);
-        mgfField.set(ret, realMgf);
-        sLenField.set(ret, sLen);
-        return ret;
+        params = constructorNoArgs.newInstance();
+        hashAlgField.set(params, realHashAlg);
+        mgfField.set(params, realMgf);
+        sLenField.set(params, sLen);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
       }
@@ -141,9 +141,33 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
       String hashAlgName = Functions.getHashAlgName(hashAlg);
       String mgfHashAlgName = Functions.getHashAlgName(mgf2HashAlgMap.get(mgf));
       try {
-        return constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, sLen);
+        params = constructor.newInstance(hashAlgName, "MGF1", mgfHashAlgName, sLen);
       } catch (Exception ex) {
         throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
+      }
+    }
+  }
+
+  @Override
+  public Object getParams() {
+    if (constructorNoArgs == null || module == null
+        || ((hashAlg & CKM_VENDOR_DEFINED) == 0) && (mgf & CKM_VENDOR_DEFINED) == 0) {
+      return params;
+    } else {
+      long newHashAlg = module.genericToVendorCode(Category.CKM, hashAlg);
+      long newMgf = module.genericToVendorCode(Category.CKG_MGF, mgf);
+      if (newHashAlg == hashAlg && newMgf == mgf) {
+        return params;
+      } else {
+        try {
+          Object ret = constructorNoArgs.newInstance();
+          hashAlgField.set(ret, newHashAlg);
+          mgfField.set(ret, newMgf);
+          sLenField.set(ret, sLen);
+          return ret;
+        } catch (Exception ex) {
+          throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
+        }
       }
     }
   }

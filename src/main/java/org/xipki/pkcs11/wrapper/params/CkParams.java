@@ -23,12 +23,6 @@ public abstract class CkParams {
     this.module = module;
   }
 
-  protected final void assertModuleSet() {
-    if (module == null) {
-      throw new IllegalStateException("module is not set");
-    }
-  }
-
   public abstract CK_MECHANISM toCkMechanism(long mechanism);
 
   /**

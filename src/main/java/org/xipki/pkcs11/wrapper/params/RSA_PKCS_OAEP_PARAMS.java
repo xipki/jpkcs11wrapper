@@ -9,8 +9,8 @@ import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 
-import static org.xipki.pkcs11.wrapper.PKCS11Constants.ckmCodeToName;
-import static org.xipki.pkcs11.wrapper.PKCS11Constants.codeToName;
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.CKM_VENDOR_DEFINED;
 
 /**
  * Represents the CK_RSA_PKCS_OAEP_PARAMS.
@@ -51,13 +51,22 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
 
   @Override
   public CK_RSA_PKCS_OAEP_PARAMS getParams() {
-    assertModuleSet();
-    CK_RSA_PKCS_OAEP_PARAMS params0 = new CK_RSA_PKCS_OAEP_PARAMS();
-    params0.hashAlg = module.genericToVendorCode(Category.CKM, params.hashAlg);
-    params0.mgf = module.genericToVendorCode(Category.CKG_MGF, params.mgf);
-    params0.source = params.source;
-    params0.pSourceData = params.pSourceData;
-    return params0;
+    if (module == null || ((params.hashAlg & CKM_VENDOR_DEFINED) == 0) && (params.mgf & CKM_VENDOR_DEFINED) == 0) {
+      return params;
+    } else {
+      long newHashAlg = module.genericToVendorCode(Category.CKM, params.hashAlg);
+      long newMgf = module.genericToVendorCode(Category.CKG_MGF, params.mgf);
+      if (newHashAlg == params.hashAlg && newMgf == params.mgf) {
+        return params;
+      } else {
+        CK_RSA_PKCS_OAEP_PARAMS params0 = new CK_RSA_PKCS_OAEP_PARAMS();
+        params0.hashAlg = newHashAlg;
+        params0.mgf = newMgf;
+        params0.source = params.source;
+        params0.pSourceData = params.pSourceData;
+        return params0;
+      }
+    }
   }
 
   @Override

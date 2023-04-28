@@ -42,9 +42,16 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
 
   @Override
   public CK_ECDH1_DERIVE_PARAMS getParams() {
-    assertModuleSet();
-    long realKdf = module.genericToVendorCode(Category.CKD, params.kdf);
-    return new CK_ECDH1_DERIVE_PARAMS(realKdf, params.pSharedData, params.pPublicData);
+    if (module == null || (params.kdf & CKM_VENDOR_DEFINED) == 0) {
+      return params;
+    } else {
+      long newKdf = module.genericToVendorCode(Category.CKD, params.kdf);
+      if (newKdf == params.kdf) {
+        return params;
+      } else {
+        return new CK_ECDH1_DERIVE_PARAMS(newKdf, params.pSharedData, params.pPublicData);
+      }
+    }
   }
 
   @Override
