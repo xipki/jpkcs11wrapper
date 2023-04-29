@@ -17,8 +17,6 @@ Use xipki/jpkcs11wrapper in your project
       <version>VERSION</version>
   </dependency>
   ```
-- Or copy the following jar file to your classpath:
-  - [jpkcs11wrapper-1.0.0.jar](https://github.com/xipki/jpkcs11wrapper/releases/download/v1.0.0/jpkcs11wrapper-1.0.0.jar)
 
 JDK17 or above
 =====
