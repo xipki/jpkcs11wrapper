@@ -2,6 +2,8 @@
 
 See also <https://github.com/xipki/jpkcs11wrapper/releases>
 
+## 1.0.6
+- Release date: 2024/mm/dd
 
 ## 1.0.5
 - Release date: 2023/04/29
