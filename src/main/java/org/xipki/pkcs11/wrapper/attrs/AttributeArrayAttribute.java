@@ -16,7 +16,6 @@ import sun.security.pkcs11.wrapper.CK_ATTRIBUTE;
  * as specified by PKCS#11. This attribute is available since
  * cryptoki version 2.20.
  *
- *
  * @author Birgit Haas (SIC)
  * @author Lijun Liao (xipki)
  */

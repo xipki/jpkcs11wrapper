@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * method before calling any other method of the module.
  * This class contains slot and token management functions as defined by the
  * PKCS#11 standard.
- *
+ * <p>
  * All applications using this library will contain the following code.
  * <pre><code>
  *      PKCS11Module pkcs11Module = PKCS11Module.getInstance("cryptoki.dll");
@@ -392,6 +392,9 @@ public class PKCS11Module {
       String confPath = System.getProperty("org.xipki.pkcs11.vendor.conf");
       InputStream in = (confPath != null) ? Files.newInputStream(Paths.get(confPath))
           : PKCS11Module.class.getClassLoader().getResourceAsStream("org/xipki/pkcs11/wrapper/vendor.conf");
+      if (in == null) {
+        throw new IOException("found no file org/xipki/pkcs11/wrapper/vendor.conf");
+      }
 
       try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
         while (true) {
@@ -549,6 +552,9 @@ public class PKCS11Module {
             throw new IllegalArgumentException("Redefinition of " + name + " is not permitted");
           }
         }
+      } else {
+        codeNameMap.put(lCode, name);
+        nameCodeMap.put(name, lCode);
       }
     }
 
@@ -589,9 +595,9 @@ public class PKCS11Module {
     }
 
     boolean matches(String modulePath, String manufacturerID, String libraryDescription, Version libraryVersion) {
-      if ((!isEmpty(modulePaths)     && !contains(modulePaths,     Paths.get(modulePath).getFileName().toString())) ||
-          (!isEmpty(manufacturerIDs) && !contains(manufacturerIDs, manufacturerID)) ||
-          (!isEmpty(descriptions)    && !contains(descriptions,    libraryDescription))) {
+      if ((!isEmpty(modulePaths)     && notContains(modulePaths,     Paths.get(modulePath).getFileName().toString())) ||
+          (!isEmpty(manufacturerIDs) && notContains(manufacturerIDs, manufacturerID)) ||
+          (!isEmpty(descriptions)    && notContains(descriptions,    libraryDescription))) {
         return false;
       }
 
@@ -624,14 +630,14 @@ public class PKCS11Module {
       return c == null || c.isEmpty();
     }
 
-    private static boolean contains(List<String> list, String str) {
+    private static boolean notContains(List<String> list, String str) {
       str = str.toLowerCase(Locale.ROOT);
       for (String s : list) {
         if (str.contains(s)) {
-          return true;
+          return false;
         }
       }
-      return false;
+      return true;
     }
 
     @Override

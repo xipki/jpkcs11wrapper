@@ -401,7 +401,7 @@ public class Session {
   }
 
   /**
-   * Gets all present attributes of the given template object an writes them to the object to update
+   * Gets all present attributes of the given template object and writes them to the object to update
    * on the token (or in the session). Both parameters may refer to the same Java object. This is
    * possible, because this method only needs the object handle of the objectToUpdate, and gets the
    * attributes to set from the template. This means, an application can get the object using
@@ -410,9 +410,9 @@ public class Session {
    * values as modified in the Java object.
    *
    * @param objectToUpdateHandle The attributes of this object get updated.
-   * @param template             This methods gets all present attributes of this template object and set this
+   * @param template             Gets all present attributes of this template object and set this
    *                             attributes at the objectToUpdate.
-   * @throws PKCS11Exception If updateing the attributes fails. All or no attributes are updated.
+   * @throws PKCS11Exception If updating the attributes fails. All or no attributes are updated.
    */
   public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws PKCS11Exception {
     final String method = "C_SetAttributeValue";
@@ -449,7 +449,7 @@ public class Session {
 
   /**
    * Initializes a find operations that provides means to find objects by passing a template object.
-   * This method get all set attributes of the template object ans searches for all objects on the
+   * This method get all set attributes of the template object and searches for all objects on the
    * token that match with these attributes.
    *
    * @param template The object that serves as a template for searching. If this object is null, the find
@@ -472,8 +472,8 @@ public class Session {
   /**
    * Finds objects that match the template object passed to findObjectsInit. The application must
    * call findObjectsInit before calling this method. With maxObjectCount the application can
-   * specifay how many objects to return at once; i.e. the application can get all found objects by
-   * susequent calls to this method like maxObjectCount(1) until it receives an empty array (this
+   * specify how many objects to return at once; i.e. the application can get all found objects by
+   * subsequent calls to this method like maxObjectCount(1) until it receives an empty array (this
    * method never returns null!).
    *
    * @param maxObjectCount Specifies how many objects to return with this call.
@@ -585,7 +585,7 @@ public class Session {
   /**
    * Encrypts the given data with the key and mechanism given to the encryptInit method. This method
    * finalizes the current encryption operation; i.e. the application need (and should) not call
-   * encryptFinal() after this call. For encrypting multiple pices of data use encryptUpdate and
+   * encryptFinal() after this call. For encrypting multiple pieces of data use encryptUpdate and
    * encryptFinal.
    *
    * @param in     the to-be-encrypted data
@@ -604,7 +604,7 @@ public class Session {
   /**
    * Encrypts the given data with the key and mechanism given to the encryptInit method. This method
    * finalizes the current encryption operation; i.e. the application need (and should) not call
-   * encryptFinal() after this call. For encrypting multiple pices of data use encryptUpdate and
+   * encryptFinal() after this call. For encrypting multiple pieces of data use encryptUpdate and
    * encryptFinal.
    *
    * @param in     buffer containing the to-be-encrypted data
@@ -695,7 +695,7 @@ public class Session {
   }
 
   /**
-   * This method finalizes an encrpytion operation and returns the final result. Use this method, if
+   * This method finalizes an encrypt operation and returns the final result. Use this method, if
    * you fed in the data using encryptUpdate. If you used the encrypt(byte[]) method, you need not
    * (and shall not) call this method, because encrypt(byte[]) finalizes the encryption itself.
    *
@@ -1128,7 +1128,7 @@ public class Session {
   /**
    * Signs the given data with the key and mechanism given to the signInit method. This method
    * finalizes the current signing operation; i.e. the application need (and should) not call
-   * signFinal() after this call. For signing multiple pices of data use signUpdate and signFinal.
+   * signFinal() after this call. For signing multiple pieces of data use signUpdate and signFinal.
    *
    * @param data The data to sign.
    * @return The signed data.
@@ -1252,7 +1252,7 @@ public class Session {
 
           boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
           if (b == null) {
-            StaticLogger.info("Set EcdsaSignatureFixNeeded to {}", b);
+            StaticLogger.info("Set EcdsaSignatureFixNeeded to {}", fixed);
             module.setEcdsaSignatureFixNeeded(fixed);
           }
           return fixedSigValue;
@@ -1269,7 +1269,7 @@ public class Session {
           byte[] fixedSigValue = Functions.fixECDSASignature(signatureValue, 32);
           boolean fixed = !Arrays.equals(fixedSigValue, signatureValue);
           if (b == null) {
-            StaticLogger.info("Set Sm2SignatureFixNeeded to {}", b);
+            StaticLogger.info("Set Sm2SignatureFixNeeded to {}", fixed);
             module.setSm2SignatureFixNeeded(fixed);
           }
           return fixedSigValue;
@@ -1403,7 +1403,7 @@ public class Session {
    * Verifies the given signature against the given data with the key and mechanism given to the
    * verifyInit method. This method finalizes the current verification operation; i.e. the
    * application need (and should) not call verifyFinal() after this call. For verifying with
-   * multiple pices of data use verifyUpdate and verifyFinal. This method throws an exception, if
+   * multiple pieces of data use verifyUpdate and verifyFinal. This method throws an exception, if
    * the verification of the signature fails.
    *
    * @param data      The data that was signed.
@@ -1495,7 +1495,7 @@ public class Session {
    * must call this method before calling verifyRecover. Before initializing a new operation, any
    * currently pending operation must be finalized using the appropriate *Final method (e.g.
    * digestFinal()). This method requires the mechanism to use for verification and the key for this
-   * oepration. The key must have set its verify-recover flag. For the mechanism the application may
+   * operation. The key must have set its verify-recover flag. For the mechanism the application may
    * use a constant defined in the Mechanism class. Notice that the key and the mechanism must be
    * compatible; i.e. you cannot use a DES key with the RSA mechanism.
    *

@@ -147,7 +147,7 @@ public class TestBase {
     }
   }
 
-  public static PKCS11Token getToken() throws PKCS11Exception {
+  public static PKCS11Token getToken() {
     if (initException != null) {
       throw initException;
     }

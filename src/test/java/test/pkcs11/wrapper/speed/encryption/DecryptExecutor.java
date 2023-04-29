@@ -25,17 +25,9 @@ public abstract class DecryptExecutor extends Pkcs11Executor {
     public MyRunnable() {
     }
 
-    private final byte[] out = new byte[plainData.length + 64];
-
     @Override
     public void run() {
-      PKCS11Token token;
-      try {
-        token = TestBase.getToken();
-      } catch (PKCS11Exception e) {
-        account(1, 1);
-        return;
-      }
+      PKCS11Token token = TestBase.getToken();
 
       byte[] out = new byte[dataToDecrypt.length];
       while (!stop()) {
@@ -86,7 +78,7 @@ public abstract class DecryptExecutor extends Pkcs11Executor {
   }
 
   @Override
-  protected Runnable getTestor() throws Exception {
+  protected Runnable getTestor() {
     return new MyRunnable();
   }
 

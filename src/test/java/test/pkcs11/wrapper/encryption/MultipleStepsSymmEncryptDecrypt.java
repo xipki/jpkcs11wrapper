@@ -20,11 +20,11 @@ import static org.xipki.pkcs11.wrapper.PKCS11Constants.CKA_TOKEN;
  */
 public abstract class MultipleStepsSymmEncryptDecrypt extends TestBase {
 
-  protected abstract Mechanism getKeyGenMech() throws PKCS11Exception;
+  protected abstract Mechanism getKeyGenMech();
 
   protected abstract AttributeVector getKeyTemplate();
 
-  protected abstract Mechanism getEncryptionMech() throws PKCS11Exception;
+  protected abstract Mechanism getEncryptionMech();
 
   @Test
   public void main() throws TokenException, IOException {

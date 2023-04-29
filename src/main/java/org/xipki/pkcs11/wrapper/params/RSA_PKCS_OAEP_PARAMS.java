@@ -9,9 +9,6 @@ import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 import sun.security.pkcs11.wrapper.CK_RSA_PKCS_OAEP_PARAMS;
 
-import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
-import static org.xipki.pkcs11.wrapper.PKCS11Constants.CKM_VENDOR_DEFINED;
-
 /**
  * Represents the CK_RSA_PKCS_OAEP_PARAMS.
  *
@@ -51,7 +48,9 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
 
   @Override
   public CK_RSA_PKCS_OAEP_PARAMS getParams() {
-    if (module == null || ((params.hashAlg & CKM_VENDOR_DEFINED) == 0) && (params.mgf & CKM_VENDOR_DEFINED) == 0) {
+    if (module == null ||
+        ((params.hashAlg & PKCS11Constants.CKM_VENDOR_DEFINED) == 0)
+            && (params.mgf & PKCS11Constants.CKM_VENDOR_DEFINED) == 0) {
       return params;
     } else {
       long newHashAlg = module.genericToVendorCode(Category.CKM, params.hashAlg);
@@ -78,9 +77,11 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
   public String toString(String indent) {
     return indent + "CK_RSA_PKCS_OAEP_PARAMS:" +
         val2Str(indent, "hashAlg", (module == null
-            ? ckmCodeToName(params.hashAlg) : module.codeToName(Category.CKM, params.hashAlg))) +
+            ? PKCS11Constants.ckmCodeToName(params.hashAlg)
+            : module.codeToName(Category.CKM, params.hashAlg))) +
         val2Str(indent, "mgf", (module == null
-            ? codeToName(Category.CKG_MGF, params.mgf) : module.codeToName(Category.CKG_MGF, params.mgf))) +
+            ? PKCS11Constants.codeToName(Category.CKG_MGF, params.mgf)
+            : module.codeToName(Category.CKG_MGF, params.mgf))) +
         val2Str(indent, "source", PKCS11Constants.codeToName(Category.CKZ, params.source)) +
         ptr2str(indent, "pSourceData", params.pSourceData);
   }

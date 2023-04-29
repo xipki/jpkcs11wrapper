@@ -118,6 +118,7 @@
           <configuration>
             <failOnError>false</failOnError>
             <failOnWarnings>false</failOnWarnings>
+            <source>8</source>
           </configuration>
         </plugin>
         <plugin>

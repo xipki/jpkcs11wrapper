@@ -161,25 +161,8 @@ public class PKCS11Token {
    * @return whether mechanism with given flag bit is supported.
    */
   public boolean supportsMechanism(long mechanism, long flagBit) {
-    return supportsMechanism(mechanism, flagBit, false);
-  }
-
-  private boolean supportsMechanism(long mechanism, long flagBit, boolean withCorrection) {
     MechanismInfo info = mechanisms.get(mechanism);
-    if (info == null) {
-      return false;
-    }
-
-    if (info.hasFlagBit(flagBit)) {
-      return true;
-    }
-
-    if (withCorrection) {
-      if (flagBit == CKF_VERIFY && info.hasFlagBit(CKF_SIGN) && isMacMechanism(mechanism)) {
-        return true;
-      }
-    }
-    return false;
+    return info != null && info.hasFlagBit(flagBit);
   }
 
   /**
@@ -641,6 +624,9 @@ public class PKCS11Token {
   /**
    * Finds all objects that match the template.
    *
+   * @param template The object that serves as a template for searching. If this object is null, the find
+   *                 operation will find all objects that this session can see. Notice, that only a user
+   *                 session will see private objects.
    * @return An array of found objects. The maximum size of this array is maxObjectCount, the
    * minimum length is 0. Never returns null.
    * @throws TokenException if finding objects failed.
@@ -657,6 +643,9 @@ public class PKCS11Token {
   /**
    * Finds objects that match the template.
    *
+   * @param template The object that serves as a template for searching. If this object is null, the find
+   *                 operation will find all objects that this session can see. Notice, that only a user
+   *                 session will see private objects.
    * @param maxObjectCount Specifies how many objects to return with this call.
    * @return An array of found objects. The maximum size of this array is maxObjectCount, the
    * minimum length is 0. Never returns null.
@@ -740,6 +729,7 @@ public class PKCS11Token {
    * @param plaintext  Input-stream of the to-be-encrypted data
    * @return length of the encrypted data.
    * @throws TokenException If encrypting the data failed.
+   * @throws IOException if reading data from the plaintext stream failed or writing to the ciphertext stream failed.
    */
   public int encrypt(OutputStream out, Mechanism mechanism, long keyHandle, InputStream plaintext)
       throws TokenException, IOException {
@@ -749,7 +739,7 @@ public class PKCS11Token {
       byte[] outBuffer = new byte[maxMessageSize + 256];
 
       byte[] buffer = new byte[maxMessageSize];
-      int readed;
+      int read;
       int inSum = 0;
       int outSum = 0;
 
@@ -757,16 +747,16 @@ public class PKCS11Token {
       session.encryptInit(mechanism, keyHandle);
 
       try {
-        while ((readed = plaintext.read(buffer)) != -1) {
+        while ((read = plaintext.read(buffer)) != -1) {
           int estimatedResLen = maxMessageSize + 32 + (inSum - outSum);
           if (outBuffer.length < estimatedResLen) {
             outBuffer = new byte[estimatedResLen];
           }
 
-          if (readed > 0) {
-            inSum += readed;
+          if (read > 0) {
+            inSum += read;
 
-            int resLen = session.encryptUpdate(buffer, 0, readed, outBuffer, 0, outBuffer.length);
+            int resLen = session.encryptUpdate(buffer, 0, read, outBuffer, 0, outBuffer.length);
             outSum += resLen;
 
             if (resLen > 0) {
@@ -865,6 +855,7 @@ public class PKCS11Token {
    * @param ciphertext Input-stream of the to-be-encrypted data
    * @return length of the decrypted data.
    * @throws TokenException If decrypting the data failed.
+   * @throws IOException if reading data from the ciphertext stream failed or writing to the plaintext stream failed.
    */
   public int decrypt(OutputStream out, Mechanism mechanism, long keyHandle, InputStream ciphertext)
       throws TokenException, IOException {
@@ -881,7 +872,7 @@ public class PKCS11Token {
       byte[] outBuffer = new byte[maxMessageSize + 256];
 
       byte[] buffer = new byte[maxMessageSize];
-      int readed;
+      int read;
       int inSum = 0;
       int outSum = 0;
 
@@ -889,11 +880,11 @@ public class PKCS11Token {
       session.decryptInit(mechanism, keyHandle);
 
       try {
-        while ((readed = ciphertext.read(buffer)) != -1) {
-          if (readed > 0) {
-            inSum += readed;
+        while ((read = ciphertext.read(buffer)) != -1) {
+          if (read > 0) {
+            inSum += read;
 
-            int resLen = session.decryptUpdate(buffer, 0, readed, outBuffer, 0, outBuffer.length);
+            int resLen = session.decryptUpdate(buffer, 0, read, outBuffer, 0, outBuffer.length);
             outSum += resLen;
 
             if (resLen > 0) {
@@ -924,6 +915,7 @@ public class PKCS11Token {
   /**
    * Digests the given data with the mechanism.
    *
+   * @param mechanism The mechanism to use.
    * @param in   the to-be-digested data
    * @return the length of digested data for this update
    * @throws PKCS11Exception If digesting the data failed.
@@ -935,6 +927,7 @@ public class PKCS11Token {
   /**
    * Digests the given data with the mechanism.
    *
+   * @param mechanism The mechanism to use.
    * @param in     buffer containing the to-be-digested data
    * @param inOfs  buffer offset of the to-be-digested data
    * @param inLen  length of the to-be-digested data
@@ -1012,7 +1005,7 @@ public class PKCS11Token {
     Session session = session0.value();
     try {
       byte[] buffer = new byte[maxMessageSize];
-      int readed;
+      int read;
 
       int digestLen = estimateDigestLen(mechanism);
       byte[] digest = new byte[digestLen];
@@ -1021,9 +1014,9 @@ public class PKCS11Token {
 
       int outLen;
       try {
-        while ((readed = data.read(buffer)) != -1) {
-          if (readed > 0) {
-            session.digestUpdate(copyOfLen(buffer, readed));
+        while ((read = data.read(buffer)) != -1) {
+          if (read > 0) {
+            session.digestUpdate(copyOfLen(buffer, read));
           }
         }
       } finally {
@@ -1112,7 +1105,7 @@ public class PKCS11Token {
       if (firstBlockLen < maxMessageSize) {
         return session.signSingle(mechanism, keyHandle, firstBlock);
       } else {
-        int readed;
+        int read;
 
         // signInit
         session.signInit(mechanism, keyHandle);
@@ -1123,8 +1116,8 @@ public class PKCS11Token {
             ByteArrayOutputStream bout = new ByteArrayOutputStream(maxMessageSize + data.available());
             bout.write(firstBlock);
 
-            while ((readed = data.read(buffer)) != -1) {
-              bout.write(buffer, 0, readed);
+            while ((read = data.read(buffer)) != -1) {
+              bout.write(buffer, 0, read);
             }
             return session.signSingle(mechanism, keyHandle, bout.toByteArray());
           }
@@ -1132,9 +1125,9 @@ public class PKCS11Token {
 
         byte[] signature;
         try {
-          while ((readed = data.read(buffer)) != -1) {
-            if (readed > 0) {
-              session.signUpdate(copyOfLen(buffer, readed));
+          while ((read = data.read(buffer)) != -1) {
+            if (read > 0) {
+              session.signUpdate(copyOfLen(buffer, read));
             }
           }
         } finally {
@@ -1151,6 +1144,8 @@ public class PKCS11Token {
   /**
    * Sign-recovers the given data with the key and mechanism.
    *
+   * @param mechanism The mechanism to use.
+   * @param keyHandle The signing key to use.
    * @param in     buffer containing the to-be-signed data
    * @param out    buffer for the signed data
    * @return the length of signed data
@@ -1163,6 +1158,8 @@ public class PKCS11Token {
   /**
    * Sign-recovers the given data with the key and mechanism.
    *
+   * @param mechanism The mechanism to use.
+   * @param keyHandle The signing key to use.
    * @param in     buffer containing the to-be-signed data
    * @param inOfs  buffer offset of the to-be-signed data
    * @param inLen  length of the to-be-signed data
@@ -1200,11 +1197,10 @@ public class PKCS11Token {
 
     long code = mechanism.getMechanismCode();
     try {
-      if (supportsMechanism(code, CKF_VERIFY, false)) {
+      if (supportsMechanism(code, CKF_VERIFY)) {
         try {
           if (len <= maxMessageSize) {
             session.verifySingle(mechanism, keyHandle, data, signature);
-            return true;
           } else {
             try {
               session.verifyInit(mechanism, keyHandle);
@@ -1222,8 +1218,8 @@ public class PKCS11Token {
                 throw e;
               }
             }
-            return true;
           }
+          return true;
         } catch (PKCS11Exception e) {
           long ckr = e.getErrorCode();
           if (ckr == CKR_SIGNATURE_INVALID || ckr == CKR_SIGNATURE_LEN_RANGE) {
@@ -1277,7 +1273,7 @@ public class PKCS11Token {
       byte[] firstBlock = copyOfLen(buffer, firstBlockLen);
 
       long code = mechanism.getMechanismCode();
-      if (supportsMechanism(code, CKF_VERIFY, false)) {
+      if (supportsMechanism(code, CKF_VERIFY)) {
         if (firstBlockLen < maxMessageSize) {
           session.verifySingle(mechanism, keyHandle, firstBlock, signature);
           return true;
@@ -1291,9 +1287,9 @@ public class PKCS11Token {
               ByteArrayOutputStream bout = new ByteArrayOutputStream(maxMessageSize + data.available());
               bout.write(firstBlock);
 
-              int readed;
-              while ((readed = data.read(buffer)) != -1) {
-                bout.write(buffer, 0, readed);
+              int read;
+              while ((read = data.read(buffer)) != -1) {
+                bout.write(buffer, 0, read);
               }
               session.verifySingle(mechanism, keyHandle, bout.toByteArray(), signature);
               return true;
@@ -1301,10 +1297,10 @@ public class PKCS11Token {
           }
 
           try {
-            int readed;
-            while ((readed = data.read(buffer)) != -1) {
-              if (readed > 0) {
-                session.verifyUpdate(copyOfLen(buffer, readed));
+            int read;
+            while ((read = data.read(buffer)) != -1) {
+              if (read > 0) {
+                session.verifyUpdate(copyOfLen(buffer, read));
               }
             }
           } finally {
@@ -1321,10 +1317,10 @@ public class PKCS11Token {
           session.signInit(mechanism, keyHandle);
           try {
             session.signUpdate(firstBlock);
-            int readed;
-            while ((readed = data.read(buffer)) != -1) {
-              if (readed > 0) {
-                session.signUpdate(buffer, 0, readed);
+            int read;
+            while ((read = data.read(buffer)) != -1) {
+              if (read > 0) {
+                session.signUpdate(buffer, 0, read);
               }
             }
           } finally {
@@ -1350,10 +1346,10 @@ public class PKCS11Token {
   /**
    * Verifies the given data with the key and mechanism.
    *
-   * @param in
-   *          buffer containing the to-be-verified data
-   * @param out
-   *          buffer for the verified data
+   * @param mechanism The mechanism to use.
+   * @param keyHandle The verification key to use.
+   * @param in buffer containing the to-be-verified data
+   * @param out buffer for the verified data
    * @return the length of verified data
    * @exception PKCS11Exception
    *              If signing the data failed.
@@ -1365,18 +1361,14 @@ public class PKCS11Token {
   /**
    * Verifies the given data with the key and mechanism.
    *
-   * @param in
-   *          buffer containing the to-be-verified data
-   * @param inOfs
-   *          buffer offset of the to-be-verified data
-   * @param inLen
-   *          length of the to-be-verified data
-   * @param out
-   *          buffer for the verified data
-   * @param outOfs
-   *          buffer offset for the verified data
-   * @param outLen
-   *          buffer size for the verified data
+   * @param mechanism The mechanism to use.
+   * @param keyHandle The verification key to use.
+   * @param in buffer containing the to-be-verified data
+   * @param inOfs buffer offset of the to-be-verified data
+   * @param inLen length of the to-be-verified data
+   * @param out buffer for the verified data
+   * @param outOfs buffer offset for the verified data
+   * @param outLen buffer size for the verified data
    * @return the length of verified data
    * @exception PKCS11Exception
    *              If signing the data failed.
@@ -1472,7 +1464,7 @@ public class PKCS11Token {
   }
 
   /**
-   * Derives a new key from a specified base key unsing the given mechanism. After deriving a new
+   * Derives a new key from a specified base key using the given mechanism. After deriving a new
    * key from the base key, a new key object is created and a representation of it is returned. The
    * application can provide a template key to set certain attributes of the new key object.
    *
@@ -1747,19 +1739,19 @@ public class PKCS11Token {
 
   private static byte[] readAllBytes(InputStream stream) throws IOException {
     ByteArrayOutputStream bout = new ByteArrayOutputStream(Math.min(32, stream.available()));
-    int readed;
+    int read;
     byte[] buffer = new byte[4096];
-    while ((readed = stream.read(buffer)) != -1) {
-      bout.write(buffer, 0, readed);
+    while ((read = stream.read(buffer)) != -1) {
+      bout.write(buffer, 0, read);
     }
     return bout.toByteArray();
   }
 
   private static int readBytes(InputStream stream, byte[] buffer, int numBytes) throws IOException {
     int ofs = 0;
-    int readed;
-    while ((readed = stream.read(buffer, ofs, numBytes - ofs)) != -1) {
-      ofs += readed;
+    int read;
+    while ((read = stream.read(buffer, ofs, numBytes - ofs)) != -1) {
+      ofs += read;
       if (ofs >= numBytes) {
         break;
       }

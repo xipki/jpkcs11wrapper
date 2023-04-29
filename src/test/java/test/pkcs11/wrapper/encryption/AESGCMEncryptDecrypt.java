@@ -30,12 +30,6 @@ public class AESGCMEncryptDecrypt extends SymmEncryptDecrypt {
     // aad = "hello".getBytes();
   }
 
-  @Test
-  @Override
-  public void main() throws TokenException, IOException {
-    super.main();
-  }
-
   @Override
   protected Mechanism getKeyGenMech() throws PKCS11Exception {
     return getSupportedMechanism(CKM_AES_KEY_GEN, CKF_GENERATE);

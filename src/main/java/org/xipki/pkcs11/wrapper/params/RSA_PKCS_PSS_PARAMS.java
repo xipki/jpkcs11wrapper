@@ -7,7 +7,6 @@
 package org.xipki.pkcs11.wrapper.params;
 
 import org.xipki.pkcs11.wrapper.Functions;
-import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import org.xipki.pkcs11.wrapper.Util;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 

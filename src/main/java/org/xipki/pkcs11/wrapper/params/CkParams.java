@@ -46,7 +46,7 @@ public abstract class CkParams {
     return Functions.requireNonNull(paramName, param);
   }
 
-  protected static final CK_MECHANISM buildCkMechanism(
+  protected static CK_MECHANISM buildCkMechanism(
       Constructor<?> constructor, long mechanismCode, Object ckParams) {
     try {
       return (CK_MECHANISM) constructor.newInstance(mechanismCode, ckParams);
