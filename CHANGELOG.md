@@ -4,11 +4,12 @@ See also <https://github.com/xipki/jpkcs11wrapper/releases>
 
 
 ## 1.0.5
-- Release date: 2023/xx/xx
+- Release date: 2023/04/29
 - Bugfix: Fixed OutOfMemory Exception in findObjects(int num) with large num.
-- Bugfix: Fixed NPE while reading attributes of a key if CKA_CLASS or CKA_KEY_TYPE is not set.
+- Bugfix: Fixed NullPointerException while reading attributes of a key if CKA_CLASS or CKA_KEY_TYPE is not set.
 - Bugfix: Fixed bug "Vendor configuration file cannot be specified via explicit property".
 - Feature: Allow the configuration of vendor values CKM_*, CKR_*, CKK_* and CKD_*.
+- Feature: Add the vendor constants of Utimaco HSM and Safenet HSM.
 
 ## 1.0.4
 - Release date: 2023/03/26
@@ -31,7 +32,7 @@ See also <https://github.com/xipki/jpkcs11wrapper/releases>
 ## 1.0.1
 - Release date: 202/2/27
 - Better vendor behaviour.
-- CKA_EC_POINT: Applicatio do not to handle the ASN.1 envelope.
+- CKA_EC_POINT: Application does not to handle the ASN.1 envelope.
 - AttributeVector: better toString
 - Session.findObjects: ignore NULL attributes.
 
