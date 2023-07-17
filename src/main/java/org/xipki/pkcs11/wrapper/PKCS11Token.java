@@ -1713,11 +1713,20 @@ public class PKCS11Token {
     StaticLogger.info("verify on PKCS11Module with " + (pins == null || pins.isEmpty() ? "NULL pin" : "pin"));
 
     String userText = "user of type " + codeToName(Category.CKU, userType);
+    boolean nullPins;
+    if (pins == null || pins.isEmpty()) {
+      nullPins = true;
+    } else if (pins.size() == 1) {
+      char[] pin = pins.get(0);
+      nullPins = pin == null || pin.length == 0;
+    } else {
+      nullPins = false;
+    }
 
     try {
-      if (isProtectedAuthenticationPath || (pins == null || pins.isEmpty())) {
-        session.login(userType, new char[0]);
-        StaticLogger.info("login successful as " + userText + " with NULL PIN");
+      if (nullPins) {
+          session.login(userType, new char[0]);
+          StaticLogger.info("login successful as " + userText + " with NULL PIN");
       } else {
         for (char[] pin : pins) {
           session.login(userType, pin == null ? new char[0] : pin);
