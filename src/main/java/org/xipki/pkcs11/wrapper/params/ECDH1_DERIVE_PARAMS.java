@@ -3,7 +3,6 @@
 
 package org.xipki.pkcs11.wrapper.params;
 
-import org.xipki.pkcs11.wrapper.Functions;
 import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
@@ -32,8 +31,6 @@ public class ECDH1_DERIVE_PARAMS extends CkParams {
    */
   public ECDH1_DERIVE_PARAMS(long kdf, byte[] sharedData, byte[] publicData) {
     requireNonNull("publicData", publicData);
-    Functions.requireAmong("kdf", kdf, PKCS11Constants.CKD_NULL, PKCS11Constants.CKD_SHA1_KDF,
-        PKCS11Constants.CKD_SHA1_KDF_ASN1, PKCS11Constants.CKD_SHA1_KDF_CONCATENATE);
     params = new CK_ECDH1_DERIVE_PARAMS(kdf, sharedData, publicData);
   }
 
