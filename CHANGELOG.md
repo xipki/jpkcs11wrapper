@@ -2,9 +2,14 @@
 
 See also <https://github.com/xipki/jpkcs11wrapper/releases>
 
-## 1.0.7
-- Release date: xxxx/xx/xx
+## 1.0.8
+- Release date: yyyy/mm/dd
+- xx
 
+## 1.0.7
+- Release date: 2023/10/15
+- Feature: remove the limitation of CKD in ECDH1_DERIVE and ECDH2_DERIVE
+- Feature: cache the mechanism codes and infos of token.
 
 ## 1.0.6
 - Release date: 2023/08/31
