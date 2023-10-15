@@ -151,8 +151,6 @@ public class Token {
    *
    * @return An array of Mechanism objects. Each describes a mechanism that
    *         this token can perform. This array may be empty but not null.
-   * @exception PKCS11Exception
-   *              If reading the list of supported mechanisms fails.
    */
   public long[] getMechanismList() {
     return mechCodes.clone();
@@ -165,9 +163,6 @@ public class Token {
    * @param mechanism
    *          A mechanism that is supported by this token.
    * @return An information object about the concerned mechanism.
-   * @exception PKCS11Exception
-   *              If reading the information fails, or if the mechanism is not
-   *              supported by this token.
    */
   public MechanismInfo getMechanismInfo(long mechanism) {
     MechanismInfo info = mechCodeInfoMap.get(mechanism);
