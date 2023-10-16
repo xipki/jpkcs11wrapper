@@ -131,7 +131,7 @@ public class Slot {
    *
    * @return The object for accessing the token, non-null.
    */
-  public Token getToken() {
+  public synchronized Token getToken() {
     return token;
   }
 

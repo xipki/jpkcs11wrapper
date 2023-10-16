@@ -6,9 +6,7 @@
 
 package org.xipki.pkcs11.wrapper;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Objects of this class represent PKCS#11 tokens. The application can get
@@ -45,7 +43,7 @@ import java.util.Map;
  * <pre><code>
  *  Session session = token.openSession(readWrite);
  * </code></pre>
- * to open a  read-only session for readWrite = false, or a read-write session if
+ * to open a read-only session for readWrite = false, or a read-write session if
  * readWrite = true.
  *
  * @author Karl Scheibelhofer (SIC)
@@ -58,7 +56,7 @@ public class Token {
    */
   private final Slot slot;
 
-  private final long[] mechCodes;
+  private long[] mechCodes;
 
   private final Map<Long, MechanismInfo> nativeMechCodeInfoMap = new HashMap<>();
 
@@ -72,6 +70,12 @@ public class Token {
    */
   protected Token(Slot slot) {
     this.slot = Functions.requireNonNull("slot", slot);
+  }
+
+  private synchronized void init() {
+    if (mechCodes != null) {
+      return;
+    }
 
     PKCS11Module module = slot.getModule();
     long[] mechanisms;
@@ -138,9 +142,9 @@ public class Token {
    */
   public TokenInfo getTokenInfo() throws PKCS11Exception {
     try {
-      return new TokenInfo(slot.getPKCS11().C_GetTokenInfo(slot.getSlotID()));
-    } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw slot.getModule().convertException(ex);
+      return new TokenInfo(slot.getModule().getPKCS11().C_GetTokenInfo(slot.getSlotID()));
+    } catch (sun.security.pkcs11.wrapper.PKCS11Exception e) {
+      throw slot.getModule().convertException(e);
     }
   }
 
@@ -153,6 +157,7 @@ public class Token {
    *         this token can perform. This array may be empty but not null.
    */
   public long[] getMechanismList() {
+    init();
     return mechCodes.clone();
   }
 
@@ -165,6 +170,7 @@ public class Token {
    * @return An information object about the concerned mechanism.
    */
   public MechanismInfo getMechanismInfo(long mechanism) {
+    init();
     MechanismInfo info = mechCodeInfoMap.get(mechanism);
     if (info == null) {
       info = nativeMechCodeInfoMap.get(mechanism);
@@ -209,14 +215,16 @@ public class Token {
     long flags = rwSession
         ? PKCS11Constants.CKF_SERIAL_SESSION | PKCS11Constants.CKF_RW_SESSION
         : PKCS11Constants.CKF_SERIAL_SESSION;
+    PKCS11Module module = slot.getModule();
     long sessionHandle;
     try {
-      sessionHandle = slot.getPKCS11().C_OpenSession(slot.getSlotID(), flags, application, null);
-      StaticLogger.info("C_OpenSession: slotID={}, flags=0x{}, sessionHandle={}",
-          slot.getSlotID(), Functions.toFullHex(flags), sessionHandle);
-    } catch (sun.security.pkcs11.wrapper.PKCS11Exception ex) {
-      throw slot.getModule().convertException(ex);
+      sessionHandle = module.getPKCS11().C_OpenSession(slot.getSlotID(), flags, application, null);
+    } catch (sun.security.pkcs11.wrapper.PKCS11Exception e) {
+      throw module.convertException(e);
     }
+
+    StaticLogger.info("C_OpenSession: slotID={}, flags=0x{}, sessionHandle={}",
+        slot.getSlotID(), Functions.toFullHex(flags), sessionHandle);
     return new Session(this, sessionHandle);
   }
 

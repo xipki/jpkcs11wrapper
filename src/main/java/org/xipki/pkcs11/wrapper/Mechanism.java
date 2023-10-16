@@ -9,6 +9,8 @@ package org.xipki.pkcs11.wrapper;
 import org.xipki.pkcs11.wrapper.params.CkParams;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
+import static org.xipki.pkcs11.wrapper.PKCS11Constants.Category.CKM;
+
 /**
  * Objects of this class represent a mechanism as defined in PKCS#11. There are
  * constants defined for all mechanisms that PKCS#11 version 2.11 defines.
@@ -84,8 +86,18 @@ public class Mechanism {
    * @return The name of this mechanism.
    */
   public String getName() {
-    return module == null ? PKCS11Constants.ckmCodeToName(mechanismCode)
-        : module.codeToName(PKCS11Constants.Category.CKM, mechanismCode);
+    if (module == null) {
+      return PKCS11Constants.ckmCodeToName(mechanismCode);
+    }
+
+    String name = module.codeToName(CKM, mechanismCode);
+    long code2 = module.genericToVendorCode(CKM, mechanismCode);
+    if (mechanismCode == code2) {
+      return name;
+    } else {
+      String name2 = module.codeToName(CKM, code2);
+      return name + " (native: " + name2 + ")";
+    }
   }
 
   public CK_MECHANISM toCkMechanism() {
