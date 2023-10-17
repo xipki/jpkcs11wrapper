@@ -32,11 +32,11 @@ public class MechanismParams extends CkParams {
 
   @Override
   public Long getParams() {
-    if (module == null || (params & CKM_VENDOR_DEFINED) == 0) {
+    if (module == null) {
       return params;
-    } else {
-      return module.genericToVendorCode(PKCS11Constants.Category.CKM, params);
     }
+
+    return module.genericToVendorCode(PKCS11Constants.Category.CKM, params);
   }
 
   @Override
@@ -51,8 +51,7 @@ public class MechanismParams extends CkParams {
 
   @Override
   public String toString(String indent) {
-    return indent + "MechanismParams Params: " + (module == null ? PKCS11Constants.ckmCodeToName(params) :
-        module.codeToName(PKCS11Constants.Category.CKM, params));
+    return indent + "MechanismParams Params: " + codeToName(PKCS11Constants.Category.CKM, params);
   }
 
 }

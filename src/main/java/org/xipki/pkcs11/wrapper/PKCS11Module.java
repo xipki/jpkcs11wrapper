@@ -117,7 +117,7 @@ public class PKCS11Module {
 
   private Boolean sm2SignatureFixNeeded;
 
-  private Map<Category, VendorMap> vendorMaps = new HashMap<>();
+  private final Map<Category, VendorMap> vendorMaps = new HashMap<>();
 
   private final Set<Integer> vendorBehaviours = new HashSet<>();
 
@@ -389,10 +389,15 @@ public class PKCS11Module {
       Version libraryVersion = moduleInfo.getLibraryVersion();
 
       String confPath = System.getProperty("org.xipki.pkcs11.vendor.conf");
-      InputStream in = (confPath != null) ? Files.newInputStream(Paths.get(confPath))
-          : PKCS11Module.class.getClassLoader().getResourceAsStream("org/xipki/pkcs11/wrapper/vendor.conf");
-      if (in == null) {
-        throw new IOException("found no file org/xipki/pkcs11/wrapper/vendor.conf");
+      InputStream in;
+      if (confPath != null) {
+        in = Files.newInputStream(Paths.get(confPath));
+      } else {
+        String path = "org/xipki/pkcs11/wrapper/vendor.conf";
+        in = PKCS11Module.class.getClassLoader().getResourceAsStream(path);
+        if (in == null) {
+          throw new IOException("found no reesource " + path);
+        }
       }
 
       try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
@@ -477,6 +482,9 @@ public class PKCS11Module {
         block = new VendorConfBlock();
         inBlock = true;
       } else if (line.startsWith("</vendor>")) {
+        if (block == null) {
+          throw new IOException("Ending </vendor> does not having the starting <vendor>.");
+        }
         block.validate();
         return block;
       } else if (inBlock) {

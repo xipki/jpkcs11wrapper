@@ -149,25 +149,24 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
 
   @Override
   public Object getParams() {
-    if (constructorNoArgs == null || module == null
-        || ((hashAlg & CKM_VENDOR_DEFINED) == 0) && (mgf & CKM_VENDOR_DEFINED) == 0) {
+    if (constructorNoArgs == null || module == null) {
       return params;
-    } else {
-      long newHashAlg = module.genericToVendorCode(Category.CKM, hashAlg);
-      long newMgf = module.genericToVendorCode(Category.CKG_MGF, mgf);
-      if (newHashAlg == hashAlg && newMgf == mgf) {
-        return params;
-      } else {
-        try {
-          Object ret = constructorNoArgs.newInstance();
-          hashAlgField.set(ret, newHashAlg);
-          mgfField.set(ret, newMgf);
-          sLenField.set(ret, sLen);
-          return ret;
-        } catch (Exception ex) {
-          throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
-        }
-      }
+    }
+
+    long newHashAlg = module.genericToVendorCode(Category.CKM, hashAlg);
+    long newMgf = module.genericToVendorCode(Category.CKG_MGF, mgf);
+    if (newHashAlg == hashAlg && newMgf == mgf) {
+      return params;
+    }
+
+    try {
+      Object ret = constructorNoArgs.newInstance();
+      hashAlgField.set(ret, newHashAlg);
+      mgfField.set(ret, newMgf);
+      sLenField.set(ret, sLen);
+      return ret;
+    } catch (Exception ex) {
+      throw new IllegalStateException("Could not create new instance of " + CLASS_CK_PARAMS, ex);
     }
   }
 
@@ -197,10 +196,8 @@ public class RSA_PKCS_PSS_PARAMS extends CkParams {
   @Override
   public String toString(String indent) {
     return indent + "CK_RSA_PKCS_PSS_PARAMS:" +
-        val2Str(indent, "hashAlg", (module == null
-            ? ckmCodeToName(hashAlg) : module.codeToName(Category.CKM, hashAlg))) +
-        val2Str(indent, "mgf", (module == null
-            ? codeToName(Category.CKG_MGF, mgf) : module.codeToName(Category.CKG_MGF, mgf))) +
+        val2Str(indent, "hashAlg", codeToName(Category.CKM, hashAlg)) +
+        val2Str(indent, "mgf", codeToName(Category.CKG_MGF, mgf)) +
         val2Str(indent, "sLen", sLen);
   }
 

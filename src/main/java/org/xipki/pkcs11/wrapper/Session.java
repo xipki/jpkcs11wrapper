@@ -27,7 +27,7 @@ import static org.xipki.pkcs11.wrapper.PKCS11Constants.*;
 /**
  * Session objects are used to perform cryptographic operations on a token. The application gets a
  * Session object by calling openSession on a certain Token object. Having the session object, the
- * application may log-in the user, if required.
+ * application may login the user, if required.
  *
  * <pre>
  * <code>

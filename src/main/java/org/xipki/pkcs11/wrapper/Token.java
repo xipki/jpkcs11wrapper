@@ -87,6 +87,8 @@ public class Token {
       return;
     }
 
+    StaticLogger.info("Mechanisms supported by the HSM natively: {}", ckmsToSstring(mechanisms));
+
     long[] mechCodeArray = new long[mechanisms.length];
     int index = 0;
 
@@ -108,6 +110,21 @@ public class Token {
     }
 
     mechCodes = (index == mechCodeArray.length) ? mechCodeArray : Arrays.copyOf(mechCodeArray, index);
+    StaticLogger.info("Mechanisms supported by the HSM: {}", ckmsToSstring(mechCodes));
+  }
+
+  private String ckmsToSstring(long[] mechCodes) {
+    List<Long> list = new ArrayList<>(mechCodes.length);
+    for (long code : mechCodes) {
+      list.add(code);
+    }
+
+    Collections.sort(list);
+    List<String> names = new ArrayList<>(mechCodes.length);
+    for (long code : list) {
+      names.add(slot.getModule().codeToName(PKCS11Constants.Category.CKM, code));
+    }
+    return names.toString();
   }
 
   /**

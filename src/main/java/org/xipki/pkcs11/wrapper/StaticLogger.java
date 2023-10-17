@@ -76,7 +76,7 @@ public class StaticLogger {
     }
 
     int fromIdx = 0;
-    for (int i = 0; i < arguments.length; i++) {
+    for (Object argument : arguments) {
       // search '{}' in format
       int idx = format.indexOf("{}", fromIdx);
       if (idx == -1) {
@@ -86,7 +86,7 @@ public class StaticLogger {
         break;
       } else {
         sb.append(format, fromIdx, idx);
-        sb.append(arguments[i]);
+        sb.append(argument);
         fromIdx = idx + 2; // 2 = "{}".length().
       }
     }

@@ -51,8 +51,6 @@ public class PKCS11Token {
 
   private final boolean readOnly;
 
-  private final boolean isProtectedAuthenticationPath;
-
   private long timeOutWaitNewSessionMs = 10000; // maximal wait for 10 second
 
   private final AtomicLong countSessions = new AtomicLong(0);
@@ -102,8 +100,6 @@ public class PKCS11Token {
     TokenInfo tokenInfo = token.getTokenInfo();
     long lc = tokenInfo.getMaxSessionCount();
     int tokenMaxSessionCount = lc > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) lc;
-
-    this.isProtectedAuthenticationPath = tokenInfo.isProtectedAuthenticationPath();
 
     if (numSessions == null) {
       this.maxSessionCount = (tokenMaxSessionCount < 1) ? 32 : Math.min(32, tokenMaxSessionCount);
@@ -175,7 +171,7 @@ public class PKCS11Token {
    * Returns whether the mechanism for given purpose is supported.
    *
    * @param mechanism The mechanism.
-   * @param flagBit   The purpose. Valid values are (may be extended in the future PKCS#11 version):
+   * @param flagBit   The purpose. Valid values are (could be extended in the future PKCS#11 version):
    *                  {@link PKCS11Constants#CKF_SIGN}, {@link PKCS11Constants#CKF_VERIFY},
    *                  {@link PKCS11Constants#CKF_SIGN_RECOVER}, {@link PKCS11Constants#CKF_VERIFY_RECOVER},
    *                  {@link PKCS11Constants#CKF_ENCRYPT}, {@link PKCS11Constants#CKF_DECRYPT},
@@ -243,7 +239,7 @@ public class PKCS11Token {
   /**
    * Login this session as CKU_SO (Security Officer).
    *
-   * @param userName User name of user type CKU_SO. In this version, it must be null or empty.
+   * @param userName Username of user type CKU_SO. In this version, it must be null or empty.
    * @param pin      PIN.
    * @throws TokenException If logging in the session fails.
    */
@@ -363,7 +359,7 @@ public class PKCS11Token {
   }
 
   /**
-   * Gets all present attributes of the given template object an writes them to the object to update
+   * Gets all present attributes of the given template object and writes them to the object to update
    * on the token (or in the session). Both parameters may refer to the same Java object. This is
    * possible, because this method only needs the object handle of the objectToUpdate, and gets the
    * attributes to set from the template. This means, an application can get the object using
@@ -372,7 +368,7 @@ public class PKCS11Token {
    * values as modified in the Java object.
    *
    * @param objectToUpdateHandle The attributes of this object get updated.
-   * @param template             This methods gets all present attributes of this template object and set this
+   * @param template             This method gets all present attributes of this template object and set this
    *                             attributes at the objectToUpdate.
    * @throws TokenException If updating the attributes fails. All or no attributes are updated.
    */

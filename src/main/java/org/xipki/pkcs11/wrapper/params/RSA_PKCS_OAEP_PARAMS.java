@@ -47,24 +47,22 @@ public class RSA_PKCS_OAEP_PARAMS extends CkParams {
 
   @Override
   public CK_RSA_PKCS_OAEP_PARAMS getParams() {
-    if (module == null ||
-        ((params.hashAlg & PKCS11Constants.CKM_VENDOR_DEFINED) == 0)
-            && (params.mgf & PKCS11Constants.CKM_VENDOR_DEFINED) == 0) {
+    if (module == null) {
       return params;
-    } else {
-      long newHashAlg = module.genericToVendorCode(Category.CKM, params.hashAlg);
-      long newMgf = module.genericToVendorCode(Category.CKG_MGF, params.mgf);
-      if (newHashAlg == params.hashAlg && newMgf == params.mgf) {
-        return params;
-      } else {
-        CK_RSA_PKCS_OAEP_PARAMS params0 = new CK_RSA_PKCS_OAEP_PARAMS();
-        params0.hashAlg = newHashAlg;
-        params0.mgf = newMgf;
-        params0.source = params.source;
-        params0.pSourceData = params.pSourceData;
-        return params0;
-      }
     }
+
+    long newHashAlg = module.genericToVendorCode(Category.CKM, params.hashAlg);
+    long newMgf = module.genericToVendorCode(Category.CKG_MGF, params.mgf);
+    if (newHashAlg == params.hashAlg && newMgf == params.mgf) {
+      return params;
+    }
+
+    CK_RSA_PKCS_OAEP_PARAMS params0 = new CK_RSA_PKCS_OAEP_PARAMS();
+    params0.hashAlg = newHashAlg;
+    params0.mgf = newMgf;
+    params0.source = params.source;
+    params0.pSourceData = params.pSourceData;
+    return params0;
   }
 
   @Override
