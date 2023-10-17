@@ -58,7 +58,7 @@ public abstract class KeyGenExecutor extends Pkcs11Executor {
 
   private final boolean inToken;
 
-  public KeyGenExecutor(long mechanism, int keyLen, boolean inToken) throws PKCS11Exception {
+  public KeyGenExecutor(long mechanism, int keyLen, boolean inToken) {
     super(describe(mechanism, keyLen, inToken));
     this.mechanism = new Mechanism(mechanism);
     this.inToken = inToken;
@@ -67,7 +67,7 @@ public abstract class KeyGenExecutor extends Pkcs11Executor {
   protected abstract AttributeVector getMinimalKeyTemplate();
 
   @Override
-  protected Runnable getTestor() {
+  protected Runnable getTester() {
     return new MyRunnable();
   }
 

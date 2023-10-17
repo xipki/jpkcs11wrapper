@@ -24,8 +24,6 @@ import java.security.spec.DSAPublicKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Key utility class.

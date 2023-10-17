@@ -78,7 +78,7 @@ public abstract class DecryptExecutor extends Pkcs11Executor {
   }
 
   @Override
-  protected Runnable getTestor() {
+  protected Runnable getTester() {
     return new MyRunnable();
   }
 

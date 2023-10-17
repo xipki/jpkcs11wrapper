@@ -4,7 +4,6 @@
 package test.pkcs11.wrapper.speed;
 
 import org.slf4j.Logger;
-import org.xipki.pkcs11.wrapper.PKCS11Exception;
 import org.xipki.pkcs11.wrapper.TokenException;
 import org.xipki.util.BenchmarkExecutor;
 import test.pkcs11.wrapper.TestBase;

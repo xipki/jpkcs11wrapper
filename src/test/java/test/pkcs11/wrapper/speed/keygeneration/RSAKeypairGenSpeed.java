@@ -3,7 +3,7 @@
 
 package test.pkcs11.wrapper.speed.keygeneration;
 
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.xipki.pkcs11.wrapper.AttributeVector;
 import org.xipki.pkcs11.wrapper.PKCS11Exception;
@@ -19,7 +19,7 @@ public class RSAKeypairGenSpeed extends TestBase {
 
   private class MyExecutor extends KeypairGenExecutor {
 
-    public MyExecutor(boolean inToken) throws PKCS11Exception {
+    public MyExecutor(boolean inToken) {
       super(ckmCodeToName(mechanism) + " (2048, inToken: " + inToken + ") Speed",
           mechanism, inToken);
     }
@@ -52,7 +52,7 @@ public class RSAKeypairGenSpeed extends TestBase {
       executor.setThreads(getSpeedTestThreads());
       executor.setDuration(getSpeedTestDuration());
       executor.execute();
-      Assert.assertEquals("no error", 0, executor.getErrorAccout());
+      Assert.assertEquals("no error", 0, executor.getErrorAccount());
     }
   }
 
