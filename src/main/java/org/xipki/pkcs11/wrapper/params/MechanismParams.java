@@ -6,8 +6,6 @@ package org.xipki.pkcs11.wrapper.params;
 import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;
 
-import static org.xipki.pkcs11.wrapper.PKCS11Constants.CKM_VENDOR_DEFINED;
-
 /**
  * This class encapsulates parameters CK_LONG.
  *

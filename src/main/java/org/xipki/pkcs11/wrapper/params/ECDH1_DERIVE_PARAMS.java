@@ -3,7 +3,6 @@
 
 package org.xipki.pkcs11.wrapper.params;
 
-import org.xipki.pkcs11.wrapper.PKCS11Constants;
 import org.xipki.pkcs11.wrapper.PKCS11Constants.Category;
 import sun.security.pkcs11.wrapper.CK_ECDH1_DERIVE_PARAMS;
 import sun.security.pkcs11.wrapper.CK_MECHANISM;

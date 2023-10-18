@@ -838,7 +838,7 @@ public class PKCS11Token {
     try {
       opInit(OP.DECRYPT, session, mechanism, keyHandle);
       return session.decrypt(in, inOfs, inLen, out, outOfs, outLen);
-    /*: BUGs in the underlying PKCS11 of JDK.
+    /* BUGs in the underlying PKCS11 of JDK.
       if (inLen <= maxMessageSize) {
         return session.decryptSingle(mechanism, keyHandle, in, inOfs, inLen, out, outOfs, outLen);
       } else {
