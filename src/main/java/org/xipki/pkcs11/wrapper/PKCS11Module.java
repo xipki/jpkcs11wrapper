@@ -123,6 +123,23 @@ public class PKCS11Module {
 
   private static final AtomicBoolean licensePrinted = new AtomicBoolean(false);
 
+  static {
+    String version = null;
+    try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(Objects.requireNonNull(PKCS11Module.class.getResourceAsStream("version"))))) {
+      version = reader.readLine();
+    } catch (Exception ex) {
+    }
+
+    if (version == null) {
+      version = "UNKNOWN";
+    } else {
+      version = version.trim();
+    }
+
+    StaticLogger.info("ipkcs11wrapper " + version);
+  }
+
   /**
    * Create a new module that uses the given PKCS11 interface to interact with
    * the token.
@@ -344,8 +361,7 @@ public class PKCS11Module {
   }
 
   public PKCS11Exception convertException(sun.security.pkcs11.wrapper.PKCS11Exception e) {
-    String name = codeToName(Category.CKR, e.getErrorCode());
-    return new PKCS11Exception(e.getErrorCode(), name);
+    return new PKCS11Exception(e.getErrorCode());
   }
 
   /**
@@ -396,7 +412,7 @@ public class PKCS11Module {
         String path = "org/xipki/pkcs11/wrapper/vendor.conf";
         in = PKCS11Module.class.getClassLoader().getResourceAsStream(path);
         if (in == null) {
-          throw new IOException("found no reesource " + path);
+          throw new IOException("found no resource " + path);
         }
       }
 
