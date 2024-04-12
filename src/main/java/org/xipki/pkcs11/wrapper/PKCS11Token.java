@@ -3,8 +3,6 @@
 
 package org.xipki.pkcs11.wrapper;
 
-import org.xipki.pkcs11.wrapper.ConcurrentBag.BagEntry;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +10,7 @@ import java.io.OutputStream;
 import java.security.PublicKey;
 import java.time.Clock;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -54,7 +53,7 @@ public class PKCS11Token {
 
   private final AtomicLong countSessions = new AtomicLong(0);
 
-  private final ConcurrentBag<Session> sessions = new ConcurrentBag<>();
+  private final LinkedBlockingQueue<Session> sessions = new LinkedBlockingQueue<>();
 
   private final Object loginSync = new Object();
 
@@ -68,6 +67,19 @@ public class PKCS11Token {
    */
   public PKCS11Token(Token token, boolean readOnly, char[] pin) throws TokenException {
     this(token, readOnly, CKU_USER, null, (pin == null ? null : Collections.singletonList(pin)), null);
+  }
+
+  /**
+   * The simple constructor.
+   *
+   * @param token    The token
+   * @param readOnly True if this token is read only, false if read-write.
+   * @param pin      The PIN of user type CKU_USER. May be null.
+   * @param numSessions Number of sessions. May be null.
+   * @throws TokenException If accessing the PKCS#11 device failed.
+   */
+  public PKCS11Token(Token token, boolean readOnly, char[] pin, Integer numSessions) throws TokenException {
+    this(token, readOnly, CKU_USER, null, (pin == null ? null : Collections.singletonList(pin)), numSessions);
   }
 
   /**
@@ -125,7 +137,7 @@ public class PKCS11Token {
     // login
     Session session = openSession();
     login(session);
-    sessions.add(new BagEntry<>(session));
+    sessions.add(session);
   }
 
   public PKCS11Module getModule() {
@@ -191,8 +203,8 @@ public class PKCS11Token {
       try {
         StaticLogger.info("close all sessions on token: {}", token.getTokenInfo());
 
-        for (BagEntry<Session> session : sessions.values()) {
-          session.value().closeSession();
+        for (Session session : sessions) {
+          session.closeSession();
         }
       } catch (Throwable th) {
         StaticLogger.error("error closing sessions, {}", th.getMessage());
@@ -200,7 +212,7 @@ public class PKCS11Token {
     }
 
     // clear the session pool
-    sessions.close();
+    sessions.clear();
     countSessions.lazySet(0);
   }
 
@@ -247,13 +259,12 @@ public class PKCS11Token {
       throw new IllegalArgumentException("userName is not null or empty");
     }
 
-    BagEntry<Session> session0 = borrowNoLoginSession();
-    Session session = session0.value();
+    Session session = borrowNoLoginSession();
     try {
       login(session, CKU_SO, (pin == null) ? null : Collections.singletonList(pin));
       StaticLogger.info("logIn CKU_SO");
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -263,13 +274,12 @@ public class PKCS11Token {
    * @throws TokenException If logging out the session fails.
    */
   public void logout() throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       session.logout();
       StaticLogger.info("logout");
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -301,20 +311,20 @@ public class PKCS11Token {
    *                        created on the token.
    */
   public long createObject(AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().createObject(template);
+      return session.createObject(template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
   public long createPrivateKeyObject(AttributeVector template, PublicKey publicKey) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().createPrivateKeyObject(template, publicKey);
+      return session.createPrivateKeyObject(template, publicKey);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -327,11 +337,11 @@ public class PKCS11Token {
    * @throws TokenException if creating new object failed.
    */
   public long createECPrivateKeyObject(AttributeVector template, byte[] ecPoint) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().createECPrivateKeyObject(template, ecPoint);
+      return session.createECPrivateKeyObject(template, ecPoint);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -349,11 +359,11 @@ public class PKCS11Token {
    * @throws TokenException If copying the object fails for some reason.
    */
   public long copyObject(long sourceObjectHandle, AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().copyObject(sourceObjectHandle, template);
+      return session.copyObject(sourceObjectHandle, template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -372,11 +382,11 @@ public class PKCS11Token {
    * @throws TokenException If updating the attributes fails. All or no attributes are updated.
    */
   public void setAttributeValues(long objectToUpdateHandle, AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      session0.value().setAttributeValues(objectToUpdateHandle, template);
+      session.setAttributeValues(objectToUpdateHandle, template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -389,11 +399,11 @@ public class PKCS11Token {
    * @throws TokenException If the object could not be destroyed.
    */
   public void destroyObject(long objectHandle) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      session0.value().destroyObject(objectHandle);
+      session.destroyObject(objectHandle);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -421,8 +431,7 @@ public class PKCS11Token {
   }
 
   public List<Long> destroyObjects(List<Long> objectHandles) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       List<Long> destroyedHandles = new ArrayList<>(objectHandles.size());
       for (long objectHandle : objectHandles) {
@@ -436,7 +445,7 @@ public class PKCS11Token {
 
       return destroyedHandles;
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -460,8 +469,7 @@ public class PKCS11Token {
     byte[] keyId = new byte[idLength];
     template.id(keyId);
 
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       while (true) {
         random.nextBytes(keyId);
@@ -470,7 +478,7 @@ public class PKCS11Token {
         }
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -485,12 +493,11 @@ public class PKCS11Token {
       return null;
     }
 
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       return getKey(session, keyId);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -501,13 +508,12 @@ public class PKCS11Token {
    * @throws TokenException If executing operation fails.
    */
   public PKCS11Key getKey(AttributeVector criteria) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       PKCS11KeyId keyId = getKeyId(session, criteria);
       return (keyId == null) ? null : getKey(session, keyId);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -562,12 +568,11 @@ public class PKCS11Token {
    * @throws TokenException If executing operation fails.
    */
   public PKCS11KeyId getKeyId(AttributeVector criteria) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       return getKeyId(session, criteria);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -650,11 +655,11 @@ public class PKCS11Token {
    * @throws TokenException if finding objects failed.
    */
   public long[] findAllObjects(AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().findAllObjectsSingle(template);
+      return session.findAllObjectsSingle(template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -670,11 +675,11 @@ public class PKCS11Token {
    * @throws TokenException if finding objects failed.
    */
   public long[] findObjects(AttributeVector template, int maxObjectCount) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().findObjectsSingle(template, maxObjectCount);
+      return session.findObjectsSingle(template, maxObjectCount);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -708,8 +713,7 @@ public class PKCS11Token {
    */
   public int encrypt(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
                      byte[] out, int outOfs, int outLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       opInit(OP.ENCRYPT, session, mechanism, keyHandle);
 
@@ -734,7 +738,7 @@ public class PKCS11Token {
         return outOfs - origOutOfs;
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -751,8 +755,7 @@ public class PKCS11Token {
    */
   public int encrypt(OutputStream out, Mechanism mechanism, long keyHandle, InputStream plaintext)
       throws TokenException, IOException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       byte[] outBuffer = new byte[maxMessageSize + 256];
 
@@ -797,7 +800,7 @@ public class PKCS11Token {
 
       return outSum;
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -831,8 +834,7 @@ public class PKCS11Token {
       */
   public int decrypt(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
                      byte[] out, int outOfs, int outLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
 
     try {
       opInit(OP.DECRYPT, session, mechanism, keyHandle);
@@ -861,7 +863,7 @@ public class PKCS11Token {
       }
       */
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -878,8 +880,7 @@ public class PKCS11Token {
    */
   public int decrypt(OutputStream out, Mechanism mechanism, long keyHandle, InputStream ciphertext)
       throws TokenException, IOException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       byte[] ciphertextBytes = readAllBytes(ciphertext);
       byte[] plaintextBytes = new byte[ciphertextBytes.length];
@@ -928,7 +929,7 @@ public class PKCS11Token {
       return outSum;
        */
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -955,8 +956,7 @@ public class PKCS11Token {
    * @throws PKCS11Exception If digesting the data failed.
    */
   public byte[] digest(Mechanism mechanism, byte[] in, int inOfs, int inLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       int digestLen = estimateDigestLen(mechanism);
       byte[] digest = new byte[digestLen];
@@ -978,7 +978,7 @@ public class PKCS11Token {
       }
       return (outLen == digestLen) ? digest : Arrays.copyOf(digest, outLen);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -991,8 +991,7 @@ public class PKCS11Token {
    * @throws TokenException If digesting the data failed.
    */
   public byte[] digestKey(Mechanism mechanism, long keyHandle) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       opInit(OP.DIGEST, session, mechanism, 0);
       byte[] digest;
@@ -1008,7 +1007,7 @@ public class PKCS11Token {
       }
       return digest;
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1022,8 +1021,7 @@ public class PKCS11Token {
    * @throws IOException if reading data from stream failed.
    */
   public byte[] digest(Mechanism mechanism, InputStream data) throws TokenException, IOException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       byte[] buffer = new byte[maxMessageSize];
       int read;
@@ -1045,7 +1043,7 @@ public class PKCS11Token {
       }
       return (outLen == digestLen) ? digest : Arrays.copyOf(digest, outLen);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1074,8 +1072,7 @@ public class PKCS11Token {
    * @throws TokenException If signing the data failed.
    */
   public byte[] sign(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       opInit(OP.SIGN, session, mechanism, keyHandle);
       if (inLen < maxMessageSize) {
@@ -1102,7 +1099,7 @@ public class PKCS11Token {
         }
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1118,8 +1115,7 @@ public class PKCS11Token {
    */
   public byte[] sign(Mechanism mechanism, long keyHandle, InputStream data)
       throws TokenException, IOException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       byte[] buffer = new byte[maxMessageSize];
       int firstBlockLen = readBytes(data, buffer, maxMessageSize);
@@ -1159,7 +1155,7 @@ public class PKCS11Token {
         return signature;
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1193,13 +1189,12 @@ public class PKCS11Token {
    */
   public int signRecover(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
                          byte[] out, int outOfs, int outLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      Session session = session0.value();
       opInit(OP.SIGN_RECOVER, session, mechanism, keyHandle);
       return session.signRecover(in, inOfs, inLen, out, outOfs, outLen);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1215,8 +1210,7 @@ public class PKCS11Token {
    * @throws TokenException If verifying the signature fails.
    */
   public boolean verify(Mechanism mechanism, long keyHandle, byte[] data, byte[] signature) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     int len = data.length;
 
     long code = mechanism.getMechanismCode();
@@ -1274,7 +1268,7 @@ public class PKCS11Token {
         throw new PKCS11Exception(CKR_MECHANISM_INVALID);
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1291,8 +1285,7 @@ public class PKCS11Token {
    */
   public boolean verify(Mechanism mechanism, long keyHandle, InputStream data, byte[] signature)
       throws TokenException, IOException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       byte[] buffer = new byte[maxMessageSize];
       int firstBlockLen = readBytes(data, buffer, maxMessageSize);
@@ -1366,7 +1359,7 @@ public class PKCS11Token {
         throw e;
       }
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1402,13 +1395,12 @@ public class PKCS11Token {
    */
   public int verifyRecover(Mechanism mechanism, long keyHandle, byte[] in, int inOfs, int inLen,
                            byte[] out, int outOfs, int outLen) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      Session session = session0.value();
       opInit(OP.VERIFY_RECOVER, session, mechanism, keyHandle);
       return session.verifyRecover(in, inOfs, inLen, out, outOfs, outLen);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1424,11 +1416,11 @@ public class PKCS11Token {
    * @throws TokenException If generating a new secret key or domain parameters failed.
    */
   public long generateKey(Mechanism mechanism, AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().generateKey(mechanism, template);
+      return session.generateKey(mechanism, template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1444,11 +1436,11 @@ public class PKCS11Token {
    * @throws TokenException If generating a new key-pair failed.
    */
   public PKCS11KeyPair generateKeyPair(Mechanism mechanism, KeyPairTemplate template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().generateKeyPair(mechanism, template);
+      return session.generateKeyPair(mechanism, template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1462,11 +1454,11 @@ public class PKCS11Token {
    * @throws TokenException If wrapping the key failed.
    */
   public byte[] wrapKey(Mechanism mechanism, long wrappingKeyHandle, long keyHandle) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().wrapKey(mechanism, wrappingKeyHandle, keyHandle);
+      return session.wrapKey(mechanism, wrappingKeyHandle, keyHandle);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1484,11 +1476,11 @@ public class PKCS11Token {
    */
   public long unwrapKey(Mechanism mechanism, long unwrappingKeyHandle, byte[] wrappedKey,
                         AttributeVector keyTemplate) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().unwrapKey(mechanism, unwrappingKeyHandle, wrappedKey, keyTemplate);
+      return session.unwrapKey(mechanism, unwrappingKeyHandle, wrappedKey, keyTemplate);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1506,11 +1498,11 @@ public class PKCS11Token {
    * @throws TokenException If deriving the key or creating a new key object failed.
    */
   public long deriveKey(Mechanism mechanism, long baseKeyHandle, AttributeVector template) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().deriveKey(mechanism, baseKeyHandle, template);
+      return session.deriveKey(mechanism, baseKeyHandle, template);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1534,15 +1526,14 @@ public class PKCS11Token {
    * @throws TokenException If generating random bytes failed.
    */
   public byte[] generateRandom(int numberOfBytesToGenerate, byte[] extraSeed) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
-    Session session = session0.value();
+    Session session = borrowSession();
     try {
       if (extraSeed != null && extraSeed.length > 0) {
         session.seedRandom(extraSeed);
       }
       return session.generateRandom(numberOfBytesToGenerate);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1583,11 +1574,11 @@ public class PKCS11Token {
    * @throws TokenException if getting attributes failed.
    */
   public AttributeVector getAttrValues(long objectHandle, List<Long> attributeTypes) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().getAttrValues(objectHandle, attributeTypes);
+      return session.getAttrValues(objectHandle, attributeTypes);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1598,11 +1589,11 @@ public class PKCS11Token {
    * @throws TokenException if getting attributes failed.
    */
   public AttributeVector getDefaultAttrValues(long objectHandle) throws TokenException {
-    BagEntry<Session> session0 = borrowSession();
+    Session session = borrowSession();
     try {
-      return session0.value().getDefaultAttrValues(objectHandle);
+      return session.getDefaultAttrValues(objectHandle);
     } finally {
-      sessions.requite(session0);
+      sessions.add(session);
     }
   }
 
@@ -1612,45 +1603,41 @@ public class PKCS11Token {
     return session;
   }
 
-  private BagEntry<Session> borrowSession() throws TokenException {
+  private Session borrowSession() throws TokenException {
     return borrowSession(true);
   }
 
-  private BagEntry<Session> borrowNoLoginSession() throws TokenException {
+  private Session borrowNoLoginSession() throws TokenException {
     return borrowSession(false);
   }
 
-  private BagEntry<Session> borrowSession(boolean login) throws TokenException {
+  private Session borrowSession(boolean login) throws TokenException {
     long maxTimeMs = clock.millis() + timeOutWaitNewSessionMs;
     int maxTries = maxSessionCount + 1;
     for (int retries = 0; retries < maxTries; retries++) {
-      BagEntry<Session> sessionBagEntry = borrowSession(login, maxTimeMs);
-      if (sessionBagEntry != null) {
+      Session session = borrowSession(login, maxTimeMs);
+      if (session != null) {
         if (retries != 0) {
           StaticLogger.info("Borrowed session after " + (retries + 1) + " tries.");
         }
-        return sessionBagEntry;
+        return session;
       }
     }
 
     throw new TokenException("could not borrow session after " + maxTries + " tries.");
   }
-  private BagEntry<Session> borrowSession(boolean login, long maxTimeMs) throws TokenException {
+  private Session borrowSession(boolean login, long maxTimeMs) throws TokenException {
     if (maxTimeMs == 0) {
       maxTimeMs = clock.millis() + timeOutWaitNewSessionMs;
     }
 
-    BagEntry<Session> session = null;
+    Session session = null;
     synchronized (sessions) {
       if (countSessions.get() < maxSessionCount) {
-        try {
-          session = sessions.borrow(1, TimeUnit.NANOSECONDS);
-        } catch (InterruptedException ex) {
-        }
-
+        session = sessions.poll();
         if (session == null) {
           // create new session
-          sessions.add(new BagEntry<>(openSession()));
+          sessions.add(openSession());
         }
       }
     }
@@ -1658,7 +1645,7 @@ public class PKCS11Token {
     if (session == null) {
       long timeOutMs = maxTimeMs - clock.millis();
       try {
-        session = sessions.borrow(Math.max(1, timeOutMs), TimeUnit.MILLISECONDS);
+        session = sessions.poll(Math.max(1, timeOutMs), TimeUnit.MILLISECONDS);
       } catch (InterruptedException ex) {
       }
     }
@@ -1673,7 +1660,7 @@ public class PKCS11Token {
       boolean sessionActive = true;
       SessionInfo sessionInfo = null;
       try {
-        sessionInfo = session.value().getSessionInfo();
+        sessionInfo = session.getSessionInfo();
       } catch (PKCS11Exception ex) {
         long ckr = ex.getErrorCode();
         if (ckr == CKR_SESSION_CLOSED || ckr == CKR_SESSION_HANDLE_INVALID) {
@@ -1712,14 +1699,14 @@ public class PKCS11Token {
         if (!loggedIn) {
           synchronized (loginSync) {
             try {
-              sessionInfo = session.value().getSessionInfo();
+              sessionInfo = session.getSessionInfo();
               loggedIn = isSessionLoggedIn(sessionInfo);
             } catch (Exception e) {
               StaticLogger.debug("Error while getSessionInfo()", e);
             }
 
             if (!loggedIn) {
-              login(session.value());
+              login(session);
             }
           }
         }
@@ -1729,7 +1716,7 @@ public class PKCS11Token {
       return session;
     } finally {
       if (requiteSession) {
-        sessions.requite(session);
+        sessions.add(session);
       }
     }
   } // method borrowSession

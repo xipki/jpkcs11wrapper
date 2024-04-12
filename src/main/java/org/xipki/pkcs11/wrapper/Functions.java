@@ -167,7 +167,14 @@ public class Functions {
     out.write(0); // place holder for length
 
     // first two nodes
-    int nodeValue = Integer.parseInt(nodes[0]) * 40 + Integer.parseInt(nodes[1]);
+    int node0 = Integer.parseInt(nodes[0]);
+    int node1 = Integer.parseInt(nodes[1]);
+    boolean valid = ((node0 == 0 || node0 == 1) && (node1 < 40)) || node0 == 2;
+    if (!valid) {
+      throw new IllegalArgumentException("invalid oid " + oid);
+    }
+
+    int nodeValue = node0 * 40 + node1;
     encodeOidNode(out, nodeValue);
 
     for (int i = 2; i < nodes.length; i++) {
