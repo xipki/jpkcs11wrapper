@@ -4,7 +4,7 @@ See also <https://github.com/xipki/jpkcs11wrapper/releases>
 
 ## 1.0.9
 - Release date: xxxx
-- N/A
+- Feature: more stable session management
 
 ## 1.0.8
 - Release date: 2023/11/19
